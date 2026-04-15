@@ -1,0 +1,14 @@
+{
+	"name": "Chatter Labels for Twitch",
+	"description": "Labels for chatters on Twitch",
+	"version": "0.1",
+	"manifest_version": 3,
+	"icons": {
+		"512": "images/icons/512.png"
+	},
+	"permissions": ["storage"],
+	"options_ui": {
+		"page": "pages/options.html",
+		"open_in_tab": true
+	}
+}
