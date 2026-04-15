@@ -2,26 +2,48 @@
 <html>
 	<head>
 		<title>Chatter Labels Options</title>
+
 		<meta charset="utf-8">
+
+		<link rel="stylesheet" href="../styles/options.css" />
+
+		<script type="text/javascript" src="../scripts/options.js" charset="UTF-8"></script>
 	</head>
 	<body>
 		<h1>Chatter Labels Options</h1>
 
-		<form>
-			<input
-				type="text"
-				name="letter"
-				minlength="1"
-				maxlength="1"
-				placeholder="Enter letter…"
-				required
-			/>
-			<input
-				type="text"
-				name="name"
-				placeholder="Enter name…"
-				required
-			/>
+		<form name="labels">
+			<template id="label">
+				<fieldset>
+					<div class="left-part">
+						<input
+							type="text"
+							name="letter"
+							minlength="1"
+							maxlength="1"
+							placeholder="Enter letter…"
+							required
+						/>
+
+						<input
+							type="text"
+							name="name"
+							placeholder="Enter name…"
+							required
+						/>
+					</div>
+
+					<div class="right-part">
+						<button
+							type="button"
+							name="delete"
+						><div class="icon"></div></button>
+					</div>
+				</fieldset>
+			</template>
+
+			<button type="button" name="add">Add</button>
+			<button type="submit">Save</button>
 		</form>
 	</body>
 </html>
