@@ -5,8 +5,10 @@ body {
 	input {
 		font-size: inherit;
 
+		/* Position */
 		padding: 0.25em 0.5em;
 
+		/* Border */
 		border-style: solid;
 		border-width: 1px;
 		border-color: lightslategray;
@@ -43,7 +45,8 @@ body {
 					width: var(--size);
 					height: var(--size);
 
-					mask-image: url('../images/delete.svg');
+					/* Icon */
+					mask-image: url("../images/delete.svg");
 					mask-repeat: no-repeat;
 					mask-size: contain;
 					background-color: #444;
