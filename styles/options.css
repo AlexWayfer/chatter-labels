@@ -27,7 +27,7 @@ body {
 			margin-bottom: 0.6em;
 
 			input[name="letter"] {
-				width: 8em;
+				width: 1em;
 			}
 
 			button[name="delete"] {
