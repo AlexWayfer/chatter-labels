@@ -2,7 +2,7 @@
 	"type": "module",
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
-		"@stylistic/eslint-plugin-js": "^4.4.1",
+		"@stylistic/eslint-plugin": "^5.10.0",
 		"@stylistic/stylelint-config": "^5.0.0",
 		"@stylistic/stylelint-plugin": "^5.2.0",
 		"eslint": "^10.4.0",
