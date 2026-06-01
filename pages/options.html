@@ -20,7 +20,7 @@
 							Letter:
 							<input
 								type="text"
-								name="letter"
+								name="letter[]"
 								minlength="1"
 								maxlength="1"
 								required
@@ -31,7 +31,7 @@
 							Name:
 							<input
 								type="text"
-								name="name"
+								name="name[]"
 								required
 							/>
 						</label>
@@ -40,13 +40,13 @@
 					<div class="right-part">
 						<button
 							type="button"
-							name="delete"
+							class="delete"
 						><div class="icon"></div></button>
 					</div>
 				</fieldset>
 			</template>
 
-			<button type="button" name="add">Add</button>
+			<button type="button" class="add">Add</button>
 			<button type="submit">Save</button>
 		</form>
 	</body>

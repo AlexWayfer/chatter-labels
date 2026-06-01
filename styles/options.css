@@ -28,11 +28,11 @@ body {
 			padding: 0.5em;
 			margin-bottom: 0.6em;
 
-			input[name="letter"] {
+			input[name="letter[]"] {
 				width: 1em;
 			}
 
-			button[name="delete"] {
+			button.delete {
 				background: transparent;
 				border: none;
 				cursor: pointer;
