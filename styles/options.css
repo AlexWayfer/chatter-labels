@@ -21,6 +21,8 @@ body {
 	}
 
 	form[name="labels"] {
+		width: max-content;
+
 		fieldset {
 			display: flex;
 			justify-content: space-between;
@@ -28,8 +30,12 @@ body {
 			padding: 0.5em;
 			margin-bottom: 0.6em;
 
-			input[name="letter[]"] {
-				width: 1em;
+			label {
+				padding: 0.2em;
+
+				input[name="letter[]"] {
+					width: 1em;
+				}
 			}
 
 			button.delete {
@@ -38,6 +44,7 @@ body {
 				cursor: pointer;
 				line-height: 0;
 				padding: 0.4em;
+				margin-left: 0.2em;
 
 				.icon {
 					--size: 0.9em;
