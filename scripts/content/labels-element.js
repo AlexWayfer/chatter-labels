@@ -1,4 +1,6 @@
 export class LabelsElement {
+	static CLASS_NAME = 'chatter-labels'
+
 	#element
 	#formElement
 
@@ -13,7 +15,7 @@ export class LabelsElement {
 	#createElement() {
 		this.#element = document.createElement('div')
 
-		this.#element.classList.add('chatter-labels')
+		this.#element.classList.add(this.constructor.CLASS_NAME)
 
 		const header = document.createElement('h5')
 		header.textContent = 'Labels'

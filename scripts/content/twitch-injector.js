@@ -17,10 +17,8 @@ const observer = new MutationObserver(async (mutations) => {
 			if (
 				chatterCard
 					&& ['viewer-card', 'mod-view-user-details'].includes(chatterCard.dataset.aTarget)
-					&& !chatterCard.hasAttribute('data-labels-injected')
+					&& !chatterCard.querySelector(LabelsElement.CLASS_NAME)
 			) {
-				chatterCard.setAttribute('data-labels-injected', 'true')
-
 				options ??= await optionsLoad()
 
 				new LabelsElement(chatterCard, options)
