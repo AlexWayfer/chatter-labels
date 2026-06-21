@@ -36,13 +36,15 @@ async function injectLabelsUI(viewerCard) {
 const observer = new MutationObserver((mutations) => {
 	for (const mutation of mutations) {
 		if (mutation.addedNodes.length > 0) {
-			const viewerCard = document.querySelector('[data-a-target="viewer-card"]')
+			;['viewer-card', 'mod-view-user-details'].forEach(dataTarget => {
+				const viewerCard = document.querySelector(`[data-a-target="${dataTarget}"]`)
 
-			if (viewerCard && !viewerCard.hasAttribute('data-labels-injected')) {
-				viewerCard.setAttribute('data-labels-injected', 'true')
+				if (viewerCard && !viewerCard.hasAttribute('data-labels-injected')) {
+					viewerCard.setAttribute('data-labels-injected', 'true')
 
-				injectLabelsUI(viewerCard)
-			}
+					injectLabelsUI(viewerCard)
+				}
+			})
 		}
 	}
 });
