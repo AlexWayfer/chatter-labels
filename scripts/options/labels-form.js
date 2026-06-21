@@ -1,0 +1,59 @@
+import { Label } from '../label.js'
+
+export class LabelsForm {
+	#fieldsetsElement
+	#fieldsetTemplate
+
+	constructor(element, options) {
+		this.element = element
+		this.options = options
+
+		this.#fieldsetsElement = this.element.querySelector('.fieldsets')
+
+		this.#fieldsetTemplate = this.element.querySelector('template#label')
+
+		this.element.querySelector('button.add').addEventListener('click', _event => { this.add() })
+
+		this.element.addEventListener('submit', event => {
+			event.preventDefault()
+
+			this.#save()
+		})
+
+		this.options.labels.forEach(label => { this.add(label) })
+	}
+
+	add(data = {}) {
+		const fieldset = document.importNode(this.#fieldsetTemplate.content, true)
+
+		fieldset.querySelectorAll('input[name]').forEach(input => {
+			input.value = data[input.name] ?? ''
+		})
+
+		fieldset.querySelector('button.delete').addEventListener('click', event => {
+			event.target.closest('fieldset').remove()
+		})
+
+		this.#fieldsetsElement.append(fieldset)
+	}
+
+	#save() {
+		this.options.labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
+			console.debug('fieldset = ', fieldset)
+
+			return new Label(
+				Object.fromEntries(
+					Array.from(fieldset.querySelectorAll('input[name]')).map(
+						input => [input.name, input.value]
+					)
+				)
+			)
+		})
+
+		console.debug('options = ', this.options)
+
+		chrome.storage.sync.set({ options: this.options }).then(() => {
+			console.debug('Options saved.')
+		})
+	}
+}

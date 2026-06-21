@@ -7,7 +7,7 @@
 
 		<link rel="stylesheet" href="../styles/options.css" />
 
-		<script type="text/javascript" src="../scripts/options.js" charset="UTF-8"></script>
+		<script type="module" src="../scripts/options.js"></script>
 	</head>
 	<body>
 		<h1>Chatter Labels Options</h1>
@@ -20,7 +20,7 @@
 							Letter:
 							<input
 								type="text"
-								name="letter[]"
+								name="letter"
 								minlength="1"
 								maxlength="1"
 								required
@@ -31,7 +31,7 @@
 							Name:
 							<input
 								type="text"
-								name="name[]"
+								name="name"
 								required
 							/>
 						</label>
@@ -45,6 +45,9 @@
 					</div>
 				</fieldset>
 			</template>
+
+			<div class="fieldsets">
+			</div>
 
 			<button type="button" class="add">Add</button>
 			<button type="submit">Save</button>
