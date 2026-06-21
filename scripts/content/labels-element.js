@@ -1,26 +1,26 @@
 export class LabelsElement {
-	#containerElement
+	#element
 	#formElement
 
 	constructor(chatterCard, options) {
-		this.#createContainerElement()
+		this.#createElement()
 
 		options.labels.forEach(label => this.#createLabelElement(label))
 
-		chatterCard.querySelector('.viewer-card-header__background').after(this.#containerElement)
+		chatterCard.querySelector('.viewer-card-header__background').after(this.#element)
 	}
 
-	#createContainerElement() {
-		this.#containerElement = document.createElement('div')
+	#createElement() {
+		this.#element = document.createElement('div')
 
-		this.#containerElement.classList.add('chatter-labels')
+		this.#element.classList.add('chatter-labels')
 
 		const header = document.createElement('h5')
 		header.textContent = 'Labels'
-		this.#containerElement.append(header)
+		this.#element.append(header)
 
 		this.#formElement = document.createElement('form')
-		this.#containerElement.append(this.#formElement)
+		this.#element.append(this.#formElement)
 	}
 
 	#createLabelElement(label) {
