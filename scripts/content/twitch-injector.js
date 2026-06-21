@@ -13,9 +13,9 @@ const observer = new MutationObserver(async (mutations) => {
 						: addedNode.querySelector('[data-a-target]')
 
 			if (
-				chatterCard
-					&& ['viewer-card', 'mod-view-user-details'].includes(chatterCard.dataset.aTarget)
-					&& !chatterCard.querySelector(LabelsElement.CLASS_NAME)
+				chatterCard &&
+					['viewer-card', 'mod-view-user-details'].includes(chatterCard.dataset.aTarget) &&
+					!chatterCard.querySelector(LabelsElement.CLASS_NAME)
 			) {
 				options ??= await optionsLoad()
 
