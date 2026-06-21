@@ -1,0 +1,28 @@
+.chatter-labels {
+	padding: 8px;
+
+	h5 {
+		font-family: var(--font-display);
+		line-height: var(--line-height-heading);
+		font-size: var(--font-size-3);
+		font-weight: var(--font-weight-medium);
+		letter-spacing: -0.18px;
+	}
+
+	form {
+		fieldset {
+			margin-top: 8px;
+
+			label {
+				padding: 4px;
+
+				font-size: var(--font-size-base);
+				line-height: var(--line-height-body);
+
+				input[type="checkbox"] {
+					margin-right: 4px;
+				}
+			}
+		}
+	}
+}

@@ -7,6 +7,27 @@
 		"512": "images/icons/512.png"
 	},
 	"permissions": ["storage"],
+	"content_scripts": [
+		{
+			"matches": ["https://*.twitch.tv/*"],
+			"js": [
+				"scripts/content/loader.js"
+			],
+			"css": [
+				"styles/content.css"
+			]
+		}
+	],
+	"web_accessible_resources": [
+		{
+			"matches": ["https://*.twitch.tv/*"],
+			"resources": [
+				"scripts/label.js",
+				"scripts/options/load.js",
+				"scripts/content/twitch-injector.js"
+			]
+		}
+	],
 	"options_ui": {
 		"page": "pages/options.html",
 		"open_in_tab": true
