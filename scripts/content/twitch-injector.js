@@ -1,50 +1,30 @@
 import { load as optionsLoad } from '../options/load.js'
+import { LabelsElement } from './labels-element.js'
 
-async function injectLabelsUI(viewerCard) {
-	const options = await optionsLoad()
+const observer = new MutationObserver(async (mutations) => {
+	let options
 
-	const container = document.createElement('div')
-	container.classList.add('chatter-labels')
-
-	const header = document.createElement('h5')
-	header.textContent = 'Labels'
-	container.append(header)
-
-	const labelsForm = document.createElement('form')
-	container.append(labelsForm)
-
-	options.labels.forEach(label => {
-		const
-			fieldsetElement = document.createElement('fieldset'),
-			labelElement = document.createElement('label'),
-			checkboxElement = document.createElement('input'),
-			labelTextElement = document.createElement('span')
-
-		checkboxElement.type = 'checkbox'
-		// checkboxElement.name = name
-
-		labelTextElement.textContent = label.name
-
-		labelElement.append(checkboxElement, labelTextElement)
-		fieldsetElement.append(labelElement)
-		labelsForm.append(fieldsetElement)
-	})
-
-	viewerCard.querySelector('.viewer-card-header__background').after(container)
-}
-
-const observer = new MutationObserver((mutations) => {
 	for (const mutation of mutations) {
-		if (mutation.addedNodes.length > 0) {
-			;['viewer-card', 'mod-view-user-details'].forEach(dataTarget => {
-				const viewerCard = document.querySelector(`[data-a-target="${dataTarget}"]`)
+		for (const addedNode of mutation.addedNodes) {
+			if (addedNode.nodeType !== Node.ELEMENT_NODE) continue
 
-				if (viewerCard && !viewerCard.hasAttribute('data-labels-injected')) {
-					viewerCard.setAttribute('data-labels-injected', 'true')
+			const
+				chatterCard =
+					addedNode.matches('[data-a-target]')
+						? addedNode
+						: addedNode.querySelector('[data-a-target]')
 
-					injectLabelsUI(viewerCard)
-				}
-			})
+			if (
+				chatterCard
+					&& ['viewer-card', 'mod-view-user-details'].includes(chatterCard.dataset.aTarget)
+					&& !chatterCard.hasAttribute('data-labels-injected')
+			) {
+				chatterCard.setAttribute('data-labels-injected', 'true')
+
+				options ??= await optionsLoad()
+
+				new LabelsElement(chatterCard, options)
+			}
 		}
 	}
 });
