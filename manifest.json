@@ -22,6 +22,7 @@
 		{
 			"matches": ["https://*.twitch.tv/*"],
 			"resources": [
+				"pages/content/labels.html",
 				"scripts/label.js",
 				"scripts/options/load.js",
 				"scripts/content/labels-element.js",

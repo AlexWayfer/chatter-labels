@@ -1,5 +1,13 @@
+const
+	fetchResult = await fetch(chrome.runtime.getURL('pages/content/labels.html')),
+	templatesHTML = await fetchResult.text(),
+	parser = new DOMParser(),
+	templatesDocument = parser.parseFromString(templatesHTML, 'text/html'),
+	elementTemplate = templatesDocument.querySelector('template#labels'),
+	labelElementTemplate = templatesDocument.querySelector('template#label')
+
 export class LabelsElement {
-	static CLASS_NAME = 'chatter-labels'
+	static CLASS_NAME = elementTemplate.content.firstElementChild.className
 
 	#element
 	#formElement
@@ -13,32 +21,18 @@ export class LabelsElement {
 	}
 
 	#createElement() {
-		this.#element = document.createElement('div')
+		this.#element = elementTemplate.content.cloneNode(true).firstElementChild
 
-		this.#element.classList.add(this.constructor.CLASS_NAME)
-
-		const header = document.createElement('h5')
-		header.textContent = 'Labels'
-		this.#element.append(header)
-
-		this.#formElement = document.createElement('form')
-		this.#element.append(this.#formElement)
+		this.#formElement = this.#element.querySelector('form')
 	}
 
 	#createLabelElement(label) {
-		const
-			fieldsetElement = document.createElement('fieldset'),
-			labelElement = document.createElement('label'),
-			checkboxElement = document.createElement('input'),
-			labelTextElement = document.createElement('span')
+		const labelElement = labelElementTemplate.content.cloneNode(true)
 
-		checkboxElement.type = 'checkbox'
 		// checkboxElement.name = name
 
-		labelTextElement.textContent = label.name
+		labelElement.querySelector('span.name').textContent = label.name
 
-		labelElement.append(checkboxElement, labelTextElement)
-		fieldsetElement.append(labelElement)
-		this.#formElement.append(fieldsetElement)
+		this.#formElement.append(labelElement)
 	}
 }
