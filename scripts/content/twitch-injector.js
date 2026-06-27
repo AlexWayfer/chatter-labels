@@ -1,4 +1,4 @@
-import { load as optionsLoad } from '../options/load.js'
+import { loadOptions } from '../load-options.js'
 import { LabelsElement } from './labels-element.js'
 
 const observer = new MutationObserver(async (mutations) => {
@@ -19,7 +19,7 @@ const observer = new MutationObserver(async (mutations) => {
 					['viewer-card', 'mod-view-user-details'].includes(chatterCard.dataset.aTarget) &&
 					!chatterCard.querySelector(LabelsElement.CLASS_NAME)
 			) {
-				options ??= await optionsLoad()
+				options ??= await loadOptions()
 
 				new LabelsElement(chatterCard, options)
 			}

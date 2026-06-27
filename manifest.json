@@ -24,7 +24,7 @@
 			"resources": [
 				"pages/content/labels.html",
 				"scripts/label.js",
-				"scripts/options/load.js",
+				"scripts/load-options.js",
 				"scripts/content/labels-element.js",
 				"scripts/content/twitch-injector.js"
 			]
