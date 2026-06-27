@@ -15,9 +15,9 @@ export class LabelsElement {
 	constructor(chatterCard, options) {
 		this.#createElement()
 
-		options.labels.forEach(label => this.#createLabelElement(label))
-
 		chatterCard.querySelector('.viewer-card-header__background').after(this.#element)
+
+		options.labels.forEach(label => this.#createLabelElement(label))
 	}
 
 	#createElement() {
