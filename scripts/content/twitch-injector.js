@@ -6,6 +6,8 @@ const observer = new MutationObserver(async (mutations) => {
 
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {
+			if (addedNode.nodeType !== Node.ELEMENT_NODE) continue
+
 			const
 				chatterCard =
 					addedNode.matches('[data-a-target]')
