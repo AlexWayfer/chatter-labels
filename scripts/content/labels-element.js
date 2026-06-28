@@ -1,4 +1,6 @@
 import { logger } from '../logger.js'
+import { OptionsStorage } from '../options/storage.js'
+import { Assignment } from '../assignment.js'
 
 const
 	fetchResult = await fetch(chrome.runtime.getURL('pages/content/labels.html')),
@@ -49,12 +51,12 @@ export class LabelsElement {
 	}
 
 	#renderLabels() {
-		const assignedLabels = this.#options.assignments?.[this.#user.id]?.labels ?? []
-
 		this.#options.labels.forEach(label => {
 			this.#createLabelElement(
 				label,
-				assignedLabels.find(assignedLabel => assignedLabel.id == label.id)
+				this.#options.assignments.find(
+					assignment => assignment.userId == this.#user.id && assignment.label.id == label.id
+				)
 			)
 		})
 	}
@@ -140,25 +142,30 @@ export class LabelsElement {
 	}
 
 	async #save() {
-		this.#options.assignments ??= {}
+		const newAssignments = Array.from(
+			this.#formElement.querySelectorAll('input[name="label"]:checked'),
+			checkbox => {
+				const
+					label = this.#options.labels.find(label => label.id == checkbox.value),
+					existing = this.#options.assignments.find(
+						assignment => assignment.userId == this.#user.id
+							&& assignment.label.id == checkbox.value
+					)
 
-		const existingLabels = this.#options.assignments[this.#user.id]?.labels ?? []
+				return new Assignment({
+					userId: this.#user.id,
+					label,
+					assignedAt: existing?.assignedAt ?? new Date().toISOString()
+				})
+			}
+		)
 
-		this.#options.assignments[this.#user.id] = {
-			username: this.#user.name,
-			labels: Array.from(
-				this.#formElement.querySelectorAll('input[name="label"]:checked'),
-				checkbox => {
-					const existing = existingLabels.find(label => label.id == checkbox.value)
-					return {
-						id: checkbox.value,
-						assignedAt: existing?.assignedAt ?? new Date().toISOString()
-					}
-				}
-			)
-		}
+		this.#options.assignments = [
+			...this.#options.assignments.filter(assignment => assignment.userId != this.#user.id),
+			...newAssignments
+		]
 
-		OptionsStorage.save(this.#options)
+		await OptionsStorage.save(this.#options)
 	}
 
 	#observeRemoval() {

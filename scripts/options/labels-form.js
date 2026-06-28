@@ -1,4 +1,5 @@
 import { logger } from '../logger.js'
+import { OptionsStorage } from './storage.js'
 import { Label } from '../label.js'
 import { ToastSaved } from './toast-saved.js'
 
