@@ -1,6 +1,7 @@
 import { logger } from '../logger.js'
 import { OptionsStorage } from '../options/storage.js'
 import { Assignment } from '../assignment.js'
+import { TwitchAPI } from '../twitch/api.js'
 
 const
 	fetchResult = await fetch(chrome.runtime.getURL('pages/content/labels.html')),
@@ -83,21 +84,9 @@ export class LabelsElement {
 
 		logger.debug('username = ', username)
 
-		const requestBody = JSON.stringify({ query: `{ user(login: "${username}") { id } }` })
-		logger.debug('user info request body = ', requestBody)
+		const user = await TwitchAPI.fetchUser(username)
 
-		const
-			response = await fetch('https://gql.twitch.tv/gql', {
-				method: 'POST',
-				headers: { 'Client-Id': 'kimne78kx3ncx6brgo4mv6wki5h1ko' },
-				body: requestBody
-			}),
-			responseJSON = await response.json()
-
-		logger.debug('user info response = ', response)
-		logger.debug('user info response json = ', responseJSON)
-
-		this.#user = { name: username, id: responseJSON.data.user.id }
+		this.#user = { name: username, id: user.id }
 	}
 
 	#createElement() {

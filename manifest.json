@@ -27,6 +27,7 @@
 				"scripts/label.js",
 				"scripts/assignment.js",
 				"scripts/options/storage.js",
+				"scripts/twitch/api.js",
 				"scripts/content/labels-element.js",
 				"scripts/content/twitch-injector.js"
 			]
