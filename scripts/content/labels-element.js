@@ -52,7 +52,7 @@ export class LabelsElement {
 	#createLabelElement(label) {
 		const labelElement = labelElementTemplate.content.cloneNode(true)
 
-		// checkboxElement.name = name
+		labelElement.querySelector('input[type="checkbox"]').value = label.id
 
 		labelElement.querySelector('span.name').textContent = label.name
 

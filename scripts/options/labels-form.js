@@ -28,7 +28,7 @@ export class LabelsForm {
 		const fieldset = document.importNode(this.#fieldsetTemplate.content, true)
 
 		fieldset.querySelectorAll('input[name]').forEach(input => {
-			input.value = data[input.name] ?? ''
+			input.value = data[input.name] ?? (input.name == 'id' ? crypto.randomUUID(): '')
 		})
 
 		fieldset.querySelector('button.delete').addEventListener('click', event => {
@@ -40,7 +40,7 @@ export class LabelsForm {
 
 	#save() {
 		this.options.labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
-			logger.debug('fieldset = ', fieldset)
+			logger.debug('fieldset inputs = ', fieldset.querySelectorAll('input[name]'))
 
 			return new Label(
 				Object.fromEntries(
