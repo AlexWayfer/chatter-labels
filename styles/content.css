@@ -2,6 +2,8 @@
 	padding: 8px;
 
 	h5 {
+		margin-bottom: 6px;
+
 		font-family: var(--font-display);
 		line-height: var(--line-height-heading);
 		font-size: var(--font-size-3);
@@ -10,19 +12,34 @@
 	}
 
 	form {
-		fieldset {
-			margin-top: 8px;
+		.fieldsets {
+			margin-bottom: 6px;
 
-			label {
-				padding: 4px;
+			fieldset {
+				label {
+					display: block;
+					padding: 4px 2px;
 
-				font-size: var(--font-size-base);
-				line-height: var(--line-height-body);
+					font-size: var(--font-size-base);
+					line-height: var(--line-height-body);
 
-				input[type="checkbox"] {
-					margin-right: 4px;
+					input[type="checkbox"] {
+						margin-right: 4px;
+					}
 				}
 			}
+		}
+
+		button {
+			height: var(--button-size-small);
+			padding-inline: calc(var(--button-padding-x) + 2px);
+
+			font-weight: var(--font-weight-semibold);
+			font-size: var(--button-text-default);
+
+			border-radius: var(--button-border-radius-default);
+			background-color: var(--color-background-button-primary-default);
+			color: var(--color-text-button-primary);
 		}
 	}
 }
