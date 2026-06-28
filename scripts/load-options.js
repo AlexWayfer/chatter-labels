@@ -1,3 +1,4 @@
+import { logger } from './logger.js'
 import { Label } from './label.js'
 
 export function parseOptions(rawOptions) {
@@ -13,7 +14,7 @@ export async function loadOptions() {
 		rawOptions = (await chrome.storage.sync.get('options')).options || {},
 		options = parseOptions(rawOptions)
 
-	console.debug('[Chatter Labels] Options loaded.')
+	logger.debug('Options loaded.')
 
 	return options
 }

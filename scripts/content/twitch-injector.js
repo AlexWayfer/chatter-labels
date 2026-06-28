@@ -1,3 +1,4 @@
+import { logger } from '../logger.js'
 import { loadOptions, parseOptions } from '../load-options.js'
 import { LabelsElement } from './labels-element.js'
 
@@ -10,7 +11,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 	LabelsElement.updateAll(options)
 
-	console.debug('[Chatter Labels] Options synced.')
+	logger.debug('Options synced.')
 })
 
 const observer = new MutationObserver(async (mutations) => {

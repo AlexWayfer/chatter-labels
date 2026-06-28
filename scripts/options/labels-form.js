@@ -1,3 +1,4 @@
+import { logger } from '../logger.js'
 import { Label } from '../label.js'
 
 export class LabelsForm {
@@ -39,7 +40,7 @@ export class LabelsForm {
 
 	#save() {
 		this.options.labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
-			console.debug('fieldset = ', fieldset)
+			logger.debug('fieldset = ', fieldset)
 
 			return new Label(
 				Object.fromEntries(
@@ -50,10 +51,10 @@ export class LabelsForm {
 			)
 		})
 
-		console.debug('options = ', this.options)
+		logger.debug('options = ', this.options)
 
 		chrome.storage.sync.set({ options: this.options }).then(() => {
-			console.debug('Options saved.')
+			logger.debug('Options saved.')
 		})
 	}
 }
