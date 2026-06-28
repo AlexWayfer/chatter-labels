@@ -115,28 +115,17 @@ export class LabelsElement {
 		this.#chatterCard.querySelector('.viewer-card-header__background').after(this.#element)
 	}
 
-	#createLabelElement(label, assignedLabel) {
+	#createLabelElement(label, assignment) {
 		const
 			labelElement = labelElementTemplate.content.cloneNode(true),
 			checkboxElement = labelElement.querySelector('input[name="label"]')
 
 		checkboxElement.value = label.id
-		checkboxElement.checked = !!assignedLabel
+		checkboxElement.checked = !!assignment
 
 		labelElement.querySelector('.name').textContent = label.name
 
-		const assignedAtText =
-			assignedLabel?.assignedAt
-				? new Intl.DateTimeFormat(navigator.language, {
-						day: '2-digit',
-						month: '2-digit',
-						year: 'numeric',
-						hour: '2-digit',
-						minute: '2-digit'
-					}).format(new Date(assignedLabel.assignedAt))
-				: ''
-
-		labelElement.querySelector('.assigned-at').textContent = assignedAtText
+		labelElement.querySelector('.assigned-at').textContent = assignment?.formattedAssignedAt ?? ''
 
 		this.#formFieldsetsElement.append(labelElement)
 	}
