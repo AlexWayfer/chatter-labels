@@ -1,6 +1,6 @@
 import { logger } from '../logger.js'
-import { Label } from '../label.js'
-import { Assignment } from '../assignment.js'
+import { Label } from '../models/label.js'
+import { Assignment } from '../models/assignment.js'
 
 export class OptionsStorage {
 	static async load() {

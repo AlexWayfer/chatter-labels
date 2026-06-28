@@ -1,6 +1,6 @@
 import { logger } from '../logger.js'
 import { OptionsStorage } from './storage.js'
-import { Label } from '../label.js'
+import { Label } from '../models/label.js'
 import { ToastSaved } from './toast-saved.js'
 
 export class LabelsForm {

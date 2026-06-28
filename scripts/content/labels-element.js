@@ -1,6 +1,6 @@
 import { logger } from '../logger.js'
 import { OptionsStorage } from '../options/storage.js'
-import { Assignment } from '../assignment.js'
+import { Assignment } from '../models/assignment.js'
 import { TwitchAPI } from '../twitch/api.js'
 
 const

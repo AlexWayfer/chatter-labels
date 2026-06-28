@@ -24,10 +24,9 @@
 			"resources": [
 				"pages/content/**",
 				"scripts/logger.js",
-				"scripts/label.js",
-				"scripts/assignment.js",
-				"scripts/options/storage.js",
 				"scripts/twitch/**",
+				"scripts/models/**",
+				"scripts/options/storage.js",
 				"scripts/content/**"
 			]
 		}
