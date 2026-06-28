@@ -1,4 +1,3 @@
-import { logger } from '../logger.js'
 import { OptionsStorage } from '../options/storage.js'
 import { LabelsElement } from './labels-element.js'
 
@@ -7,11 +6,7 @@ let options = await OptionsStorage.load()
 chrome.storage.onChanged.addListener((changes, area) => {
 	if (area != 'sync' || !changes.options) return
 
-	options = OptionsStorage.parse(changes.options.newValue)
-
-	LabelsElement.updateAll(options)
-
-	logger.debug('Options synced.')
+	OptionsStorage.sync(changes.options.newValue)
 })
 
 const observer = new MutationObserver(mutations => {
