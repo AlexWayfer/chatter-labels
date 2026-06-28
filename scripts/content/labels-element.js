@@ -121,7 +121,20 @@ export class LabelsElement {
 		checkboxElement.value = label.id
 		checkboxElement.checked = !!assignedLabel
 
-		labelElement.querySelector('span.name').textContent = label.name
+		labelElement.querySelector('.name').textContent = label.name
+
+		const assignedAtText =
+			assignedLabel?.assignedAt
+				? new Intl.DateTimeFormat(navigator.language, {
+						day: '2-digit',
+						month: '2-digit',
+						year: 'numeric',
+						hour: '2-digit',
+						minute: '2-digit'
+					}).format(new Date(assignedLabel.assignedAt))
+				: ''
+
+		labelElement.querySelector('.assigned-at').textContent = assignedAtText
 
 		this.#formFieldsetsElement.append(labelElement)
 	}

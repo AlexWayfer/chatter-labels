@@ -26,6 +26,11 @@
 					input[type="checkbox"] {
 						margin-right: 4px;
 					}
+
+					.assigned-at {
+						color: var(--color-text-alt-2);
+						font-size: 0.8em;
+					}
 				}
 			}
 		}
