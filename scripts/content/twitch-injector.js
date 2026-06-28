@@ -1,13 +1,13 @@
 import { logger } from '../logger.js'
-import { loadOptions, parseOptions } from '../load-options.js'
+import { OptionsStorage } from '../options/storage.js'
 import { LabelsElement } from './labels-element.js'
 
-let options = await loadOptions()
+let options = await OptionsStorage.load()
 
 chrome.storage.onChanged.addListener((changes, area) => {
 	if (area != 'sync' || !changes.options) return
 
-	options = parseOptions(changes.options.newValue)
+	options = OptionsStorage.parse(changes.options.newValue)
 
 	LabelsElement.updateAll(options)
 

@@ -25,7 +25,7 @@
 				"pages/content/labels.html",
 				"scripts/logger.js",
 				"scripts/label.js",
-				"scripts/load-options.js",
+				"scripts/options/storage.js",
 				"scripts/content/labels-element.js",
 				"scripts/content/twitch-injector.js"
 			]
