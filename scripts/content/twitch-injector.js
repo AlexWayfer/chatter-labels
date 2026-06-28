@@ -14,7 +14,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 	logger.debug('Options synced.')
 })
 
-const observer = new MutationObserver(async (mutations) => {
+const observer = new MutationObserver(mutations => {
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {
 			if (addedNode.nodeType !== Node.ELEMENT_NODE) continue
