@@ -55,9 +55,7 @@ export class LabelsForm {
 
 		logger.debug('options = ', this.options)
 
-		chrome.storage.sync.set({ options: this.options }).then(() => {
-			logger.debug('Options saved.')
-		})
+		OptionsStorage.save(this.options)
 
 		this.#toastSaved.show()
 	}

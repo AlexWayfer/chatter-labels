@@ -21,6 +21,12 @@ export class OptionsStorage {
 		logger.debug('Options synced.')
 	}
 
+	static save(options) {
+		chrome.storage.sync.set({ options }).then(() => {
+			logger.debug('Options saved.')
+		})
+	}
+
 	static #parse(raw) {
 		let options = raw || {}
 

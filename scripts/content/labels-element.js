@@ -158,7 +158,7 @@ export class LabelsElement {
 			)
 		}
 
-		await chrome.storage.sync.set({ options: this.#options })
+		OptionsStorage.save(this.#options)
 	}
 
 	#observeRemoval() {
