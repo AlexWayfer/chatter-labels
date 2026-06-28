@@ -25,9 +25,9 @@ const observer = new MutationObserver(mutations => {
 						? addedNode
 						: addedNode.querySelector('[data-a-target]')
 
-			if (!chatterCard) return
-			if (!['viewer-card', 'mod-view-user-details'].includes(chatterCard.dataset.aTarget)) return
-			if (chatterCard.querySelector(LabelsElement.CLASS_NAME)) return
+			if (!chatterCard) continue
+			if (!['viewer-card', 'mod-view-user-details'].includes(chatterCard.dataset.aTarget)) continue
+			if (chatterCard.querySelector(LabelsElement.CLASS_NAME)) continue
 
 			new LabelsElement(chatterCard, options)
 		}
