@@ -1,11 +1,19 @@
 import { Label } from './label.js'
 
-export async function loadOptions() {
-	const options = (await chrome.storage.sync.get('options')).options || {}
+export function parseOptions(rawOptions) {
+	let options = rawOptions || {}
 
 	options.labels = (options.labels ?? []).map(data => new Label(data))
 
-	console.debug('Options loaded.')
+	return options
+}
+
+export async function loadOptions() {
+	let
+		rawOptions = (await chrome.storage.sync.get('options')).options || {},
+		options = parseOptions(rawOptions)
+
+	console.debug('[Chatter Labels] Options loaded.')
 
 	return options
 }
