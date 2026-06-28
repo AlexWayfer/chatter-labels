@@ -1,17 +1,19 @@
 import { logger } from '../logger.js'
 import { Label } from '../label.js'
+import { ToastSaved } from './toast-saved.js'
 
 export class LabelsForm {
 	#fieldsetsElement
 	#fieldsetTemplate
+	#toastSaved
 
 	constructor(element, options) {
 		this.element = element
 		this.options = options
 
 		this.#fieldsetsElement = this.element.querySelector('.fieldsets')
-
 		this.#fieldsetTemplate = this.element.querySelector('template#label')
+		this.#toastSaved = new ToastSaved(this.element.querySelector('.toast-saved'))
 
 		this.element.querySelector('button.add').addEventListener('click', _event => { this.add() })
 
@@ -56,5 +58,7 @@ export class LabelsForm {
 		chrome.storage.sync.set({ options: this.options }).then(() => {
 			logger.debug('Options saved.')
 		})
+
+		this.#toastSaved.show()
 	}
 }

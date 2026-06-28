@@ -1,6 +1,10 @@
 body {
 	font-size: 18px;
 
+	.hidden {
+		display: none;
+	}
+
 	button,
 	input {
 		font-size: inherit;
@@ -60,5 +64,10 @@ body {
 				}
 			}
 		}
+	}
+
+	.toast-saved {
+		margin-left: 0.4em;
+		color: green;
 	}
 }
