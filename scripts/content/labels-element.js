@@ -6,12 +6,13 @@ const
 	elementTemplate = templatesDocument.querySelector('template#labels'),
 	labelElementTemplate = templatesDocument.querySelector('template#label')
 
+const instances = new Set()
+
 export class LabelsElement {
 	static CLASS_NAME = elementTemplate.content.firstElementChild.className
-	static #instances = new Set()
 
 	static updateAll(options) {
-		for (const instance of this.#instances) {
+		for (const instance of instances) {
 			instance.update(options)
 		}
 	}
@@ -29,7 +30,7 @@ export class LabelsElement {
 
 		this.#observeRemoval()
 
-		this.constructor.#instances.add(this)
+		instances.add(this)
 	}
 
 	update(options) {
@@ -63,7 +64,7 @@ export class LabelsElement {
 		const observer = new MutationObserver(() => {
 			if (this.#chatterCard.isConnected) return
 
-			this.constructor.#instances.delete(this)
+			instances.delete(this)
 			observer.disconnect()
 		})
 
