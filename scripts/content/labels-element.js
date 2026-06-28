@@ -152,8 +152,11 @@ export class LabelsElement {
 
 			instances.delete(this)
 			observer.disconnect()
+			logger.debug('Labels Element instance deleted.')
 		})
 
-		observer.observe(this.#chatterCard.parentNode, { childList: true })
+		//// There can be multiple parents, and Twitch can remove one of them
+		// logger.debug('Chatter Card parent node = ', this.#chatterCard.parentNode)
+		observer.observe(document.body, { childList: true, subtree: true })
 	}
 }
