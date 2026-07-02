@@ -10,8 +10,6 @@ const
 	labelElementTemplate = templatesDocument.querySelector('template#label-fieldset')
 
 export class LabelsElement {
-	static CLASS_NAME = elementTemplate.content.firstElementChild.className
-
 	#options
 	#user
 	#formElement

@@ -12,7 +12,7 @@ export class ChatterCard {
 
 		if (!element) return
 		if (!['viewer-card', 'mod-view-user-details'].includes(element.dataset.aTarget)) return
-		if (element.querySelector(LabelsElement.CLASS_NAME)) return
+		if (element.dataset.labelsInjected) return
 
 		new this(element, options)
 	}
@@ -38,6 +38,8 @@ export class ChatterCard {
 			this.#element
 				.querySelector('.viewer-card-header__background')
 				.after(this.labelsElement.element)
+
+			this.#element.dataset.labelsInjected = true
 		})
 	}
 
