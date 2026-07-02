@@ -15,26 +15,26 @@ chrome.storage.onChanged.addListener((changes, area) => {
 	logger.debug('Options synced for content script.')
 })
 
+function findElementForChatterCard(node) {
+	if (node.nodeType !== Node.ELEMENT_NODE) return null
+
+	const element = node.matches('[data-a-target]') ? node : node.querySelector('[data-a-target]')
+
+	if (!element) return null
+	if (!['viewer-card', 'mod-view-user-details'].includes(element.dataset.aTarget)) return null
+	if (element.querySelector(LabelsElement.CLASS_NAME)) return null
+
+	return element
+}
+
 const observer = new MutationObserver(mutations => {
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {
-			if (addedNode.nodeType !== Node.ELEMENT_NODE) continue
+			const chatterCardElement = findElementForChatterCard(addedNode)
 
-			const
-				chatterCardElement =
-					addedNode.matches('[data-a-target]')
-						? addedNode
-						: addedNode.querySelector('[data-a-target]')
-
-			if (
-				chatterCardElement
-					&& ['viewer-card', 'mod-view-user-details'].includes(chatterCardElement.dataset.aTarget)
-					&& !chatterCardElement.querySelector(LabelsElement.CLASS_NAME)
-			) {
-				new ChatterCard(chatterCardElement, options)
-			}
+			if (chatterCardElement) new ChatterCard(chatterCardElement, options)
 		}
 	}
-});
+})
 
 observer.observe(document.body, { childList: true, subtree: true })
