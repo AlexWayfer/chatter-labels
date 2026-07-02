@@ -5,6 +5,18 @@ import { LabelsElement } from './labels-element.js'
 const instances = new Set()
 
 export class ChatterCard {
+	static createIfNeeded(node, options) {
+		if (node.nodeType !== Node.ELEMENT_NODE) return
+
+		const element = node.matches('[data-a-target]') ? node : node.querySelector('[data-a-target]')
+
+		if (!element) return
+		if (!['viewer-card', 'mod-view-user-details'].includes(element.dataset.aTarget)) return
+		if (element.querySelector(LabelsElement.CLASS_NAME)) return
+
+		new this(element, options)
+	}
+
 	static updateAll(options) {
 		for (const instance of instances) {
 			instance.labelsElement.options = options
