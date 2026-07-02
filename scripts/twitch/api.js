@@ -8,7 +8,7 @@ export class TwitchAPI {
 			response = await fetch('https://gql.twitch.tv/gql', {
 				method: 'POST',
 				headers: { 'Client-Id': this.#CLIENT_ID },
-				body: JSON.stringify({ query: `{ user(login: "${username}") { id } }` })
+				body: JSON.stringify({ query: `{ user(login: "${username}") { id displayName } }` })
 			}),
 			json = await response.json()
 

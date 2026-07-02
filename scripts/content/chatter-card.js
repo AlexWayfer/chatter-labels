@@ -30,30 +30,14 @@ export class ChatterCard {
 	}
 
 	async #fetchUserInfo() {
-		const findUsername = () => {
-			return this.#element.querySelector('.viewer-card-header__display-name a')?.textContent
-		}
+		const login =
+			this.#element.querySelector('.viewer-card-header__display-name a').href.split('/').pop()
 
-		const username = await new Promise(resolve => {
-			const existingUsername = findUsername()
-			if (existingUsername) return resolve(existingUsername)
+		logger.debug('login = ', login)
 
-			const observer = new MutationObserver(() => {
-				const foundUsername = findUsername()
-				if (foundUsername) {
-					observer.disconnect()
-					resolve(foundUsername)
-				}
-			})
+		const user = await TwitchAPI.fetchUser(login)
 
-			observer.observe(this.#element, { childList: true, subtree: true })
-		})
-
-		logger.debug('username = ', username)
-
-		const user = await TwitchAPI.fetchUser(username)
-
-		this.#user = { name: username, id: user.id }
+		this.#user = { name: user.displayName, id: user.id }
 	}
 
 	#observeRemoval() {
