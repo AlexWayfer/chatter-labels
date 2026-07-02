@@ -1,7 +1,5 @@
-import { logger } from '../logger.js'
 import { OptionsStorage } from '../options/storage.js'
 import { Assignment } from '../models/assignment.js'
-import { TwitchAPI } from '../twitch/api.js'
 
 const
 	fetchResult = await fetch(chrome.runtime.getURL('pages/content/labels.html')),
@@ -11,47 +9,31 @@ const
 	elementTemplate = templatesDocument.querySelector('template#chatter-labels'),
 	labelElementTemplate = templatesDocument.querySelector('template#label-fieldset')
 
-const instances = new Set()
-
 export class LabelsElement {
 	static CLASS_NAME = elementTemplate.content.firstElementChild.className
 
-	static updateAll(options) {
-		for (const instance of instances) {
-			instance.options = options
-		}
-	}
-
-	#chatterCard
 	#options
 	#user
-	#element
 	#formElement
 	#formFieldsetsElement
 
-	constructor(chatterCard, options) {
-		this.#chatterCard = chatterCard
+	constructor(user, options) {
+		this.#user = user
 		this.#options = options
 
-		this.#fetchUserInfo().then(() => {
-			this.#createElement()
-
-			this.#renderLabels()
-
-			this.#observeRemoval()
-
-			instances.add(this)
-		})
+		this.#createElement()
+		this.#renderLabels()
 	}
 
 	/** @param {object} newValue */
 	set options(newValue) {
 		this.#options = newValue
-		this.#formFieldsetsElement.replaceChildren()
 		this.#renderLabels()
 	}
 
 	#renderLabels() {
+		this.#formFieldsetsElement.replaceChildren()
+
 		this.#options.labels.forEach(label => {
 			this.#createLabelElement(
 				label,
@@ -62,37 +44,10 @@ export class LabelsElement {
 		})
 	}
 
-	async #fetchUserInfo() {
-		const findUsername = () => {
-			return this.#chatterCard.querySelector('.viewer-card-header__display-name a')?.textContent
-		}
-
-		const username = await new Promise(resolve => {
-			const existingUsername = findUsername()
-			if (existingUsername) return resolve(existingUsername)
-
-			const observer = new MutationObserver(() => {
-				const foundUsername = findUsername()
-				if (foundUsername) {
-					observer.disconnect()
-					resolve(foundUsername)
-				}
-			})
-
-			observer.observe(this.#chatterCard, { childList: true, subtree: true })
-		})
-
-		logger.debug('username = ', username)
-
-		const user = await TwitchAPI.fetchUser(username)
-
-		this.#user = { name: username, id: user.id }
-	}
-
 	#createElement() {
-		this.#element = elementTemplate.content.cloneNode(true).firstElementChild
+		this.element = elementTemplate.content.cloneNode(true).firstElementChild
 
-		this.#formElement = this.#element.querySelector('form')
+		this.#formElement = this.element.querySelector('form')
 		this.#formElement.addEventListener('submit', event => {
 			event.preventDefault()
 
@@ -100,8 +55,6 @@ export class LabelsElement {
 		})
 
 		this.#formFieldsetsElement = this.#formElement.querySelector('.fieldsets')
-
-		this.#chatterCard.querySelector('.viewer-card-header__background').after(this.#element)
 	}
 
 	#createLabelElement(label, assignment) {
@@ -144,19 +97,5 @@ export class LabelsElement {
 		]
 
 		await OptionsStorage.save(this.#options)
-	}
-
-	#observeRemoval() {
-		const observer = new MutationObserver(() => {
-			if (this.#chatterCard.isConnected) return
-
-			instances.delete(this)
-			observer.disconnect()
-			logger.debug('Labels Element instance deleted.')
-		})
-
-		//// There can be multiple parents, and Twitch can remove one of them
-		// logger.debug('Chatter Card parent node = ', this.#chatterCard.parentNode)
-		observer.observe(document.body, { childList: true, subtree: true })
 	}
 }
