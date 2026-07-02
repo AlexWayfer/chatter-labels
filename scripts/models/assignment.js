@@ -1,6 +1,7 @@
 export class Assignment {
-	constructor({ userId, label, assignedAt }) {
+	constructor({ userId, username, label, assignedAt }) {
 		this.userId = userId
+		this.username = username
 		this.label = label
 		this.assignedAt = assignedAt
 	}
@@ -18,6 +19,7 @@ export class Assignment {
 	toJSON() {
 		return {
 			userId: this.userId,
+			username: this.username,
 			labelId: this.label.id,
 			assignedAt: this.assignedAt
 		}

@@ -85,6 +85,7 @@ export class LabelsElement {
 
 				return new Assignment({
 					userId: this.#user.id,
+					username: this.#user.name,
 					label,
 					assignedAt: existing?.assignedAt ?? new Date().toISOString()
 				})
