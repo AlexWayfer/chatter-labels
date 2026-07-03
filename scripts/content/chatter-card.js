@@ -25,12 +25,6 @@ export class ChatterCard {
 		return new this(element, labelsElement)
 	}
 
-	static updateAll() {
-		for (const instance of instances) {
-			instance.labelsElement.update()
-		}
-	}
-
 	static async #fetchUserInfo(element) {
 		const login = element.querySelector('.viewer-card-header__display-name a').href.split('/').pop()
 
@@ -62,6 +56,7 @@ export class ChatterCard {
 		const observer = new MutationObserver(() => {
 			if (this.#element.isConnected) return
 
+			this.labelsElement.unsubscribe()
 			instances.delete(this)
 			observer.disconnect()
 			logger.debug('Labels Element instance deleted.')

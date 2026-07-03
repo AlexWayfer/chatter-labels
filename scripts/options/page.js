@@ -10,3 +10,5 @@ const
 	assignments = await Storage.get('assignments')
 
 new LabelsForm(document.querySelector('form[name="labels"]'), labels, assignments)
+
+Storage.listen()

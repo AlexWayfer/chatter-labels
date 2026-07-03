@@ -1,5 +1,6 @@
-import { Assignment } from '../models/assignment.js'
+import { logger } from '../logger.js'
 import { Storage } from '../storage.js'
+import { Assignment } from '../models/assignment.js'
 
 const
 	fetchResult = await fetch(chrome.runtime.getURL('pages/content/labels.html')),
@@ -12,33 +13,53 @@ const
 export class LabelsElement {
 	#labels
 	#assignments
+	#subscriptions
 	#user
 	#formElement
 	#formFieldsetsElement
 
 	static async create(user) {
-		const instance = new this(user)
+		const
+			labels = await Storage.get('labels'),
+			assignments = await Storage.get('assignments')
 
-		instance.update()
+		const instance = new this(user, labels, assignments)
 
 		return instance
 	}
 
-	constructor(user) {
+	constructor(user, labels, assignments) {
 		this.#user = user
+		this.#labels = labels
+		this.#assignments = assignments
 
 		this.#createElement()
+		this.#renderLabels()
+
+		this.#subscribe()
 	}
 
-	async update() {
-		this.#labels = await Storage.get('labels')
-		this.#assignments = await Storage.get('assignments')
+	#subscribe() {
+		this.#subscriptions = [
+			Storage.subscribe('labels', labels => {
+				this.#labels = labels
+				this.#renderLabels()
+			}),
+			Storage.subscribe('assignments', assignments => {
+				this.#assignments = assignments
+				this.#renderLabels()
+			})
+		]
+	}
 
-		this.#renderLabels()
+	unsubscribe() {
+		this.#subscriptions.forEach(subscription => subscription())
 	}
 
 	#renderLabels() {
 		this.#formFieldsetsElement.replaceChildren()
+
+		logger.debug('renderLabels this.#assignments = ', this.#assignments)
 
 		this.#labels.forEach(label => {
 			this.#createLabelElement(
@@ -103,6 +124,8 @@ export class LabelsElement {
 			...newAssignments
 		]
 
-		await Storage.set('assignments', this.#assignments)
+		logger.debug('save this.#assignments = ', this.#assignments)
+
+		Storage.set('assignments', this.#assignments)
 	}
 }

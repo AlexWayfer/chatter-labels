@@ -7,6 +7,10 @@
 		"512": "images/icons/512.png"
 	},
 	"permissions": ["storage"],
+	"background": {
+		"service_worker": "scripts/service-worker.js",
+		"type": "module"
+	},
 	"content_scripts": [
 		{
 			"matches": ["https://*.twitch.tv/*"],
