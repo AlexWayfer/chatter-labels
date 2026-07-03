@@ -96,6 +96,12 @@ export class LabelsForm {
 
 		Storage.set('labels', this.#labels)
 
+		this.#assignments = this.#assignments.filter(
+			assignment => this.#labels.some(label => label.id == assignment.label.id)
+		)
+
+		Storage.set('assignments', this.#assignments)
+
 		this.#toastSaved.show()
 	}
 }
