@@ -27,7 +27,9 @@ export class LabelsForm {
 			this.#save()
 		})
 
-		this.#labels.forEach(label => { this.add(label) })
+		this.#renderLabels()
+
+		this.#subscribe()
 	}
 
 	add(data = {}) {
@@ -57,6 +59,24 @@ export class LabelsForm {
 		}
 
 		this.#fieldsetsElement.append(fieldsetFragment)
+	}
+
+	#renderLabels() {
+		this.#fieldsetsElement.replaceChildren()
+
+		this.#labels.forEach(label => { this.add(label) })
+	}
+
+	#subscribe() {
+		Storage.subscribe('labels', labels => {
+			this.#labels = labels
+			this.#renderLabels()
+		})
+
+		Storage.subscribe('assignments', assignments => {
+			this.#assignments = assignments
+			this.#renderLabels()
+		})
 	}
 
 	#save() {
