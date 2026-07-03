@@ -19,10 +19,20 @@ export class LabelsForm {
 		this.#fieldsetTemplate = this.element.querySelector('template#label')
 		this.#toastSaved = new ToastSaved(this.element.querySelector('.toast-saved'))
 
-		this.element.querySelector('button.add').addEventListener('click', _event => { this.add() })
+		this.element.querySelector('button.add').addEventListener('click', _event => {
+			this.add()
+		})
+
+		this.element.addEventListener('input', _event => {
+			this.#validateUniqueNames()
+		})
 
 		this.element.addEventListener('submit', event => {
 			event.preventDefault()
+
+			this.#validateUniqueNames()
+
+			if (!this.element.checkValidity()) return
 
 			this.#save()
 		})
@@ -103,5 +113,23 @@ export class LabelsForm {
 		Storage.set('assignments', this.#assignments)
 
 		this.#toastSaved.show()
+	}
+
+	#validateUniqueNames() {
+		const seen = new Set()
+
+		Array.from(this.element.querySelectorAll('input[name="name"]')).forEach(input => {
+			const value = input.value.trim()
+
+			input.setCustomValidity('')
+
+			if (!value) return
+
+			if (seen.has(value)) {
+				input.setCustomValidity('Name must be unique')
+			} else {
+				seen.add(value)
+			}
+		})
 	}
 }
