@@ -5,7 +5,7 @@ import { LabelsElement } from './labels-element.js'
 const instances = new Set()
 
 export class ChatterCard {
-	static createIfNeeded(node, options) {
+	static createIfNeeded(node) {
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 
 		const element = node.matches('[data-a-target]') ? node : node.querySelector('[data-a-target]')
@@ -14,44 +14,48 @@ export class ChatterCard {
 		if (!['viewer-card', 'mod-view-user-details'].includes(element.dataset.aTarget)) return
 		if (element.dataset.labelsInjected) return
 
-		new this(element, options)
+		this.create(element)
 	}
 
-	static updateAll(options) {
+	static async create(element) {
+		const
+			userInfo = await this.#fetchUserInfo(element),
+			labelsElement = await LabelsElement.create(userInfo)
+
+		return new this(element, labelsElement)
+	}
+
+	static updateAll() {
 		for (const instance of instances) {
-			instance.labelsElement.options = options
+			instance.labelsElement.update()
 		}
 	}
 
-	#element
-	#user
-
-	constructor(element, options) {
-		this.#element = element
-
-		instances.add(this)
-		this.#observeRemoval()
-
-		this.#fetchUserInfo().then(() => {
-			this.labelsElement = new LabelsElement(this.#user, options)
-
-			this.#element
-				.querySelector('.viewer-card-header__background')
-				.after(this.labelsElement.element)
-
-			this.#element.dataset.labelsInjected = true
-		})
-	}
-
-	async #fetchUserInfo() {
-		const login =
-			this.#element.querySelector('.viewer-card-header__display-name a').href.split('/').pop()
+	static async #fetchUserInfo(element) {
+		const login = element.querySelector('.viewer-card-header__display-name a').href.split('/').pop()
 
 		logger.debug('login = ', login)
 
-		const user = await TwitchAPI.fetchUser(login)
+		const userResponse = await TwitchAPI.fetchUser(login)
 
-		this.#user = { name: user.displayName, id: user.id }
+		return { name: userResponse.displayName, id: userResponse.id }
+	}
+
+	#element
+
+	constructor(element, labelsElement) {
+		this.#element = element
+		this.labelsElement = labelsElement
+
+		instances.add(this)
+
+		this.#observeRemoval()
+
+		this.#element
+			.querySelector('.viewer-card-header__background')
+			.after(this.labelsElement.element)
+
+		this.#element.dataset.labelsInjected = true
 	}
 
 	#observeRemoval() {

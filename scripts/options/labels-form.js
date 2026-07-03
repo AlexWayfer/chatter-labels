@@ -1,5 +1,5 @@
 import { logger } from '../logger.js'
-import { OptionsStorage } from './storage.js'
+import { Storage } from '../storage.js'
 import { Label } from '../models/label.js'
 import { ToastSaved } from './toast-saved.js'
 
@@ -8,9 +8,9 @@ export class LabelsForm {
 	#fieldsetTemplate
 	#toastSaved
 
-	constructor(element, options) {
+	constructor(element, labels) {
 		this.element = element
-		this.options = options
+		this.labels = labels
 
 		this.#fieldsetsElement = this.element.querySelector('.fieldsets')
 		this.#fieldsetTemplate = this.element.querySelector('template#label')
@@ -24,7 +24,7 @@ export class LabelsForm {
 			this.#save()
 		})
 
-		this.options.labels.forEach(label => { this.add(label) })
+		this.labels.forEach(label => { this.add(label) })
 	}
 
 	add(data = {}) {
@@ -42,7 +42,7 @@ export class LabelsForm {
 	}
 
 	#save() {
-		this.options.labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
+		this.labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
 			logger.debug('fieldset inputs = ', fieldset.querySelectorAll('input[name]'))
 
 			return new Label(
@@ -54,9 +54,9 @@ export class LabelsForm {
 			)
 		})
 
-		logger.debug('options = ', this.options)
+		logger.debug('labels = ', this.labels)
 
-		OptionsStorage.save(this.options)
+		Storage.setLabels(this.labels)
 
 		this.#toastSaved.show()
 	}

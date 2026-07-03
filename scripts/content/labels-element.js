@@ -1,5 +1,5 @@
-import { OptionsStorage } from '../options/storage.js'
 import { Assignment } from '../models/assignment.js'
+import { Storage } from '../storage.js'
 
 const
 	fetchResult = await fetch(chrome.runtime.getURL('pages/content/labels.html')),
@@ -10,32 +10,40 @@ const
 	labelElementTemplate = templatesDocument.querySelector('template#label-fieldset')
 
 export class LabelsElement {
-	#options
+	#labels
+	#assignments
 	#user
 	#formElement
 	#formFieldsetsElement
 
-	constructor(user, options) {
-		this.#user = user
-		this.#options = options
+	static async create(user) {
+		const instance = new this(user)
 
-		this.#createElement()
-		this.#renderLabels()
+		instance.update()
+
+		return instance
 	}
 
-	/** @param {object} newValue */
-	set options(newValue) {
-		this.#options = newValue
+	constructor(user) {
+		this.#user = user
+
+		this.#createElement()
+	}
+
+	async update() {
+		this.#labels = await Storage.getLabels()
+		this.#assignments = await Storage.getAssignments()
+
 		this.#renderLabels()
 	}
 
 	#renderLabels() {
 		this.#formFieldsetsElement.replaceChildren()
 
-		this.#options.labels.forEach(label => {
+		this.#labels.forEach(label => {
 			this.#createLabelElement(
 				label,
-				this.#options.assignments.find(
+				this.#assignments.find(
 					assignment => assignment.userId == this.#user.id && assignment.label.id == label.id
 				)
 			)
@@ -75,8 +83,8 @@ export class LabelsElement {
 			this.#formElement.querySelectorAll('input[name="label"]:checked'),
 			checkbox => {
 				const
-					label = this.#options.labels.find(label => label.id == checkbox.value),
-					existing = this.#options.assignments.find(
+					label = this.#labels.find(label => label.id == checkbox.value),
+					existing = this.#assignments.find(
 						assignment => assignment.userId == this.#user.id
 							&& assignment.label.id == checkbox.value
 					)
@@ -90,11 +98,11 @@ export class LabelsElement {
 			}
 		)
 
-		this.#options.assignments = [
-			...this.#options.assignments.filter(assignment => assignment.userId != this.#user.id),
+		this.#assignments = [
+			...this.#assignments.filter(assignment => assignment.userId != this.#user.id),
 			...newAssignments
 		]
 
-		await OptionsStorage.save(this.#options)
+		await Storage.setAssignments(this.#assignments)
 	}
 }

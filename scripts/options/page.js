@@ -1,8 +1,8 @@
-import { OptionsStorage } from '../options/storage.js'
+import { Storage } from '../storage.js'
 import { LabelsForm } from './labels-form.js'
 
 document.addEventListener('DOMContentLoaded', async _event => {
-	const options = await OptionsStorage.load()
+	const labels = await Storage.getLabels()
 
-	new LabelsForm(document.querySelector('form[name="labels"]'), options)
+	new LabelsForm(document.querySelector('form[name="labels"]'), labels)
 })

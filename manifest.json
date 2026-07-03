@@ -24,9 +24,9 @@
 			"resources": [
 				"pages/content/**",
 				"scripts/logger.js",
-				"scripts/twitch/**",
 				"scripts/models/**",
-				"scripts/options/storage.js",
+				"scripts/storage.js",
+				"scripts/twitch/**",
 				"scripts/content/**"
 			]
 		}
