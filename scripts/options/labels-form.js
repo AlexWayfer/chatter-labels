@@ -34,7 +34,7 @@ export class LabelsForm {
 		const
 			fieldsetFragment = document.importNode(this.#fieldsetTemplate.content, true),
 			fieldsetElement = fieldsetFragment.querySelector('fieldset'),
-			assignmentsElement = fieldsetFragment.querySelector('.assignments'),
+			assignmentsListElement = fieldsetFragment.querySelector('.assignments ul'),
 			assignmentTemplate = fieldsetFragment.querySelector('template#assignment')
 
 		fieldsetElement.querySelectorAll('input[name]').forEach(input => {
@@ -53,7 +53,7 @@ export class LabelsForm {
 			assignmentFragment.querySelector('.username').textContent = assignment.username
 			assignmentFragment.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
 
-			assignmentsElement.append(assignmentFragment)
+			assignmentsListElement.append(assignmentFragment)
 		}
 
 		this.#fieldsetsElement.append(fieldsetFragment)
