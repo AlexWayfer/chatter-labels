@@ -56,7 +56,7 @@ export class LabelsForm {
 
 		logger.debug('labels = ', this.labels)
 
-		Storage.setLabels(this.labels)
+		Storage.set('labels', this.labels)
 
 		this.#toastSaved.show()
 	}

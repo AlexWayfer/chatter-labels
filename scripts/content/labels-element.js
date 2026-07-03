@@ -31,8 +31,8 @@ export class LabelsElement {
 	}
 
 	async update() {
-		this.#labels = await Storage.getLabels()
-		this.#assignments = await Storage.getAssignments()
+		this.#labels = await Storage.get('labels')
+		this.#assignments = await Storage.get('assignments')
 
 		this.#renderLabels()
 	}
@@ -103,6 +103,6 @@ export class LabelsElement {
 			...newAssignments
 		]
 
-		await Storage.setAssignments(this.#assignments)
+		await Storage.set('assignments', this.#assignments)
 	}
 }

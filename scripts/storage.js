@@ -5,8 +5,7 @@ import { ChatterCard } from './content/chatter-card.js'
 
 export class Storage {
 	// static #options
-	static #labels
-	static #assignments
+	static #data
 
 	// static async getOptions() {
 	// 	if (this.#options) return this.#options
@@ -18,48 +17,35 @@ export class Storage {
 	// 	return this.#options
 	// }
 
-	static async getLabels() {
-		if (this.#labels) return this.#labels
+	static async get(key) {
+		if (this.#data) return this.#data[key]
 
-		const rawLabels = (await chrome.storage.sync.get('labels')).labels ?? []
+		await this.#load()
 
-		this.#labels = this.#parseLabels(rawLabels)
-
-		logger.debug('Labels loaded.')
-
-		return this.#labels
+		return this.#data[key]
 	}
 
-	static async setLabels(newLabels) {
-		this.#labels = newLabels
+	static async #load() {
+		const
+			rawData = await chrome.storage.sync.get(['labels', 'assignments']),
+			labels = this.#parseLabels(rawData.labels ?? []),
+			assignments = this.#parseAssignments(rawData.assignments ?? [], labels)
+
+		this.#data = { labels, assignments }
+
+		logger.debug('Storage data loaded.')
+	}
+
+	static async set(key, value) {
+		this.#data[key] = value
 
 		await chrome.storage.sync.set({
-			labels: this.#labels.map(label => label.toJSON())
+			[key]: Array.isArray(value)
+				? value.map(element => element.toJSON())
+				: value
 		})
 
-		logger.debug('Labels saved.')
-	}
-
-	static async getAssignments() {
-		if (this.#assignments) return this.#assignments
-
-		const rawAssignments = (await chrome.storage.sync.get('assignments')).assignments ?? []
-
-		this.#assignments = this.#parseAssignments(rawAssignments)
-
-		logger.debug('Assignments loaded.')
-
-		return this.#assignments
-	}
-
-	static async setAssignments(newAssignments) {
-		this.#assignments = newAssignments
-
-		await chrome.storage.sync.set({
-			assignments: this.#assignments.map(assignment => assignment.toJSON())
-		})
-
-		logger.debug('Assignments saved.')
+		logger.debug(`Storage data[${key}] saved.`)
 	}
 
 	static listenChanges() {
@@ -67,11 +53,13 @@ export class Storage {
 			if (area != 'sync') return
 
 			if (changes.labels) {
-				this.#labels = this.#parseLabels(changes.labels.newValue)
+				this.#data.labels = this.#parseLabels(changes.labels.newValue)
 			}
 
 			if (changes.assignments) {
-				this.#assignments = await this.#parseAssignments(changes.assignments.newValue)
+				this.#data.assignments = await this.#parseAssignments(
+					changes.assignments.newValue, this.#data.labels
+				)
 			}
 
 			if (changes.labels || changes.assignments) {
@@ -86,9 +74,7 @@ export class Storage {
 		return rawLabels.map(data => new Label(data))
 	}
 
-	static async #parseAssignments(rawAssignments) {
-		const labels = await this.getLabels()
-
+	static #parseAssignments(rawAssignments, labels) {
 		return rawAssignments.map(({ labelId, ...data }) => {
 			return new Assignment({
 				...data,
