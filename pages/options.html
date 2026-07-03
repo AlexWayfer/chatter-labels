@@ -17,37 +17,48 @@
 		<form name="labels">
 			<template id="label">
 				<fieldset>
-					<div class="left-part">
-						<input type="hidden" name="id" />
+					<div class="label">
+						<div class="fields">
+							<input type="hidden" name="id" />
 
-						<label>
-							Letter:
-							<input
-								type="text"
-								name="letter"
-								minlength="1"
-								maxlength="1"
-								required
-							/>
-						</label>
+							<label>
+								Letter:
+								<input
+									type="text"
+									name="letter"
+									minlength="1"
+									maxlength="1"
+									required
+								/>
+							</label>
 
-						<label>
-							Name:
-							<input
-								type="text"
-								name="name"
-								required
-								autocomplete="off"
-							/>
-						</label>
+							<label>
+								Name:
+								<input
+									type="text"
+									name="name"
+									required
+									autocomplete="off"
+								/>
+							</label>
+						</div>
+
+						<div class="buttons">
+							<button
+								type="button"
+								class="delete"
+							><div class="icon"></div></button>
+						</div>
 					</div>
 
-					<div class="right-part">
-						<button
-							type="button"
-							class="delete"
-						><div class="icon"></div></button>
-					</div>
+					<template id="assignment">
+						<li>
+							<span class="username"></span> <span class="assigned-at"></span>
+						</li>
+					</template>
+
+					<ul class="assignments">
+					</ul>
 				</fieldset>
 			</template>
 

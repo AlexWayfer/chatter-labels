@@ -4,13 +4,16 @@ import { Label } from '../models/label.js'
 import { ToastSaved } from './toast-saved.js'
 
 export class LabelsForm {
+	#labels
+	#assignments
 	#fieldsetsElement
 	#fieldsetTemplate
 	#toastSaved
 
-	constructor(element, labels) {
+	constructor(element, labels, assignments) {
 		this.element = element
-		this.labels = labels
+		this.#labels = labels
+		this.#assignments = assignments
 
 		this.#fieldsetsElement = this.element.querySelector('.fieldsets')
 		this.#fieldsetTemplate = this.element.querySelector('template#label')
@@ -24,25 +27,40 @@ export class LabelsForm {
 			this.#save()
 		})
 
-		this.labels.forEach(label => { this.add(label) })
+		this.#labels.forEach(label => { this.add(label) })
 	}
 
 	add(data = {}) {
-		const fieldset = document.importNode(this.#fieldsetTemplate.content, true)
+		const
+			fieldsetFragment = document.importNode(this.#fieldsetTemplate.content, true),
+			fieldsetElement = fieldsetFragment.querySelector('fieldset'),
+			assignmentsElement = fieldsetFragment.querySelector('.assignments'),
+			assignmentTemplate = fieldsetFragment.querySelector('template#assignment')
 
-		fieldset.querySelectorAll('input[name]').forEach(input => {
+		fieldsetElement.querySelectorAll('input[name]').forEach(input => {
 			input.value = data[input.name] ?? (input.name == 'id' ? crypto.randomUUID(): '')
 		})
 
-		fieldset.querySelector('button.delete').addEventListener('click', event => {
-			event.target.closest('fieldset').remove()
+		fieldsetElement.querySelector('button.delete').addEventListener('click', _event => {
+			fieldsetElement.remove()
 		})
 
-		this.#fieldsetsElement.append(fieldset)
+		for (const assignment of this.#assignments) {
+			if (assignment.label.id != data.id) continue
+
+			const assignmentFragment = document.importNode(assignmentTemplate.content, true)
+
+			assignmentFragment.querySelector('.username').textContent = assignment.username
+			assignmentFragment.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
+
+			assignmentsElement.append(assignmentFragment)
+		}
+
+		this.#fieldsetsElement.append(fieldsetFragment)
 	}
 
 	#save() {
-		this.labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
+		this.#labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
 			logger.debug('fieldset inputs = ', fieldset.querySelectorAll('input[name]'))
 
 			return new Label(
@@ -54,9 +72,9 @@ export class LabelsForm {
 			)
 		})
 
-		logger.debug('labels = ', this.labels)
+		logger.debug('this.#labels = ', this.#labels)
 
-		Storage.set('labels', this.labels)
+		Storage.set('labels', this.#labels)
 
 		this.#toastSaved.show()
 	}
