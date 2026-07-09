@@ -1,4 +1,4 @@
-import { Storage } from '../storage.js'
+import { Storage } from '../storage/storage.js'
 import { ChatterCard } from './chatter-card.js'
 
 const observer = new MutationObserver(mutations => {

@@ -29,7 +29,7 @@
 				"pages/content/**",
 				"scripts/logger.js",
 				"scripts/models/**",
-				"scripts/storage.js",
+				"scripts/storage/**",
 				"scripts/twitch/**",
 				"scripts/content/**"
 			]

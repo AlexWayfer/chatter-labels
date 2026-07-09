@@ -1,5 +1,5 @@
 import { logger } from '../logger.js'
-import { Storage } from '../storage.js'
+import { Storage } from '../storage/storage.js'
 import { Label } from '../models/label.js'
 import { ToastSaved } from './toast-saved.js'
 

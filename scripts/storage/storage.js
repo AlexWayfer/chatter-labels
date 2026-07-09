@@ -1,11 +1,13 @@
-import { logger } from './logger.js'
-import { Label } from './models/label.js'
-import { Assignment } from './models/assignment.js'
+import { logger } from '../logger.js'
+import { ChromeSync } from './storage/providers/chrome-sync.js'
+import { Label } from '../models/label.js'
+import { Assignment } from '../models/assignment.js'
 
 export class Storage {
+	static #provider = new ChromeSync()
 	// static #options
-	static #loaded = false
 	static #data = {}
+	static #loaded = false
 	static #parsers = {
 		labels: (rawLabels) => {
 			return rawLabels.map(data => new Label(data))
@@ -60,7 +62,7 @@ export class Storage {
 	}
 
 	static async #load() {
-		const rawData = await chrome.storage.sync.get(['labels', 'assignments'])
+		const rawData = await this.#provider.load(['labels', 'assignments'])
 
 		this.#data.labels = this.#parsers.labels(rawData.labels ?? []),
 		this.#data.assignments = this.#parsers.assignments(rawData.assignments ?? [])
