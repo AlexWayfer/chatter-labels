@@ -3,7 +3,7 @@ import { ChromeSync } from './providers/chrome-sync.js'
 import { Label } from '../models/label.js'
 import { Assignment } from '../models/assignment.js'
 
-export class Storage {
+export class StorageClient {
 	#provider
 	// #options
 	#data = {}

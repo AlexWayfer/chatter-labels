@@ -11,26 +11,26 @@ const
 
 export class LabelsElement {
 	#user
-	#storage
+	#storageClient
 	#labels
 	#assignments
 	#subscriptions
 	#formElement
 	#formFieldsetsElement
 
-	static async create(user, storage) {
+	static async create(user, storageClient) {
 		const
-			labels = await storage.get('labels'),
-			assignments = await storage.get('assignments')
+			labels = await storageClient.get('labels'),
+			assignments = await storageClient.get('assignments')
 
-		const instance = new this(user, storage, labels, assignments)
+		const instance = new this(user, storageClient, labels, assignments)
 
 		return instance
 	}
 
-	constructor(user, storage, labels, assignments) {
+	constructor(user, storageClient, labels, assignments) {
 		this.#user = user
-		this.#storage = storage
+		this.#storageClient = storageClient
 		this.#labels = labels
 		this.#assignments = assignments
 
@@ -42,11 +42,11 @@ export class LabelsElement {
 
 	#subscribe() {
 		this.#subscriptions = [
-			this.#storage.subscribe('labels', labels => {
+			this.#storageClient.subscribe('labels', labels => {
 				this.#labels = labels
 				this.#renderLabels()
 			}),
-			this.#storage.subscribe('assignments', assignments => {
+			this.#storageClient.subscribe('assignments', assignments => {
 				this.#assignments = assignments
 				this.#renderLabels()
 			})
@@ -127,6 +127,6 @@ export class LabelsElement {
 
 		logger.debug('save this.#assignments = ', this.#assignments)
 
-		this.#storage.set('assignments', this.#assignments)
+		this.#storageClient.set('assignments', this.#assignments)
 	}
 }

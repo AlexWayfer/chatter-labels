@@ -3,24 +3,24 @@ import { Label } from '../models/label.js'
 import { ToastSaved } from './toast-saved.js'
 
 export class LabelsForm {
-	#storage
+	#storageClient
 	#labels
 	#assignments
 	#fieldsetsElement
 	#fieldsetTemplate
 	#toastSaved
 
-	static async create(element, storage) {
+	static async create(element, storageClient) {
 		const
-			labels = await storage.get('labels'),
-			assignments = await storage.get('assignments')
+			labels = await storageClient.get('labels'),
+			assignments = await storageClient.get('assignments')
 
-		new this(element, storage, labels, assignments)
+		new this(element, storageClient, labels, assignments)
 	}
 
-	constructor(element, storage, labels, assignments) {
+	constructor(element, storageClient, labels, assignments) {
 		this.element = element
-		this.#storage = storage
+		this.#storageClient = storageClient
 		this.#labels = labels
 		this.#assignments = assignments
 
@@ -87,12 +87,12 @@ export class LabelsForm {
 	}
 
 	#subscribe() {
-		this.#storage.subscribe('labels', labels => {
+		this.#storageClient.subscribe('labels', labels => {
 			this.#labels = labels
 			this.#renderLabels()
 		})
 
-		this.#storage.subscribe('assignments', assignments => {
+		this.#storageClient.subscribe('assignments', assignments => {
 			this.#assignments = assignments
 			this.#renderLabels()
 		})
@@ -113,13 +113,13 @@ export class LabelsForm {
 
 		logger.debug('this.#labels = ', this.#labels)
 
-		this.#storage.set('labels', this.#labels)
+		this.#storageClient.set('labels', this.#labels)
 
 		this.#assignments = this.#assignments.filter(
 			assignment => this.#labels.some(label => label.id == assignment.label.id)
 		)
 
-		this.#storage.set('assignments', this.#assignments)
+		this.#storageClient.set('assignments', this.#assignments)
 
 		this.#toastSaved.show()
 	}
