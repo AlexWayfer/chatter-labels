@@ -1,5 +1,4 @@
 import { logger } from '../logger.js'
-import { Storage } from '../storage/storage.js'
 import { Assignment } from '../models/assignment.js'
 
 const
@@ -11,25 +10,27 @@ const
 	labelElementTemplate = templatesDocument.querySelector('template#label-fieldset')
 
 export class LabelsElement {
+	#user
+	#storage
 	#labels
 	#assignments
 	#subscriptions
-	#user
 	#formElement
 	#formFieldsetsElement
 
-	static async create(user) {
+	static async create(user, storage) {
 		const
-			labels = await Storage.get('labels'),
-			assignments = await Storage.get('assignments')
+			labels = await storage.get('labels'),
+			assignments = await storage.get('assignments')
 
-		const instance = new this(user, labels, assignments)
+		const instance = new this(user, storage, labels, assignments)
 
 		return instance
 	}
 
-	constructor(user, labels, assignments) {
+	constructor(user, storage, labels, assignments) {
 		this.#user = user
+		this.#storage = storage
 		this.#labels = labels
 		this.#assignments = assignments
 
@@ -41,11 +42,11 @@ export class LabelsElement {
 
 	#subscribe() {
 		this.#subscriptions = [
-			Storage.subscribe('labels', labels => {
+			this.#storage.subscribe('labels', labels => {
 				this.#labels = labels
 				this.#renderLabels()
 			}),
-			Storage.subscribe('assignments', assignments => {
+			this.#storage.subscribe('assignments', assignments => {
 				this.#assignments = assignments
 				this.#renderLabels()
 			})
@@ -126,6 +127,6 @@ export class LabelsElement {
 
 		logger.debug('save this.#assignments = ', this.#assignments)
 
-		Storage.set('assignments', this.#assignments)
+		this.#storage.set('assignments', this.#assignments)
 	}
 }

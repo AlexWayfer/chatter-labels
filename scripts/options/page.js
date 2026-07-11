@@ -5,10 +5,8 @@ import { LabelsForm } from './labels-form.js'
 logger.debug('options/page.js')
 logger.debug('document.readyState = ', document.readyState)
 
-const
-	labels = await Storage.get('labels'),
-	assignments = await Storage.get('assignments')
+const storage = new Storage()
 
-new LabelsForm(document.querySelector('form[name="labels"]'), labels, assignments)
+LabelsForm.create(document.querySelector('form[name="labels"]'), storage)
 
-Storage.listen()
+storage.listen()

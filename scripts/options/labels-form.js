@@ -1,17 +1,26 @@
 import { logger } from '../logger.js'
-import { Storage } from '../storage/storage.js'
 import { Label } from '../models/label.js'
 import { ToastSaved } from './toast-saved.js'
 
 export class LabelsForm {
+	#storage
 	#labels
 	#assignments
 	#fieldsetsElement
 	#fieldsetTemplate
 	#toastSaved
 
-	constructor(element, labels, assignments) {
+	static async create(element, storage) {
+		const
+			labels = await storage.get('labels'),
+			assignments = await storage.get('assignments')
+
+		new this(element, storage, labels, assignments)
+	}
+
+	constructor(element, storage, labels, assignments) {
 		this.element = element
+		this.#storage = storage
 		this.#labels = labels
 		this.#assignments = assignments
 
@@ -78,12 +87,12 @@ export class LabelsForm {
 	}
 
 	#subscribe() {
-		Storage.subscribe('labels', labels => {
+		this.#storage.subscribe('labels', labels => {
 			this.#labels = labels
 			this.#renderLabels()
 		})
 
-		Storage.subscribe('assignments', assignments => {
+		this.#storage.subscribe('assignments', assignments => {
 			this.#assignments = assignments
 			this.#renderLabels()
 		})
@@ -104,13 +113,13 @@ export class LabelsForm {
 
 		logger.debug('this.#labels = ', this.#labels)
 
-		Storage.set('labels', this.#labels)
+		this.#storage.set('labels', this.#labels)
 
 		this.#assignments = this.#assignments.filter(
 			assignment => this.#labels.some(label => label.id == assignment.label.id)
 		)
 
-		Storage.set('assignments', this.#assignments)
+		this.#storage.set('assignments', this.#assignments)
 
 		this.#toastSaved.show()
 	}

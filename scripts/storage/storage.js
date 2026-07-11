@@ -1,14 +1,14 @@
 import { logger } from '../logger.js'
-import { ChromeSync } from './storage/providers/chrome-sync.js'
+import { ChromeSync } from './providers/chrome-sync.js'
 import { Label } from '../models/label.js'
 import { Assignment } from '../models/assignment.js'
 
 export class Storage {
-	static #provider = new ChromeSync()
-	// static #options
-	static #data = {}
-	static #loaded = false
-	static #parsers = {
+	#provider
+	// #options
+	#data = {}
+	#loaded = false
+	#parsers = {
 		labels: (rawLabels) => {
 			return rawLabels.map(data => new Label(data))
 		},
@@ -21,10 +21,16 @@ export class Storage {
 			})
 		}
 	}
-	static #subscriptions = new Map()
-	static #port = chrome.runtime.connect({ name: 'storage' })
+	#subscriptions
+	#port
 
-	static listen() {
+	constructor() {
+		this.#provider = new ChromeSync()
+		this.#port = chrome.runtime.connect({ name: 'storage' })
+		this.#subscriptions = new Map()
+	}
+
+	listen() {
 		this.#port.onMessage.addListener(message => {
 			if (message.type != 'storage:update') return
 
@@ -44,7 +50,7 @@ export class Storage {
 		logger.debug('Storage listens.')
 	}
 
-	// static async getOptions() {
+	// async getOptions() {
 	// 	if (this.#options) return this.#options
 	//
 	// 	this.#options = (await chrome.storage.sync.get('options')).options ?? {}
@@ -54,14 +60,14 @@ export class Storage {
 	// 	return this.#options
 	// }
 
-	static async get(key) {
+	async get(key) {
 		logger.debug(`Storage get '${key}'`)
 		if (!this.#loaded) await this.#load()
 
 		return this.#data[key]
 	}
 
-	static async #load() {
+	async #load() {
 		const rawData = await this.#provider.load(['labels', 'assignments'])
 
 		this.#data.labels = this.#parsers.labels(rawData.labels ?? []),
@@ -72,7 +78,7 @@ export class Storage {
 		logger.debug('Storage data loaded.')
 	}
 
-	static async set(key, value) {
+	async set(key, value) {
 		const serializedValue = Array.isArray(value) ? value.map(element => element.toJSON()) : value
 
 		await chrome.storage.sync.set({ [key]: serializedValue })
@@ -82,7 +88,7 @@ export class Storage {
 		this.#port.postMessage({ type: 'storage:update', key, serializedValue })
 	}
 
-	static subscribe(key, callback) {
+	subscribe(key, callback) {
 		let callbacks = this.#subscriptions.get(key)
 
 		if (!callbacks) {
@@ -95,7 +101,7 @@ export class Storage {
 		return () => callbacks.delete(callback)
 	}
 
-	static #notify(key, value) {
+	#notify(key, value) {
 		const callbacks = this.#subscriptions.get(key)
 
 		if (!callbacks) return
