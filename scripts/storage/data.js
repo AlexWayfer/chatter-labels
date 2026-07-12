@@ -25,13 +25,13 @@ export class DataStorage {
 
 	constructor() {
 		this.#provider = new ChromeSync()
-		this.#port = chrome.runtime.connect({ name: 'storage' })
+		this.#port = chrome.runtime.connect({ name: 'data-storage' })
 		this.#subscriptions = new Map()
 	}
 
 	listen() {
 		this.#port.onMessage.addListener(message => {
-			if (message.type != 'storage:update') return
+			if (message.type != 'data-storage:update') return
 
 			const
 				{ key, serializedValue } = message,
@@ -74,7 +74,7 @@ export class DataStorage {
 
 		logger.debug(`Storage data[${key}] saved.`)
 
-		this.#port.postMessage({ type: 'storage:update', key, serializedValue })
+		this.#port.postMessage({ type: 'data-storage:update', key, serializedValue })
 	}
 
 	subscribe(key, callback) {

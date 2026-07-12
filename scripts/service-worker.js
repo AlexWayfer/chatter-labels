@@ -3,7 +3,7 @@ import { logger } from './logger.js'
 const clients = new Set()
 
 chrome.runtime.onConnect.addListener(port => {
-	if (port.name != 'storage') return
+	if (port.name != 'data-storage') return
 
 	clients.add(port)
 
@@ -12,7 +12,7 @@ chrome.runtime.onConnect.addListener(port => {
 	})
 
 	port.onMessage.addListener(message => {
-		if (message.type != 'storage:update') return
+		if (message.type != 'data-storage:update') return
 
 		for (const client of clients) {
 			client.postMessage(message)
