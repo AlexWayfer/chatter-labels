@@ -81,7 +81,7 @@ export class StorageClient {
 	async set(key, value) {
 		const serializedValue = Array.isArray(value) ? value.map(element => element.toJSON()) : value
 
-		await chrome.storage.sync.set({ [key]: serializedValue })
+		await this.#provider.set(key, serializedValue)
 
 		logger.debug(`Storage data[${key}] saved.`)
 
