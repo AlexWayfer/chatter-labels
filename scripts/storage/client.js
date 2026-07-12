@@ -68,7 +68,7 @@ export class StorageClient {
 	}
 
 	async #load() {
-		const rawData = await this.#provider.load(['labels', 'assignments'])
+		const rawData = await this.#provider.get(['labels', 'assignments'])
 
 		this.#data.labels = this.#parsers.labels(rawData.labels ?? []),
 		this.#data.assignments = this.#parsers.assignments(rawData.assignments ?? [])

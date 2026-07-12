@@ -1,5 +1,5 @@
 export class ChromeSync {
-	async load(keys) {
+	async get(keys) {
 		return chrome.storage.sync.get(keys)
 	}
 
