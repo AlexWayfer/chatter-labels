@@ -5,7 +5,7 @@ import { LabelsElement } from './labels-element.js'
 const instances = new Set()
 
 export class ChatterCard {
-	static createIfNeeded(node, storageClient) {
+	static createIfNeeded(node, dataStorage) {
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 
 		const element = node.matches('[data-a-target]') ? node : node.querySelector('[data-a-target]')
@@ -14,13 +14,13 @@ export class ChatterCard {
 		if (!['viewer-card', 'mod-view-user-details'].includes(element.dataset.aTarget)) return
 		if (element.dataset.labelsInjected) return
 
-		this.create(element, storageClient)
+		this.create(element, dataStorage)
 	}
 
-	static async create(element, storageClient) {
+	static async create(element, dataStorage) {
 		const
 			userInfo = await this.#fetchUserInfo(element),
-			labelsElement = await LabelsElement.create(userInfo, storageClient)
+			labelsElement = await LabelsElement.create(userInfo, dataStorage)
 
 		return new this(element, labelsElement)
 	}

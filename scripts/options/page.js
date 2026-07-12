@@ -1,12 +1,15 @@
 import { logger } from '../logger.js'
-import { StorageClient } from '../storage/client.js'
+import { DataStorage } from '../storage/data.js'
+import { GitHubGistForm } from './github-gist-form.js'
 import { LabelsForm } from './labels-form.js'
 
 logger.debug('options/page.js')
 logger.debug('document.readyState = ', document.readyState)
 
-const storageClient = new StorageClient()
+const dataStorage = new DataStorage()
 
-LabelsForm.create(document.querySelector('form[name="labels"]'), storageClient)
+GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), dataStorage)
 
-storageClient.listen()
+LabelsForm.create(document.querySelector('form[name="labels"]'), dataStorage)
+
+dataStorage.listen()

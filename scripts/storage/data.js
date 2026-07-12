@@ -3,9 +3,8 @@ import { ChromeSync } from './providers/chrome-sync.js'
 import { Label } from '../models/label.js'
 import { Assignment } from '../models/assignment.js'
 
-export class StorageClient {
+export class DataStorage {
 	#provider
-	// #options
 	#data = {}
 	#loaded = false
 	#parsers = {
@@ -49,16 +48,6 @@ export class StorageClient {
 
 		logger.debug('Storage listens.')
 	}
-
-	// async getOptions() {
-	// 	if (this.#options) return this.#options
-	//
-	// 	this.#options = (await chrome.storage.sync.get('options')).options ?? {}
-	//
-	// 	logger.debug('Options loaded.')
-	//
-	// 	return this.#options
-	// }
 
 	async get(key) {
 		logger.debug(`Storage get '${key}'`)
