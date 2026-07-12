@@ -18,8 +18,8 @@ chrome.runtime.onConnect.addListener(port => {
 			client.postMessage(message)
 		}
 
-		logger.debug('Storage message retranslated.')
+		logger.debug('Data Storage message retranslated.')
 	})
 
-	logger.debug('Storage port connected.')
+	logger.debug('Data Storage port connected.')
 })

@@ -37,7 +37,7 @@ export class DataStorage {
 				{ key, serializedValue } = message,
 				value = this.#parsers[key](serializedValue)
 
-			logger.debug(`Storage message with '${key}' received.`)
+			logger.debug(`Data Storage message with '${key}' received.`)
 			logger.debug('serializedValue = ', serializedValue)
 			logger.debug('value = ', value)
 
@@ -46,11 +46,11 @@ export class DataStorage {
 			this.#notify(key, value)
 		})
 
-		logger.debug('Storage listens.')
+		logger.debug('Data Storage listens.')
 	}
 
 	async get(key) {
-		logger.debug(`Storage get '${key}'`)
+		logger.debug(`Data Storage get '${key}'`)
 		if (!this.#loaded) await this.#load()
 
 		return this.#data[key]
@@ -64,7 +64,7 @@ export class DataStorage {
 
 		this.#loaded = true
 
-		logger.debug('Storage data loaded.')
+		logger.debug('Data Storage data loaded.')
 	}
 
 	async set(key, value) {
@@ -72,7 +72,7 @@ export class DataStorage {
 
 		await this.#provider.set(key, serializedValue)
 
-		logger.debug(`Storage data[${key}] saved.`)
+		logger.debug(`Data Storage data[${key}] saved.`)
 
 		this.#port.postMessage({ type: 'data-storage:update', key, serializedValue })
 	}
