@@ -24,6 +24,12 @@ body {
 		border-radius: 0.4em;
 	}
 
+	form[name="github-gist"] {
+		a.create-token {
+			display: inline-block;
+		}
+	}
+
 	form[name="labels"] {
 		width: max-content;
 

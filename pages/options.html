@@ -12,6 +12,27 @@
 	<body>
 		<h1>Chatter Labels Options</h1>
 
+		<h2>Storage</h2>
+
+		<h3>GitHub Gist</h3>
+
+		<form name="github-gist">
+			<p>
+				<a
+					class="create-token"
+					href="https://github.com/settings/personal-access-tokens/new"
+					target="_blank"
+				>
+					Create token
+				</a>
+				(select "Gists" in Permissions)
+			</p>
+
+			Token: <input type="password" name="token" required />
+
+			<button type="submit">Save</button>
+		</form>
+
 		<h2>Labels</h2>
 
 		<form name="labels">

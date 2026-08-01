@@ -1,9 +1,13 @@
 import { logger } from './logger.js'
 
-const clients = new Set()
+const channels = new Map()
 
 chrome.runtime.onConnect.addListener(port => {
-	if (port.name != 'data-storage') return
+	let clients = channels.get(port.name)
+	if (!clients) {
+		clients = new Set()
+		channels.set(port.name, clients)
+	}
 
 	clients.add(port)
 
@@ -12,14 +16,12 @@ chrome.runtime.onConnect.addListener(port => {
 	})
 
 	port.onMessage.addListener(message => {
-		if (message.type != 'data-storage:update') return
-
 		for (const client of clients) {
 			client.postMessage(message)
 		}
 
-		logger.debug('Data Storage message retranslated.')
+		logger.debug(`'${port.name}' message retranslated.`)
 	})
 
-	logger.debug('Data Storage port connected.')
+	logger.debug(`'${port.name}' port connected.`)
 })

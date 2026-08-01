@@ -1,16 +1,16 @@
-import { DataStorage } from '../storage/data.js'
+import { MainStorage } from '../storage/main.js'
 import { ChatterCard } from './chatter-card.js'
 
-const dataStorage = new DataStorage()
+const mainStorage = new MainStorage()
 
 const observer = new MutationObserver(mutations => {
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {
-			ChatterCard.createIfNeeded(addedNode, dataStorage)
+			ChatterCard.createIfNeeded(addedNode, mainStorage)
 		}
 	}
 })
 
 observer.observe(document.body, { childList: true, subtree: true })
 
-dataStorage.listen()
+mainStorage.listen()

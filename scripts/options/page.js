@@ -1,15 +1,19 @@
 import { logger } from '../logger.js'
-import { DataStorage } from '../storage/data.js'
+import { MainStorage } from '../storage/main.js'
+import { OptionsStorage } from '../storage/options.js'
 import { GitHubGistForm } from './github-gist-form.js'
 import { LabelsForm } from './labels-form.js'
 
 logger.debug('options/page.js')
 logger.debug('document.readyState = ', document.readyState)
 
-const dataStorage = new DataStorage()
+const
+	mainStorage = new MainStorage(),
+	optionsStorage = new OptionsStorage()
 
-GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), dataStorage)
+GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), optionsStorage)
 
-LabelsForm.create(document.querySelector('form[name="labels"]'), dataStorage)
+LabelsForm.create(document.querySelector('form[name="labels"]'), mainStorage)
 
-dataStorage.listen()
+optionsStorage.listen()
+mainStorage.listen()
