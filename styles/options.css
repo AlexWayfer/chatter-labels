@@ -5,6 +5,10 @@ body {
 		display: none;
 	}
 
+	.invisible {
+		visibility: hidden;
+	}
+
 	button,
 	input {
 		font-size: inherit;
@@ -27,6 +31,33 @@ body {
 	form[name="github-gist"] {
 		a.create-token {
 			display: inline-block;
+		}
+
+		input[name="token"] {
+			&[type="password"] {
+				& + button.token-visibility-toggle {
+					.text-hide {
+						visibility: hidden;
+					}
+				}
+			}
+
+			&:not([type="password"]) {
+				& + button.token-visibility-toggle {
+					.text-show {
+						visibility: hidden;
+					}
+				}
+			}
+		}
+
+		button.token-visibility-toggle {
+			display: inline-grid;
+			place-items: center;
+
+			& > span {
+				grid-area: 1 / 1;
+			}
 		}
 	}
 

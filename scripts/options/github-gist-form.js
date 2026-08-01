@@ -16,6 +16,13 @@ export class GitHubGistForm {
 
 		this.#setTokenInputElementValue(this.#storage.githubGist?.token)
 
+		const tokenVisibilityToggleElement = element.querySelector('button.token-visibility-toggle')
+
+		tokenVisibilityToggleElement.addEventListener('click', _event => {
+			this.#tokenInputElement.type =
+				this.#tokenInputElement.type == 'password' ? 'text' : 'password'
+		})
+
 		element.addEventListener('submit', event => {
 			event.preventDefault()
 
