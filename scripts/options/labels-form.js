@@ -98,7 +98,7 @@ export class LabelsForm {
 		})
 	}
 
-	#save() {
+	async #save() {
 		this.#labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
 			logger.debug('fieldset inputs = ', fieldset.querySelectorAll('input[name]'))
 
@@ -113,13 +113,13 @@ export class LabelsForm {
 
 		logger.debug('this.#labels = ', this.#labels)
 
-		this.#dataStorage.set('labels', this.#labels)
+		await this.#dataStorage.set('labels', this.#labels)
 
 		this.#assignments = this.#assignments.filter(
 			assignment => this.#labels.some(label => label.id == assignment.label.id)
 		)
 
-		this.#dataStorage.set('assignments', this.#assignments)
+		await this.#dataStorage.set('assignments', this.#assignments)
 
 		this.#toastSaved.show()
 	}
