@@ -11,6 +11,10 @@
 		"service_worker": "scripts/service-worker.js",
 		"type": "module"
 	},
+	"host_permissions": [
+		"https://api.github.com/*",
+		"https://gist.githubusercontent.com/*"
+	],
 	"content_scripts": [
 		{
 			"matches": ["https://*.twitch.tv/*"],

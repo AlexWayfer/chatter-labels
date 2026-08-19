@@ -1,6 +1,6 @@
 import { logger } from '../logger.js'
 import { BaseStorage } from './base.js'
-import { ChromeSync } from './providers/chrome-sync.js'
+import { GitHubGist } from './providers/github-gist.js'
 import { Label } from '../models/label.js'
 import { Assignment } from '../models/assignment.js'
 
@@ -21,12 +21,31 @@ export class MainStorage extends BaseStorage {
 		}
 	}
 
-	constructor() {
-		super()
-		this._provider = new ChromeSync()
+	static async create(optionsStorage) {
+		const
+			storageConfig = await optionsStorage.get('storage'),
+			githubGist = storageConfig.githubGist
+
+		// logger.debug('githubGist = ', githubGist)
+
+		const provider = new GitHubGist(githubGist.token, githubGist.gistId)
+
+		optionsStorage.subscribe('storage', updatedConfig => {
+			const githubGist = updatedConfig.githubGist
+
+			provider.token = githubGist.token
+			provider.gistId = githubGist.gistId
+		})
+
+		return super.create(provider)
 	}
 
-	async load() {
+	constructor(provider) {
+		super()
+		this._provider = provider
+	}
+
+	async _load() {
 		const rawData = await this._provider.get(['labels', 'assignments'])
 
 		this._data.labels = this._parsers.labels(rawData.labels ?? []),

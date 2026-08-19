@@ -1,8 +1,11 @@
 import { logger } from '../logger.js'
+import { GitHubGist } from '../storage/providers/github-gist.js'
 
 export class GitHubGistForm {
 	#storage
+	#optionsStorage
 	#tokenInputElement
+	#submitButtonElement
 
 	static async create(element, optionsStorage) {
 		const storage = await optionsStorage.get('storage')
@@ -12,7 +15,9 @@ export class GitHubGistForm {
 
 	constructor(element, storage, optionsStorage) {
 		this.#storage = storage
+		this.#optionsStorage = optionsStorage
 		this.#tokenInputElement = element.querySelector('input[name="token"]')
+		this.#submitButtonElement = element.querySelector('button[type="submit"]')
 
 		this.#setTokenInputElementValue(this.#storage.githubGist?.token)
 
@@ -26,9 +31,7 @@ export class GitHubGistForm {
 		element.addEventListener('submit', event => {
 			event.preventDefault()
 
-			this.#storage.githubGist = { token: this.#tokenInputElement.value }
-
-			optionsStorage.set('storage', this.#storage)
+			this.#save()
 		})
 
 		optionsStorage.subscribe('storage', storage => {
@@ -36,6 +39,25 @@ export class GitHubGistForm {
 
 			this.#setTokenInputElementValue(storage.githubGist?.token)
 		})
+	}
+
+	async #save() {
+		this.#submitButtonElement.disabled = true
+
+		try {
+			const token = this.#tokenInputElement.value
+			const provider = new GitHubGist(token, this.#storage.githubGist?.gistId)
+			const gistId = await provider.ensureGistAccess()
+
+			this.#storage.githubGist = { token, gistId }
+
+			await this.#optionsStorage.set('storage', this.#storage)
+		} catch (error) {
+			logger.debug('GitHub Gist Form submit failed', error)
+			// TODO: Show error in UI
+		} finally {
+			this.#submitButtonElement.disabled = false
+		}
 	}
 
 	#setTokenInputElementValue(newValue) {

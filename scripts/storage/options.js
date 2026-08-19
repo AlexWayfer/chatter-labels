@@ -12,7 +12,7 @@ export class OptionsStorage extends BaseStorage {
 		this._provider = new ChromeSync()
 	}
 
-	async load() {
+	async _load() {
 		const rawData = await this._provider.get(['storage'])
 
 		this._data.storage = rawData.storage ?? {},

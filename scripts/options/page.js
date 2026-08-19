@@ -8,12 +8,11 @@ logger.debug('options/page.js')
 logger.debug('document.readyState = ', document.readyState)
 
 const
-	mainStorage = new MainStorage(),
-	optionsStorage = new OptionsStorage()
+	optionsStorage = await OptionsStorage.create(),
+	mainStorage = await MainStorage.create(optionsStorage)
+
+// logger.debug('optionsStorage = ', optionsStorage)
 
 GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), optionsStorage)
 
 LabelsForm.create(document.querySelector('form[name="labels"]'), mainStorage)
-
-optionsStorage.listen()
-mainStorage.listen()

@@ -1,7 +1,10 @@
+import { OptionsStorage } from '../storage/options.js'
 import { MainStorage } from '../storage/main.js'
 import { ChatterCard } from './chatter-card.js'
 
-const mainStorage = new MainStorage()
+const
+	optionsStorage = await OptionsStorage.create(),
+	mainStorage = await MainStorage.create(optionsStorage)
 
 const observer = new MutationObserver(mutations => {
 	for (const mutation of mutations) {
@@ -12,5 +15,3 @@ const observer = new MutationObserver(mutations => {
 })
 
 observer.observe(document.body, { childList: true, subtree: true })
-
-mainStorage.listen()
