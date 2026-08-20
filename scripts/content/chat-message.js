@@ -10,12 +10,10 @@ export class ChatMessage {
 		this.render()
 	}
 
-	async render() {
+	render() {
 		const
-			userId = await this.#chat.userIdFrom(this.#element),
+			userId = this.#chat.userIdFrom(this.#element),
 			labels = this.#assignedLabels(userId)
-
-		if (!this.#element.isConnected) return
 
 		if (!labels.length) {
 			this.#iconsElement?.remove()
