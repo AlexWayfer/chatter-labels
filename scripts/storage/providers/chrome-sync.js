@@ -4,6 +4,6 @@ export class ChromeSync {
 	}
 
 	async set(key, serializedValue) {
-		chrome.storage.sync.set({ [key]: serializedValue })
+		await chrome.storage.sync.set({ [key]: serializedValue })
 	}
 }
