@@ -21,22 +21,22 @@ export class GitHubGistForm extends Form {
 
 		this.#storage = storage
 		this.#optionsStorage = optionsStorage
-		this.#tokenInputElement = this.element.querySelector('input[name="token"]')
-		this.#existingGistElement = this.element.querySelector('.existing-gist')
-		this.#toastError = new Toast(this.element.querySelector('.toast.error'))
+		this.#tokenInputElement = this._element.querySelector('input[name="token"]')
+		this.#existingGistElement = this._element.querySelector('.existing-gist')
+		this.#toastError = new Toast(this._element.querySelector('.toast.error'))
 
 		this._setTokenInputElementValue(this.#storage.githubGist?.token)
 		this._setExistingGistElementHref(this.#storage.githubGist?.gistId)
 
 		const tokenVisibilityToggleElement =
-			this.element.querySelector('button.token-visibility-toggle')
+			this._element.querySelector('button.token-visibility-toggle')
 
 		tokenVisibilityToggleElement.addEventListener('click', _event => {
 			this.#tokenInputElement.type =
 				this.#tokenInputElement.type == 'password' ? 'text' : 'password'
 		})
 
-		this.element.addEventListener('submit', event => {
+		this._element.addEventListener('submit', event => {
 			event.preventDefault()
 
 			this._save()

@@ -24,23 +24,23 @@ export class LabelsForm extends Form {
 		this.#labels = labels
 		this.#assignments = assignments
 
-		this.#fieldsetsElement = this.element.querySelector('.fieldsets')
-		this.#fieldsetTemplate = this.element.querySelector('template#label')
+		this.#fieldsetsElement = this._element.querySelector('.fieldsets')
+		this.#fieldsetTemplate = this._element.querySelector('template#label')
 
-		this.element.querySelector('button.add').addEventListener('click', _event => {
+		this._element.querySelector('button.add').addEventListener('click', _event => {
 			this.add()
 		})
 
-		this.element.addEventListener('input', _event => {
+		this._element.addEventListener('input', _event => {
 			this.#validateUniqueNames()
 		})
 
-		this.element.addEventListener('submit', event => {
+		this._element.addEventListener('submit', event => {
 			event.preventDefault()
 
 			this.#validateUniqueNames()
 
-			if (!this.element.checkValidity()) return
+			if (!this._element.checkValidity()) return
 
 			this._save()
 		})
@@ -126,7 +126,7 @@ export class LabelsForm extends Form {
 	#validateUniqueNames() {
 		const seen = new Set()
 
-		Array.from(this.element.querySelectorAll('input[name="name"]')).forEach(input => {
+		Array.from(this._element.querySelectorAll('input[name="name"]')).forEach(input => {
 			const value = input.value.trim()
 
 			input.setCustomValidity('')

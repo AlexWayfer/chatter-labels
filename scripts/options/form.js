@@ -2,7 +2,7 @@ import { Toast } from './toast.js'
 
 export class Form {
 	constructor(element) {
-		this.element = element
+		this._element = element
 		this._submitButtonElement = element.querySelector('button[type="submit"]')
 		this._toastSaved = new Toast(element.querySelector('.toast.saved'))
 	}
