@@ -1,14 +1,13 @@
 import { logger } from '../logger.js'
 import { GitHubGist } from '../storage/providers/github-gist.js'
+import { Form } from './form.js'
 import { Toast } from './toast.js'
 
-export class GitHubGistForm {
+export class GitHubGistForm extends Form {
 	#storage
 	#optionsStorage
 	#tokenInputElement
 	#existingGistElement
-	#submitButtonElement
-	#toastSaved
 	#toastError
 
 	static async create(element, optionsStorage) {
@@ -18,16 +17,16 @@ export class GitHubGistForm {
 	}
 
 	constructor(element, storage, optionsStorage) {
+		super(element)
+
 		this.#storage = storage
 		this.#optionsStorage = optionsStorage
 		this.#tokenInputElement = element.querySelector('input[name="token"]')
 		this.#existingGistElement = element.querySelector('.existing-gist')
-		this.#submitButtonElement = element.querySelector('button[type="submit"]')
-		this.#toastSaved = new Toast(element.querySelector('.toast.saved'))
 		this.#toastError = new Toast(element.querySelector('.toast.error'))
 
-		this.#setTokenInputElementValue(this.#storage.githubGist?.token)
-		this.#setExistingGistElementHref(this.#storage.githubGist?.gistId)
+		this._setTokenInputElementValue(this.#storage.githubGist?.token)
+		this._setExistingGistElementHref(this.#storage.githubGist?.gistId)
 
 		const tokenVisibilityToggleElement = element.querySelector('button.token-visibility-toggle')
 
@@ -39,44 +38,40 @@ export class GitHubGistForm {
 		element.addEventListener('submit', event => {
 			event.preventDefault()
 
-			this.#save()
+			this._save()
 		})
 
 		optionsStorage.subscribe('storage', storage => {
 			logger.debug('GitHub Gist Form storage message received')
 
-			this.#setTokenInputElementValue(storage.githubGist?.token)
-			this.#setExistingGistElementHref(storage.githubGist?.gistId)
+			this._setTokenInputElementValue(storage.githubGist?.token)
+			this._setExistingGistElementHref(storage.githubGist?.gistId)
 		})
 	}
 
-	async #save() {
-		this.#submitButtonElement.disabled = true
+	async _save() {
+		super._save(async () => {
+			try {
+				const token = this.#tokenInputElement.value
+				const provider = new GitHubGist(token, this.#storage.githubGist?.gistId)
+				const gistId = await provider.ensureGistAccess()
 
-		try {
-			const token = this.#tokenInputElement.value
-			const provider = new GitHubGist(token, this.#storage.githubGist?.gistId)
-			const gistId = await provider.ensureGistAccess()
+				this.#storage.githubGist = { token, gistId }
 
-			this.#storage.githubGist = { token, gistId }
+				await this.#optionsStorage.set('storage', this.#storage)
+			} catch (error) {
+				this.#toastError.show(error)
 
-			await this.#optionsStorage.set('storage', this.#storage)
-
-			this.#toastSaved.show()
-		} catch (error) {
-			logger.debug('GitHub Gist Form submit failed', error)
-
-			this.#toastError.show(error)
-		} finally {
-			this.#submitButtonElement.disabled = false
-		}
+				throw error
+			}
+		})
 	}
 
-	#setTokenInputElementValue(newValue) {
+	_setTokenInputElementValue(newValue) {
 		this.#tokenInputElement.value = newValue ?? ''
 	}
 
-	#setExistingGistElementHref(gistId) {
+	_setExistingGistElementHref(gistId) {
 		if (!gistId) {
 			this.#existingGistElement.classList.add('hidden')
 			return

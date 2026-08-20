@@ -1,14 +1,13 @@
 import { logger } from '../logger.js'
 import { Label } from '../models/label.js'
-import { Toast } from './toast.js'
+import { Form } from './form.js'
 
-export class LabelsForm {
+export class LabelsForm extends Form {
 	#mainStorage
 	#labels
 	#assignments
 	#fieldsetsElement
 	#fieldsetTemplate
-	#toastSaved
 
 	static async create(element, mainStorage) {
 		const
@@ -19,6 +18,8 @@ export class LabelsForm {
 	}
 
 	constructor(element, mainStorage, labels, assignments) {
+		super(element)
+
 		this.element = element
 		this.#mainStorage = mainStorage
 		this.#labels = labels
@@ -26,7 +27,6 @@ export class LabelsForm {
 
 		this.#fieldsetsElement = this.element.querySelector('.fieldsets')
 		this.#fieldsetTemplate = this.element.querySelector('template#label')
-		this.#toastSaved = new Toast(this.element.querySelector('.toast.saved'))
 
 		this.element.querySelector('button.add').addEventListener('click', _event => {
 			this.add()
@@ -43,7 +43,7 @@ export class LabelsForm {
 
 			if (!this.element.checkValidity()) return
 
-			this.#save()
+			this._save()
 		})
 
 		this.#renderLabels()
@@ -98,30 +98,30 @@ export class LabelsForm {
 		})
 	}
 
-	async #save() {
-		this.#labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
-			logger.debug('fieldset inputs = ', fieldset.querySelectorAll('input[name]'))
+	async _save() {
+		super._save(async () => {
+			this.#labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
+				logger.debug('fieldset inputs = ', fieldset.querySelectorAll('input[name]'))
 
-			return new Label(
-				Object.fromEntries(
-					Array.from(fieldset.querySelectorAll('input[name]')).map(
-						input => [input.name, input.value]
+				return new Label(
+					Object.fromEntries(
+						Array.from(fieldset.querySelectorAll('input[name]')).map(
+							input => [input.name, input.value]
+						)
 					)
 				)
+			})
+
+			logger.debug('this.#labels = ', this.#labels)
+
+			await this.#mainStorage.set('labels', this.#labels)
+
+			this.#assignments = this.#assignments.filter(
+				assignment => this.#labels.some(label => label.id == assignment.label.id)
 			)
+
+			await this.#mainStorage.set('assignments', this.#assignments)
 		})
-
-		logger.debug('this.#labels = ', this.#labels)
-
-		await this.#mainStorage.set('labels', this.#labels)
-
-		this.#assignments = this.#assignments.filter(
-			assignment => this.#labels.some(label => label.id == assignment.label.id)
-		)
-
-		await this.#mainStorage.set('assignments', this.#assignments)
-
-		this.#toastSaved.show()
 	}
 
 	#validateUniqueNames() {
