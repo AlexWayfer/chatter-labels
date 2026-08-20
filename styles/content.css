@@ -1,3 +1,12 @@
+.chatter-labels-letters {
+	font-weight: var(--font-weight-semibold, 600);
+	vertical-align: middle;
+
+	.chatter-labels-letter {
+		margin: 0 .3rem .2rem 0;
+	}
+}
+
 .chatter-labels {
 	padding: 8px;
 
