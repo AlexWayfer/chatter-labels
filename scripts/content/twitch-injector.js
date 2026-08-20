@@ -1,11 +1,12 @@
 import { OptionsStorage } from '../storage/options.js'
 import { MainStorage } from '../storage/main.js'
 import { ChatterCard } from './chatter-card.js'
-import { ChatLine } from './chat-line.js'
+import { Chat } from './chat.js'
 
 const
 	optionsStorage = await OptionsStorage.create(),
-	mainStorage = await MainStorage.create(optionsStorage)
+	mainStorage = await MainStorage.create(optionsStorage),
+	chat = await Chat.create(mainStorage)
 
 window.addEventListener('pageshow', event => {
 	if (event.persisted) {
@@ -18,11 +19,15 @@ const observer = new MutationObserver(mutations => {
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {
 			ChatterCard.createIfNeeded(addedNode, mainStorage)
-			ChatLine.createIfNeeded(addedNode, mainStorage)
+			chat.attachIfNeeded(addedNode)
+		}
+
+		for (const removedNode of mutation.removedNodes) {
+			chat.detachIfNeeded(removedNode)
 		}
 	}
 })
 
 observer.observe(document.body, { childList: true, subtree: true })
 
-ChatLine.createIfNeeded(document.body, mainStorage)
+chat.attachIfNeeded(document.body)
