@@ -3,8 +3,8 @@ import { Toast } from './toast.js'
 export class Form {
 	constructor(element) {
 		this._element = element
-		this._submitButtonElement = element.querySelector('button[type="submit"]')
-		this._toastSaved = new Toast(element.querySelector('.toast.saved'))
+		this._submitButtonElement = this._element.querySelector('button[type="submit"]')
+		this._toastSaved = new Toast(this._element.querySelector('.toast.saved'))
 	}
 
 	async _save(logic) {
