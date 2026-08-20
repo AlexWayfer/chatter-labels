@@ -31,9 +31,14 @@ export class BaseStorage {
 
 		await this._provider.set(key, serializedValue)
 
+		const parsedValue = this._parsers[key] ? this._parsers[key](serializedValue) : serializedValue
+
+		this._data[key] = parsedValue
+		this.notify(key, parsedValue)
+
 		logger.debug(`${this.constructor.name} data[${key}] saved.`)
 
-		this._port.postMessage({ type: `${this.constructor.PORT_NAME}:update`, key, serializedValue })
+		this._broadcast({ type: `${this.constructor.PORT_NAME}:update`, key, serializedValue })
 	}
 
 	subscribe(key, callback) {
@@ -62,6 +67,13 @@ export class BaseStorage {
 	reconnect() {
 		logger.debug(`${this.constructor.name} reconnecting port.`)
 
+		try {
+			this._port?.disconnect()
+		} catch {
+			// Already disconnected.
+		}
+
+		this._port = null
 		this._connect()
 	}
 
@@ -71,7 +83,23 @@ export class BaseStorage {
 
 	_connect() {
 		this._port = chrome.runtime.connect({ name: this.constructor.PORT_NAME })
+
+		this._port.onDisconnect.addListener(() => {
+			logger.debug(`${this.constructor.name} port disconnected.`)
+			this._port = null
+		})
+
 		this._listen()
+	}
+
+	_broadcast(message) {
+		try {
+			if (!this._port) this._connect()
+			this._port.postMessage(message)
+		} catch {
+			this._connect()
+			this._port.postMessage(message)
+		}
 	}
 
 	_listen() {

@@ -17,7 +17,13 @@ chrome.runtime.onConnect.addListener(port => {
 
 	port.onMessage.addListener(message => {
 		for (const client of clients) {
-			client.postMessage(message)
+			if (client === port) continue
+
+			try {
+				client.postMessage(message)
+			} catch {
+				clients.delete(client)
+			}
 		}
 
 		logger.debug(`'${port.name}' message retranslated.`)
