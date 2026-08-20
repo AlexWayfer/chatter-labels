@@ -6,6 +6,13 @@ const
 	optionsStorage = await OptionsStorage.create(),
 	mainStorage = await MainStorage.create(optionsStorage)
 
+window.addEventListener('pageshow', event => {
+	if (event.persisted) {
+		optionsStorage.reconnect()
+		mainStorage.reconnect()
+	}
+})
+
 const observer = new MutationObserver(mutations => {
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {

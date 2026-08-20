@@ -14,10 +14,9 @@ export class BaseStorage {
 	}
 
 	constructor() {
-		this._port = chrome.runtime.connect({ name: this.constructor.PORT_NAME })
 		this._subscriptions = new Map()
 
-		this._listen()
+		this._connect()
 	}
 
 	async get(key) {
@@ -60,8 +59,19 @@ export class BaseStorage {
 		}
 	}
 
+	reconnect() {
+		logger.debug(`${this.constructor.name} reconnecting port.`)
+
+		this._connect()
+	}
+
 	async _load() {
 		throw new Error(`${this.constructor.name} must implement _load().`)
+	}
+
+	_connect() {
+		this._port = chrome.runtime.connect({ name: this.constructor.PORT_NAME })
+		this._listen()
 	}
 
 	_listen() {
