@@ -1,6 +1,7 @@
 import { logger } from '../logger.js'
 import { Label } from '../models/label.js'
 import { Form } from './form.js'
+import { IconField } from './icon-field.js'
 
 export class LabelsForm extends Form {
 	#mainStorage
@@ -60,6 +61,8 @@ export class LabelsForm extends Form {
 		fieldsetElement.querySelectorAll('input[name]').forEach(input => {
 			input.value = data[input.name] ?? (input.name == 'id' ? crypto.randomUUID(): '')
 		})
+
+		new IconField(fieldsetElement)
 
 		fieldsetElement.querySelector('button.delete').addEventListener('click', _event => {
 			fieldsetElement.remove()

@@ -1,4 +1,7 @@
 body {
+	--input-border: 1px solid lightslategray;
+	--input-border-radius: 0.4em;
+
 	font-size: 18px;
 
 	.hidden {
@@ -17,15 +20,17 @@ body {
 		padding: 0.25em 0.5em;
 
 		/* Border */
-		border-style: solid;
-		border-width: 1px;
-		border-color: lightslategray;
+		border: var(--input-border);
 	}
 
 	fieldset,
 	button,
 	input {
-		border-radius: 0.4em;
+		border-radius: var(--input-border-radius);
+	}
+
+	input[type="file"] {
+		border: none;
 	}
 
 	form[name="github-gist"] {
@@ -74,13 +79,35 @@ body {
 				.label {
 					display: flex;
 					justify-content: space-between;
-					align-items: center;
+					align-items: start;
 
 					label {
+						display: inline-block;
+						position: relative;
 						padding: var(--input-label-padding);
 
-						input[name="letter[]"] {
-							width: 1em;
+						img.icon-preview {
+							--size: 1.2em;
+
+							height: var(--size);
+							width: auto;
+							min-width: var(--size);
+							padding: 0.2em;
+							vertical-align: middle;
+							border: var(--input-border);
+							border-radius: var(--input-border-radius);
+							cursor: pointer;
+						}
+
+						input.icon {
+							position: absolute;
+							width: 1px;
+							height: 1px;
+							padding: 0;
+							overflow: hidden;
+							clip-path: inset(50%);
+							opacity: 0;
+							border: 0;
 						}
 					}
 

@@ -93,6 +93,7 @@ export class LabelsElement {
 		checkboxElement.value = label.id
 		checkboxElement.checked = !!assignment
 
+		labelElement.querySelector('.icon').src = label.icon
 		labelElement.querySelector('.name').textContent = label.name
 
 		labelElement.querySelector('.assigned-at').textContent = assignment?.formattedAssignedAt ?? ''

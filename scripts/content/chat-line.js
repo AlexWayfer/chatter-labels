@@ -30,7 +30,7 @@ export class ChatLine {
 	#labels
 	#assignments
 	#subscriptions
-	#lettersElement
+	#iconsElement
 
 	constructor(element, mainStorage, labels, assignments) {
 		this.#element = element
@@ -76,33 +76,34 @@ export class ChatLine {
 	}
 
 	#render() {
-		const letters = this.#letters()
+		const labels = this.#assignedLabels()
 
-		if (!letters.length) {
-			this.#lettersElement?.remove()
-			this.#lettersElement = null
+		if (!labels.length) {
+			this.#iconsElement?.remove()
+			this.#iconsElement = null
 			return
 		}
 
-		if (!this.#lettersElement) {
-			this.#lettersElement = document.createElement('span')
-			this.#lettersElement.classList.add('chatter-labels-letters')
-			this.#element.querySelector('.chat-line__username').before(this.#lettersElement)
+		if (!this.#iconsElement) {
+			this.#iconsElement = document.createElement('span')
+			this.#iconsElement.classList.add('chatter-labels-icons')
+			this.#element.querySelector('.chat-line__username').before(this.#iconsElement)
 		}
 
-		this.#lettersElement.replaceChildren(
-			...letters.map(letter => {
-				const letterElement = document.createElement('span')
+		this.#iconsElement.replaceChildren(
+			...labels.map(label => {
+				const iconElement = document.createElement('img')
 
-				letterElement.classList.add('chatter-labels-letter')
-				letterElement.textContent = letter
+				iconElement.classList.add('chatter-labels-icon')
+				iconElement.src = label.icon
+				iconElement.alt = label.name
 
-				return letterElement
+				return iconElement
 			})
 		)
 	}
 
-	#letters() {
+	#assignedLabels() {
 		const userId = this.#element.dataset.userId
 
 		if (!userId) return []
@@ -111,8 +112,8 @@ export class ChatLine {
 
 		if (!userAssignments.length) return []
 
-		return this.#labels
-			.filter(label => userAssignments.some(assignment => assignment.label?.id == label.id))
-			.map(label => label.letter)
+		return this.#labels.filter(
+			label => userAssignments.some(assignment => assignment.label?.id == label.id)
+		)
 	}
 }

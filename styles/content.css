@@ -1,9 +1,13 @@
-.chatter-labels-letters {
-	font-weight: var(--font-weight-semibold, 600);
+.chatter-labels-icons {
 	vertical-align: middle;
 
-	.chatter-labels-letter {
+	.chatter-labels-icon {
+		--size: 1.8rem;
+		height: var(--size);
+		width: auto;
+		min-width: var(--size);
 		margin: 0 .3rem .2rem 0;
+		vertical-align: middle;
 	}
 }
 
@@ -34,6 +38,13 @@
 
 					input[type="checkbox"] {
 						margin-right: 4px;
+					}
+
+					.icon {
+						height: 18px;
+						width: auto;
+						margin-right: 4px;
+						vertical-align: middle;
 					}
 
 					.assigned-at {

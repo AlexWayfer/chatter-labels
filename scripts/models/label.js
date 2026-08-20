@@ -1,14 +1,14 @@
 export class Label {
-	constructor({ id, letter, name }) {
+	constructor({ id, icon, name }) {
 		this.id = id
-		this.letter = letter
+		this.icon = icon
 		this.name = name
 	}
 
 	toJSON() {
 		return {
 			id: this.id,
-			letter: this.letter,
+			icon: this.icon,
 			name: this.name
 		}
 	}
