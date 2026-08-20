@@ -144,8 +144,15 @@ body {
 		}
 	}
 
-	.toast-saved {
+	.toast {
 		margin-left: 0.4em;
-		color: green;
+
+		&.saved {
+			color: green;
+		}
+
+		&.error {
+			color: red;
+		}
 	}
 }

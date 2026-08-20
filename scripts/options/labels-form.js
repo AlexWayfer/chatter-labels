@@ -1,6 +1,6 @@
 import { logger } from '../logger.js'
 import { Label } from '../models/label.js'
-import { ToastSaved } from './toast-saved.js'
+import { Toast } from './toast.js'
 
 export class LabelsForm {
 	#mainStorage
@@ -26,7 +26,7 @@ export class LabelsForm {
 
 		this.#fieldsetsElement = this.element.querySelector('.fieldsets')
 		this.#fieldsetTemplate = this.element.querySelector('template#label')
-		this.#toastSaved = new ToastSaved(this.element.querySelector('.toast-saved'))
+		this.#toastSaved = new Toast(this.element.querySelector('.toast.saved'))
 
 		this.element.querySelector('button.add').addEventListener('click', _event => {
 			this.add()

@@ -1,11 +1,13 @@
 import { logger } from '../logger.js'
 import { GitHubGist } from '../storage/providers/github-gist.js'
+import { Toast } from './toast.js'
 
 export class GitHubGistForm {
 	#storage
 	#optionsStorage
 	#tokenInputElement
 	#submitButtonElement
+	#toastError
 
 	static async create(element, optionsStorage) {
 		const storage = await optionsStorage.get('storage')
@@ -18,6 +20,7 @@ export class GitHubGistForm {
 		this.#optionsStorage = optionsStorage
 		this.#tokenInputElement = element.querySelector('input[name="token"]')
 		this.#submitButtonElement = element.querySelector('button[type="submit"]')
+		this.#toastError = new Toast(element.querySelector('.toast.error'))
 
 		this.#setTokenInputElementValue(this.#storage.githubGist?.token)
 
@@ -54,7 +57,8 @@ export class GitHubGistForm {
 			await this.#optionsStorage.set('storage', this.#storage)
 		} catch (error) {
 			logger.debug('GitHub Gist Form submit failed', error)
-			// TODO: Show error in UI
+
+			this.#toastError.show(error)
 		} finally {
 			this.#submitButtonElement.disabled = false
 		}
