@@ -2,7 +2,6 @@ export class GitHubGist {
 	static API_BASE = 'https://api.github.com/gists'
 	static API_VERSION = '2026-03-10'
 	static GIST_DESCRIPTION = 'Chatter Labels — synced data'
-	static FILE_EXTENSION = '.json'
 
 	constructor(token, gistId = null) {
 		this.token = token
@@ -18,7 +17,7 @@ export class GitHubGist {
 		const result = {}
 
 		for (const key of keys) {
-			const file = gist.files[`${key}${this.constructor.FILE_EXTENSION}`]
+			const file = gist.files[this.#buildFileName(key)]
 			if (!file) continue
 
 			// Gist API truncates files larger than ~1MB and they have `truncated: true`,
@@ -35,9 +34,10 @@ export class GitHubGist {
 	}
 
 	async set(key, serializedValue) {
+		const fileName = this.#buildFileName(key)
 		const content = JSON.stringify(serializedValue)
 
-		await this.#patchGist(`${key}${this.constructor.FILE_EXTENSION}`, content)
+		await this.#patchGist(fileName, content)
 	}
 
 	// Ensure `this.token` has access to `this.gistId`.
@@ -112,5 +112,9 @@ export class GitHubGist {
 		}
 
 		return response
+	}
+
+	#buildFileName(key) {
+		return `${key}.json`
 	}
 }
