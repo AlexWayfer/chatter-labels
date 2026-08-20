@@ -6,6 +6,7 @@ export class GitHubGistForm {
 	#storage
 	#optionsStorage
 	#tokenInputElement
+	#existingGistElement
 	#submitButtonElement
 	#toastSaved
 	#toastError
@@ -20,11 +21,13 @@ export class GitHubGistForm {
 		this.#storage = storage
 		this.#optionsStorage = optionsStorage
 		this.#tokenInputElement = element.querySelector('input[name="token"]')
+		this.#existingGistElement = element.querySelector('.existing-gist')
 		this.#submitButtonElement = element.querySelector('button[type="submit"]')
 		this.#toastSaved = new Toast(element.querySelector('.toast.saved'))
 		this.#toastError = new Toast(element.querySelector('.toast.error'))
 
 		this.#setTokenInputElementValue(this.#storage.githubGist?.token)
+		this.#setExistingGistElementHref(this.#storage.githubGist?.gistId)
 
 		const tokenVisibilityToggleElement = element.querySelector('button.token-visibility-toggle')
 
@@ -43,6 +46,7 @@ export class GitHubGistForm {
 			logger.debug('GitHub Gist Form storage message received')
 
 			this.#setTokenInputElementValue(storage.githubGist?.token)
+			this.#setExistingGistElementHref(storage.githubGist?.gistId)
 		})
 	}
 
@@ -70,5 +74,15 @@ export class GitHubGistForm {
 
 	#setTokenInputElementValue(newValue) {
 		this.#tokenInputElement.value = newValue ?? ''
+	}
+
+	#setExistingGistElementHref(gistId) {
+		if (!gistId) {
+			this.#existingGistElement.classList.add('hidden')
+			return
+		}
+
+		this.#existingGistElement.classList.remove('hidden')
+		this.#existingGistElement.querySelector('a').href = `https://gist.github.com/${gistId}`
 	}
 }
