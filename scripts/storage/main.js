@@ -28,13 +28,13 @@ export class MainStorage extends BaseStorage {
 
 		// logger.debug('githubGist = ', githubGist)
 
-		const provider = new GitHubGist(githubGist.token, githubGist.gistId)
+		const provider = new GitHubGist(githubGist?.token, githubGist?.gistId)
 
 		optionsStorage.subscribe('storage', updatedConfig => {
 			const githubGist = updatedConfig.githubGist
 
-			provider.token = githubGist.token
-			provider.gistId = githubGist.gistId
+			provider.token = githubGist?.token
+			provider.gistId = githubGist?.gistId
 		})
 
 		return super.create(provider)

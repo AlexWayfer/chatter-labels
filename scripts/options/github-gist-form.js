@@ -52,19 +52,13 @@ export class GitHubGistForm extends Form {
 
 	async _save() {
 		super._save(async () => {
-			try {
-				const token = this.#tokenInputElement.value
-				const provider = new GitHubGist(token, this.#storage.githubGist?.gistId)
-				const gistId = await provider.ensureGistAccess()
+			const token = this.#tokenInputElement.value
+			const provider = new GitHubGist(token, this.#storage.githubGist?.gistId)
+			const gistId = await provider.ensureGistAccess()
 
-				this.#storage.githubGist = { token, gistId }
+			this.#storage.githubGist = { token, gistId }
 
-				await this.#optionsStorage.set('storage', this.#storage)
-			} catch (error) {
-				this.#toastError.show(error)
-
-				throw error
-			}
+			await this.#optionsStorage.set('storage', this.#storage)
 		})
 	}
 

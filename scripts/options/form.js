@@ -5,6 +5,7 @@ export class Form {
 		this._element = element
 		this._submitButtonElement = this._element.querySelector('button[type="submit"]')
 		this._toastSaved = new Toast(this._element.querySelector('.toast.saved'))
+		this._toastError = new Toast(this._element.querySelector('.toast.error'))
 	}
 
 	async _save(logic) {
@@ -13,6 +14,10 @@ export class Form {
 		try {
 			await logic()
 			this._toastSaved.show()
+		} catch (error) {
+			this._toastError.show(error)
+
+			throw error
 		} finally {
 			this._submitButtonElement.disabled = false
 		}
