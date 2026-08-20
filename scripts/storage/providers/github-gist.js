@@ -35,7 +35,7 @@ export class GitHubGist {
 
 	async set(key, serializedValue) {
 		const fileName = this.#buildFileName(key)
-		const content = JSON.stringify(serializedValue)
+		const content = JSON.stringify(serializedValue, null, '\t')
 
 		await this.#patchGist(fileName, content)
 	}
