@@ -10,8 +10,12 @@ export class ChatMessage {
 		this.render()
 	}
 
-	render() {
-		const labels = this.#assignedLabels()
+	async render() {
+		const
+			userId = await this.#chat.userIdFrom(this.#element),
+			labels = this.#assignedLabels(userId)
+
+		if (!this.#element.isConnected) return
 
 		if (!labels.length) {
 			this.#iconsElement?.remove()
@@ -39,9 +43,7 @@ export class ChatMessage {
 		)
 	}
 
-	#assignedLabels() {
-		const userId = this.#element.dataset.userId
-
+	#assignedLabels(userId) {
 		if (!userId) return []
 
 		const userAssignments = this.#chat.assignments.filter(assignment => assignment.userId == userId)

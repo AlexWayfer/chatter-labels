@@ -1,4 +1,5 @@
 import { logger } from '../logger.js'
+import { TwitchAPI } from '../twitch/api.js'
 import { ChatMessage } from './chat-message.js'
 
 export class Chat {
@@ -19,6 +20,7 @@ export class Chat {
 	#messages = new Set()
 	#messagesByElement = new WeakMap()
 	#containers = new Map()
+	#userIdsByLogin = new Map()
 
 	constructor(mainStorage, labels, assignments) {
 		this.#mainStorage = mainStorage
@@ -34,6 +36,27 @@ export class Chat {
 
 	get assignments() {
 		return this.#assignments
+	}
+
+	async userIdFrom(element) {
+		if (element.dataset.userId) return element.dataset.userId
+
+		const login = element.dataset.aUser ?? element.dataset.user
+
+		if (!login) return null
+
+		let pending = this.#userIdsByLogin.get(login)
+
+		if (!pending) {
+			pending = TwitchAPI.fetchUser(login).then(user => user?.id ?? null)
+			this.#userIdsByLogin.set(login, pending)
+		}
+
+		const userId = await pending
+
+		if (userId) element.dataset.userId = userId
+
+		return userId
 	}
 
 	attachIfNeeded(node) {
