@@ -32,6 +32,7 @@ export class ChatMessage {
 				iconElement.classList.add('chatter-labels-icon')
 				iconElement.src = label.icon
 				iconElement.alt = label.name
+				iconElement.title = label.name
 
 				return iconElement
 			})
