@@ -20,7 +20,6 @@ export class LabelsForm extends Form {
 	constructor(element, mainStorage, labels, assignments) {
 		super(element)
 
-		this.element = element
 		this.#mainStorage = mainStorage
 		this.#labels = labels
 		this.#assignments = assignments
