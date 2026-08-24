@@ -68,11 +68,11 @@ export class GitHubGistForm extends Form {
 
 	_setExistingGistElementHref(gistId) {
 		if (!gistId) {
-			this.#existingGistElement.classList.add('hidden')
+			this.#existingGistElement.hidden = true
 			return
 		}
 
-		this.#existingGistElement.classList.remove('hidden')
+		this.#existingGistElement.hidden = false
 		this.#existingGistElement.querySelector('a').href = `https://gist.github.com/${gistId}`
 	}
 }

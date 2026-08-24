@@ -9,10 +9,10 @@ export class Toast {
 		clearTimeout(this.#timeoutId)
 
 		if (text) this._element.textContent = text
-		this._element.classList.remove('hidden')
+		this._element.hidden = false
 
 		this.#timeoutId = setTimeout(() => {
-			this._element.classList.add('hidden')
+			this._element.hidden = true
 			if (text) this._element.textContent = ''
 		}, 1500)
 	}
