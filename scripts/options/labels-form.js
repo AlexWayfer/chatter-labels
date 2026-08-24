@@ -76,6 +76,17 @@ export class LabelsForm extends Form {
 		})
 
 		fieldsetElement.querySelector('button.delete').addEventListener('click', _event => {
+			const name = fieldsetElement.querySelector('input[name="name"]').value
+
+			if (
+				!confirm([
+					`Remove label "${name}" from the list?`,
+					'Click "Save" to apply.'
+				].join('\n'))
+			) {
+				return
+			}
+
 			fieldsetElement.remove()
 			this.#updateMoveButtons()
 		})
