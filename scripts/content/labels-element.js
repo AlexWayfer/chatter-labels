@@ -22,11 +22,31 @@ export class LabelsElement {
 	static async create(user, mainStorage) {
 		const
 			labels = await mainStorage.get('labels'),
-			assignments = await mainStorage.get('assignments')
+			assignments = await this.#syncUsername(
+				user,
+				mainStorage,
+				await mainStorage.get('assignments')
+			)
 
-		const instance = new this(user, mainStorage, labels, assignments)
+		return new this(user, mainStorage, labels, assignments)
+	}
 
-		return instance
+	static async #syncUsername(user, mainStorage, assignments) {
+		if (!assignments.some(assignment =>
+			assignment.userId == user.id && assignment.username != user.name
+		)) {
+			return assignments
+		}
+
+		const updatedAssignments = assignments.map(assignment =>
+			assignment.userId == user.id
+				? new Assignment({ ...assignment, username: user.name })
+				: assignment
+		)
+
+		await mainStorage.set('assignments', updatedAssignments)
+
+		return updatedAssignments
 	}
 
 	constructor(user, mainStorage, labels, assignments) {
