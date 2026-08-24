@@ -39,12 +39,12 @@ export class LabelsForm extends Form {
 			this.#validateUniqueNames()
 		})
 
-		this._element.addEventListener('submit', event => {
+		this._element.querySelector('form[name="labels"]').addEventListener('submit', event => {
 			event.preventDefault()
 
 			this.#validateUniqueNames()
 
-			if (!this._element.checkValidity()) return
+			if (!event.currentTarget.checkValidity()) return
 
 			this._save()
 		})
@@ -91,7 +91,15 @@ export class LabelsForm extends Form {
 			this.#updateMoveButtons()
 		})
 
-		fieldsetElement.querySelector('button.add-assignments').addEventListener('click', _event => {
+		fieldsetElement.querySelector('button.show-add-assignments').addEventListener('click', _event => {
+			fieldsetElement.querySelector('button.show-add-assignments').hidden = true
+			fieldsetElement.querySelector('form.add-assignments').hidden = false
+			fieldsetElement.querySelector('textarea').focus()
+		})
+
+		fieldsetElement.querySelector('form.add-assignments').addEventListener('submit', event => {
+			event.preventDefault()
+
 			this.#addAssignments(fieldsetElement)
 		})
 
@@ -206,10 +214,20 @@ export class LabelsForm extends Form {
 
 	async #addAssignments(fieldsetElement) {
 		const
-			textarea = fieldsetElement.querySelector('textarea'),
-			addButton = fieldsetElement.querySelector('button.add-assignments'),
-			toastAdded = new Toast(fieldsetElement.querySelector('.assignments .added')),
-			toastError = new Toast(fieldsetElement.querySelector('.assignments .error')),
+			form = fieldsetElement.querySelector('form.add-assignments'),
+			textarea = form.querySelector('textarea'),
+			addButton = form.querySelector('button[type="submit"]'),
+			toastAdded = new Toast(form.querySelector('.added')),
+			toastError = new Toast(form.querySelector('.error')),
+			nicknames = this.#parseNicknames(textarea.value)
+
+		if (!nicknames.length) {
+			form.hidden = true
+			fieldsetElement.querySelector('button.show-add-assignments').hidden = false
+			return
+		}
+
+		const
 			labelId = fieldsetElement.querySelector('input[name="id"]').value,
 			label = this.#labels.find(label => label.id == labelId)
 
@@ -217,10 +235,6 @@ export class LabelsForm extends Form {
 			toastError.show('Save the label first')
 			return
 		}
-
-		const nicknames = this.#parseNicknames(textarea.value)
-
-		if (!nicknames.length) return
 
 		addButton.disabled = true
 

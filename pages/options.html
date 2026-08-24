@@ -47,7 +47,7 @@
 
 		<h2>Labels</h2>
 
-		<form name="labels">
+		<div class="labels">
 			<template id="label">
 				<fieldset>
 					<div class="move">
@@ -58,13 +58,13 @@
 					<div class="content">
 						<div class="label">
 							<div class="fields">
-								<input type="hidden" name="id" />
+								<input type="hidden" name="id" form="labels-form" />
 
 								<label>
 									Icon:
 									<img class="icon-preview" alt="" />
-									<input type="hidden" name="icon" />
-									<input type="file" class="icon" accept="image/*" required />
+									<input type="hidden" name="icon" form="labels-form" />
+									<input type="file" class="icon" form="labels-form" accept="image/*" required />
 								</label>
 
 								<label>
@@ -72,6 +72,7 @@
 									<input
 										type="text"
 										name="name"
+										form="labels-form"
 										required
 										autocomplete="off"
 									/>
@@ -92,13 +93,16 @@
 							<ul>
 							</ul>
 
-							<textarea
-								rows="3"
-								placeholder="One nickname per line"
-							></textarea>
-							<button type="button" class="add-assignments">Add</button>
-							<span class="toast added" hidden>Added!</span>
-							<span class="toast error" hidden></span>
+							<button type="button" class="show-add-assignments">Add</button>
+							<form class="add-assignments" hidden>
+								<textarea
+									rows="3"
+									placeholder="One nickname per line"
+								></textarea>
+								<button type="submit">Add</button>
+								<span class="toast added" hidden>Added!</span>
+								<span class="toast error" hidden></span>
+							</form>
 						</div>
 					</div>
 
@@ -113,10 +117,12 @@
 
 			<p class="empty-list-notice">List is empty.</p>
 
-			<button type="button" class="add">Add</button>
-			<button type="submit">Save</button>
-			<span class="toast saved" hidden>Saved!</span>
-			<span class="toast error" hidden></span>
-		</form>
+			<form name="labels" id="labels-form">
+				<button type="button" class="add">Add</button>
+				<button type="submit">Save</button>
+				<span class="toast saved" hidden>Saved!</span>
+				<span class="toast error" hidden></span>
+			</form>
+		</div>
 	</body>
 </html>

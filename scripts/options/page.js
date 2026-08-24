@@ -22,4 +22,4 @@ window.addEventListener('pageshow', event => {
 
 GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), optionsStorage)
 
-LabelsForm.create(document.querySelector('form[name="labels"]'), mainStorage)
+LabelsForm.create(document.querySelector('.labels'), mainStorage)
