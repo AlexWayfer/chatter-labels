@@ -16,6 +16,7 @@ export class LabelsElement {
 	#assignments
 	#subscriptions
 	#formElement
+	#submitButtonElement
 	#formFieldsetsElement
 
 	static async create(user, mainStorage) {
@@ -76,6 +77,7 @@ export class LabelsElement {
 		this.element = elementTemplate.content.cloneNode(true).firstElementChild
 
 		this.#formElement = this.element.querySelector('form')
+		this.#submitButtonElement = this.#formElement.querySelector('button[type="submit"]')
 		this.#formElement.addEventListener('submit', event => {
 			event.preventDefault()
 
@@ -102,32 +104,38 @@ export class LabelsElement {
 	}
 
 	async #save() {
-		const newAssignments = Array.from(
-			this.#formElement.querySelectorAll('input[name="label"]:checked'),
-			checkbox => {
-				const
-					label = this.#labels.find(label => label.id == checkbox.value),
-					existing = this.#assignments.find(
-						assignment => assignment.userId == this.#user.id
-							&& assignment.label.id == checkbox.value
-					)
+		this.#submitButtonElement.disabled = true
 
-				return new Assignment({
-					userId: this.#user.id,
-					username: this.#user.name,
-					label,
-					assignedAt: existing?.assignedAt ?? new Date().toISOString()
-				})
-			}
-		)
+		try {
+			const newAssignments = Array.from(
+				this.#formElement.querySelectorAll('input[name="label"]:checked'),
+				checkbox => {
+					const
+						label = this.#labels.find(label => label.id == checkbox.value),
+						existing = this.#assignments.find(
+							assignment => assignment.userId == this.#user.id
+								&& assignment.label.id == checkbox.value
+						)
 
-		this.#assignments = [
-			...this.#assignments.filter(assignment => assignment.userId != this.#user.id),
-			...newAssignments
-		]
+					return new Assignment({
+						userId: this.#user.id,
+						username: this.#user.name,
+						label,
+						assignedAt: existing?.assignedAt ?? new Date().toISOString()
+					})
+				}
+			)
 
-		logger.debug('save this.#assignments = ', this.#assignments)
+			this.#assignments = [
+				...this.#assignments.filter(assignment => assignment.userId != this.#user.id),
+				...newAssignments
+			]
 
-		this.#mainStorage.set('assignments', this.#assignments)
+			logger.debug('save this.#assignments = ', this.#assignments)
+
+			await this.#mainStorage.set('assignments', this.#assignments)
+		} finally {
+			this.#submitButtonElement.disabled = false
+		}
 	}
 }

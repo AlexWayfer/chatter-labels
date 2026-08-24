@@ -65,6 +65,12 @@
 			border-radius: var(--button-border-radius-default);
 			background-color: var(--color-background-button-primary-default);
 			color: var(--color-text-button-primary);
+
+			&:disabled {
+				cursor: not-allowed;
+				background-color: var(--color-background-button-disabled);
+				color: var(--color-text-button-disabled);
+			}
 		}
 	}
 }
