@@ -1,11 +1,13 @@
 export class IconField {
 	#fileInput
 	#valueInput
+	#nameInput
 	#previewElement
 
 	constructor(fieldsetElement) {
 		this.#fileInput = fieldsetElement.querySelector('input.icon')
 		this.#valueInput = fieldsetElement.querySelector('input[name="icon"]')
+		this.#nameInput = fieldsetElement.querySelector('input[name="name"]')
 		this.#previewElement = fieldsetElement.querySelector('img.icon-preview')
 
 		this.#updatePreview()
@@ -30,6 +32,7 @@ export class IconField {
 		try {
 			this.#valueInput.value = await this.#dataUrl(file)
 			this.#updatePreview()
+			this.#fillEmptyName(file)
 		} catch {
 			this.#fileInput.setCustomValidity('Could not read image')
 			this.#fileInput.reportValidity()
@@ -45,6 +48,15 @@ export class IconField {
 		}
 
 		this.#fileInput.required = !this.#valueInput.value
+	}
+
+	#fillEmptyName(file) {
+		if (this.#nameInput.value.trim()) return
+
+		const lastDot = file.name.lastIndexOf('.')
+
+		this.#nameInput.value = lastDot > 0 ? file.name.slice(0, lastDot) : file.name
+		this.#nameInput.dispatchEvent(new Event('input', { bubbles: true }))
 	}
 
 	async #dataUrl(file) {
