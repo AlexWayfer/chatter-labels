@@ -84,7 +84,8 @@ body {
 				}
 
 				.buttons button,
-				.move button {
+				.move button,
+				.assignments li button {
 					background: transparent;
 					border: none;
 					cursor: pointer;
@@ -110,6 +111,10 @@ body {
 					}
 
 					&.delete .icon {
+						mask-image: url("../images/delete.svg");
+					}
+
+					&.delete-assignment .icon {
 						mask-image: url("../images/delete.svg");
 					}
 				}
@@ -175,6 +180,10 @@ body {
 						.assigned-at {
 							font-size: 0.8em;
 							color: gray;
+						}
+
+						button {
+							vertical-align: middle;
 						}
 					}
 				}

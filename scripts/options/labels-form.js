@@ -171,12 +171,36 @@ export class LabelsForm extends Form {
 		for (const assignment of this.#assignments) {
 			if (assignment.label.id != labelId) continue
 
-			const assignmentFragment = document.importNode(template.content, true)
+			const
+				assignmentFragment = document.importNode(template.content, true),
+				assignmentElement = assignmentFragment.querySelector('li')
 
-			assignmentFragment.querySelector('.username').textContent = assignment.username
-			assignmentFragment.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
+			assignmentElement.querySelector('.username').textContent = assignment.username
+			assignmentElement.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
+
+			assignmentElement.querySelector('button.delete-assignment').addEventListener('click', event => {
+				this.#deleteAssignment(event.currentTarget, assignment)
+			})
 
 			listElement.append(assignmentFragment)
+		}
+	}
+
+	async #deleteAssignment(deleteButton, assignment) {
+		if (!confirm(`Delete assignment "${assignment.username}" from "${assignment.label.name}"?`)) return
+
+		deleteButton.disabled = true
+
+		try {
+			this.#assignments = this.#assignments.filter(existing =>
+				existing.userId != assignment.userId || existing.label.id != assignment.label.id
+			)
+
+			await this.#mainStorage.set('assignments', this.#assignments)
+		} catch (error) {
+			deleteButton.disabled = false
+			new Toast(deleteButton.closest('.assignments').querySelector('.error')).show(error)
+			throw error
 		}
 	}
 
