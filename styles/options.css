@@ -9,7 +9,8 @@ body {
 	}
 
 	button,
-	input {
+	input,
+	textarea {
 		font-size: inherit;
 
 		/* Position */
@@ -21,7 +22,8 @@ body {
 
 	fieldset,
 	button,
-	input {
+	input,
+	textarea {
 		border-radius: var(--input-border-radius);
 	}
 
@@ -153,16 +155,16 @@ body {
 			}
 
 			.assignments {
-				&:not(:has(ul > li)) {
-					display: none;
-				}
-
 				h4 {
 					margin: 1em 0 0.6em var(--input-label-padding);
 				}
 
 				ul {
 					margin: 0.6em 0;
+
+					&:not(:has(li)) {
+						display: none;
+					}
 
 					li {
 						.username {
@@ -174,6 +176,14 @@ body {
 							color: gray;
 						}
 					}
+				}
+
+				textarea {
+					display: block;
+					width: 100%;
+					margin: 0.6em 0 0.4em;
+					font-family: inherit;
+					resize: vertical;
 				}
 			}
 
@@ -191,7 +201,8 @@ body {
 	.toast {
 		margin-left: 0.4em;
 
-		&.saved {
+		&.saved,
+		&.added {
 			color: green;
 		}
 

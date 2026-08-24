@@ -13,7 +13,8 @@
 	},
 	"host_permissions": [
 		"https://api.github.com/*",
-		"https://gist.githubusercontent.com/*"
+		"https://gist.githubusercontent.com/*",
+		"https://gql.twitch.tv/*"
 	],
 	"content_scripts": [
 		{

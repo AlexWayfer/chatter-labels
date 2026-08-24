@@ -1,7 +1,10 @@
 import { logger } from '../logger.js'
+import { Assignment } from '../models/assignment.js'
 import { Label } from '../models/label.js'
+import { TwitchAPI } from '../twitch/api.js'
 import { Form } from './form.js'
 import { IconField } from './icon-field.js'
+import { Toast } from './toast.js'
 
 export class LabelsForm extends Form {
 	#mainStorage
@@ -54,9 +57,7 @@ export class LabelsForm extends Form {
 	add(data = {}) {
 		const
 			fieldsetFragment = document.importNode(this.#fieldsetTemplate.content, true),
-			fieldsetElement = fieldsetFragment.querySelector('fieldset'),
-			assignmentsListElement = fieldsetFragment.querySelector('.assignments ul'),
-			assignmentTemplate = fieldsetFragment.querySelector('template#assignment')
+			fieldsetElement = fieldsetFragment.querySelector('fieldset')
 
 		fieldsetElement.querySelectorAll('input[name]').forEach(input => {
 			input.value = data[input.name] ?? (input.name == 'id' ? crypto.randomUUID(): '')
@@ -79,16 +80,11 @@ export class LabelsForm extends Form {
 			this.#updateMoveButtons()
 		})
 
-		for (const assignment of this.#assignments) {
-			if (assignment.label.id != data.id) continue
+		fieldsetElement.querySelector('button.add-assignments').addEventListener('click', _event => {
+			this.#addAssignments(fieldsetElement)
+		})
 
-			const assignmentFragment = document.importNode(assignmentTemplate.content, true)
-
-			assignmentFragment.querySelector('.username').textContent = assignment.username
-			assignmentFragment.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
-
-			assignmentsListElement.append(assignmentFragment)
-		}
+		this.#renderAssignmentList(fieldsetElement)
 
 		this.#fieldsetsElement.append(fieldsetFragment)
 		this.#updateMoveButtons()
@@ -117,7 +113,7 @@ export class LabelsForm extends Form {
 
 		this.#mainStorage.subscribe('assignments', assignments => {
 			this.#assignments = assignments
-			this.#renderLabels()
+			this.#renderAssignmentLists()
 		})
 	}
 
@@ -145,6 +141,115 @@ export class LabelsForm extends Form {
 
 			await this.#mainStorage.set('assignments', this.#assignments)
 		})
+	}
+
+	#renderAssignmentLists() {
+		Array.from(this.#fieldsetsElement.children).forEach(
+			fieldset => this.#renderAssignmentList(fieldset)
+		)
+	}
+
+	#renderAssignmentList(fieldsetElement) {
+		const
+			listElement = fieldsetElement.querySelector('.assignments ul'),
+			template = fieldsetElement.querySelector('template#assignment'),
+			labelId = fieldsetElement.querySelector('input[name="id"]').value
+
+		listElement.replaceChildren()
+
+		for (const assignment of this.#assignments) {
+			if (assignment.label.id != labelId) continue
+
+			const assignmentFragment = document.importNode(template.content, true)
+
+			assignmentFragment.querySelector('.username').textContent = assignment.username
+			assignmentFragment.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
+
+			listElement.append(assignmentFragment)
+		}
+	}
+
+	async #addAssignments(fieldsetElement) {
+		const
+			textarea = fieldsetElement.querySelector('textarea'),
+			addButton = fieldsetElement.querySelector('button.add-assignments'),
+			toastAdded = new Toast(fieldsetElement.querySelector('.assignments .added')),
+			toastError = new Toast(fieldsetElement.querySelector('.assignments .error')),
+			labelId = fieldsetElement.querySelector('input[name="id"]').value,
+			label = this.#labels.find(label => label.id == labelId)
+
+		if (!label) {
+			toastError.show('Save the label first')
+			return
+		}
+
+		const nicknames = this.#parseNicknames(textarea.value)
+
+		if (!nicknames.length) return
+
+		addButton.disabled = true
+
+		try {
+			const
+				newAssignments = [],
+				unknownNicknames = []
+
+			for (const nickname of nicknames) {
+				const user = await TwitchAPI.fetchUser(nickname)
+
+				if (!user) {
+					unknownNicknames.push(nickname)
+					continue
+				}
+
+				if (this.#assignments.some(assignment =>
+					assignment.label.id == label.id && assignment.userId == user.id
+				)) {
+					continue
+				}
+
+				const assignment = new Assignment({
+					userId: user.id,
+					username: user.displayName,
+					label,
+					assignedAt: new Date().toISOString()
+				})
+
+				this.#assignments.push(assignment)
+				newAssignments.push(assignment)
+			}
+
+			if (newAssignments.length) {
+				await this.#mainStorage.set('assignments', this.#assignments)
+				toastAdded.show()
+			}
+
+			textarea.value = unknownNicknames.join('\n')
+
+			if (unknownNicknames.length) {
+				toastError.show(`Unknown nicknames: ${unknownNicknames.join(', ')}`)
+			}
+		} catch (error) {
+			toastError.show(error)
+			throw error
+		} finally {
+			addButton.disabled = false
+		}
+	}
+
+	#parseNicknames(text) {
+		const nicknames = []
+
+		for (const line of text.split('\n')) {
+			const nickname = line.trim().replace(/^@/, '')
+
+			if (!nickname) continue
+			if (nicknames.some(existing => existing.toLowerCase() == nickname.toLowerCase())) continue
+
+			nicknames.push(nickname)
+		}
+
+		return nicknames
 	}
 
 	#validateUniqueNames() {
