@@ -69,14 +69,57 @@ body {
 			fieldset {
 				--input-label-padding: 0.2em;
 
+				display: flex;
+				align-items: center;
 				padding: 0.5em;
 				margin-bottom: 0.6em;
 
-				.label {
+				.move,
+				.buttons {
 					display: flex;
-					justify-content: space-between;
-					align-items: start;
+					flex-direction: column;
+				}
 
+				.buttons button,
+				.move button {
+					background: transparent;
+					border: none;
+					cursor: pointer;
+					line-height: 0;
+					padding: 0.4em;
+
+					.icon {
+						--size: 0.9em;
+
+						width: var(--size);
+						height: var(--size);
+						mask-repeat: no-repeat;
+						mask-size: contain;
+						background-color: #444;
+					}
+
+					&.up .icon {
+						mask-image: url("../images/arrow-up.svg");
+					}
+
+					&.down .icon {
+						mask-image: url("../images/arrow-down.svg");
+					}
+
+					&.delete .icon {
+						mask-image: url("../images/delete.svg");
+					}
+				}
+
+				.content {
+					flex: 1;
+				}
+
+				.buttons {
+					align-self: start;
+				}
+
+				.label {
 					label {
 						display: inline-block;
 						position: relative;
@@ -104,28 +147,6 @@ body {
 							clip-path: inset(50%);
 							opacity: 0;
 							border: 0;
-						}
-					}
-
-					button.delete {
-						background: transparent;
-						border: none;
-						cursor: pointer;
-						line-height: 0;
-						padding: 0.4em;
-						margin-left: 0.2em;
-
-						.icon {
-							--size: 0.9em;
-
-							width: var(--size);
-							height: var(--size);
-
-							/* Icon */
-							mask-image: url("../images/delete.svg");
-							mask-repeat: no-repeat;
-							mask-size: contain;
-							background-color: #444;
 						}
 					}
 				}

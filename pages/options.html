@@ -50,47 +50,51 @@
 		<form name="labels">
 			<template id="label">
 				<fieldset>
-					<div class="label">
-						<div class="fields">
-							<input type="hidden" name="id" />
+					<div class="move">
+						<button type="button" class="up"><div class="icon"></div></button>
+						<button type="button" class="down"><div class="icon"></div></button>
+					</div>
 
-							<label>
-								Icon:
-								<img class="icon-preview" alt="" />
-								<input type="hidden" name="icon" />
-								<input type="file" class="icon" accept="image/*" required />
-							</label>
+					<div class="content">
+						<div class="label">
+							<div class="fields">
+								<input type="hidden" name="id" />
 
-							<label>
-								Name:
-								<input
-									type="text"
-									name="name"
-									required
-									autocomplete="off"
-								/>
-							</label>
+								<label>
+									Icon:
+									<img class="icon-preview" alt="" />
+									<input type="hidden" name="icon" />
+									<input type="file" class="icon" accept="image/*" required />
+								</label>
+
+								<label>
+									Name:
+									<input
+										type="text"
+										name="name"
+										required
+										autocomplete="off"
+									/>
+								</label>
+							</div>
 						</div>
 
-						<div class="buttons">
-							<button
-								type="button"
-								class="delete"
-							><div class="icon"></div></button>
+						<div class="assignments">
+							<h4>Assignments:</h4>
+
+							<template id="assignment">
+								<li>
+									<span class="username"></span> <span class="assigned-at"></span>
+								</li>
+							</template>
+
+							<ul>
+							</ul>
 						</div>
 					</div>
 
-					<div class="assignments">
-						<h4>Assignments:</h4>
-
-						<template id="assignment">
-							<li>
-								<span class="username"></span> <span class="assigned-at"></span>
-							</li>
-						</template>
-
-						<ul>
-						</ul>
+					<div class="buttons">
+						<button type="button" class="delete"><div class="icon"></div></button>
 					</div>
 				</fieldset>
 			</template>

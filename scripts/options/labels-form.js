@@ -64,8 +64,19 @@ export class LabelsForm extends Form {
 
 		new IconField(fieldsetElement)
 
+		fieldsetElement.querySelector('button.up').addEventListener('click', _event => {
+			fieldsetElement.previousElementSibling.before(fieldsetElement)
+			this.#updateMoveButtons()
+		})
+
+		fieldsetElement.querySelector('button.down').addEventListener('click', _event => {
+			fieldsetElement.nextElementSibling.after(fieldsetElement)
+			this.#updateMoveButtons()
+		})
+
 		fieldsetElement.querySelector('button.delete').addEventListener('click', _event => {
 			fieldsetElement.remove()
+			this.#updateMoveButtons()
 		})
 
 		for (const assignment of this.#assignments) {
@@ -80,6 +91,16 @@ export class LabelsForm extends Form {
 		}
 
 		this.#fieldsetsElement.append(fieldsetFragment)
+		this.#updateMoveButtons()
+	}
+
+	#updateMoveButtons() {
+		const fieldsets = this.#fieldsetsElement.children
+
+		Array.from(fieldsets).forEach((fieldset, index) => {
+			fieldset.querySelector('button.up').hidden = index == 0
+			fieldset.querySelector('button.down').hidden = index == fieldsets.length - 1
+		})
 	}
 
 	#renderLabels() {
