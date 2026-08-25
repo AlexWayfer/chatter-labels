@@ -10,6 +10,7 @@ export class AssignmentsList {
 	#listElement
 	#template
 	#showButton
+	#toggleRemoveButton
 	#form
 
 	constructor(element, mainStorage, label, assignments) {
@@ -20,12 +21,21 @@ export class AssignmentsList {
 		this.#listElement = element.querySelector('ul')
 		this.#template = element.querySelector('template#assignment')
 		this.#showButton = element.querySelector('button.show-add-assignments')
+		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
 		this.#form = element.querySelector('form.add-assignments')
 
 		this.#showButton.addEventListener('click', _event => {
 			this.#showButton.hidden = true
 			this.#form.hidden = false
 			this.#form.querySelector('textarea').focus()
+		})
+
+		this.#toggleRemoveButton.addEventListener('click', _event => {
+			this.#toggleRemoveButton.classList.toggle('active')
+
+			this.#listElement.querySelectorAll('button.delete-assignment').forEach(button => {
+				button.classList.toggle('invisible')
+			})
 		})
 
 		this.#form.addEventListener('submit', event => {
@@ -57,12 +67,17 @@ export class AssignmentsList {
 
 			const
 				assignmentFragment = document.importNode(this.#template.content, true),
-				assignmentElement = assignmentFragment.querySelector('li')
+				assignmentElement = assignmentFragment.querySelector('li'),
+				deleteButton = assignmentElement.querySelector('button.delete-assignment')
 
 			assignmentElement.querySelector('.username').textContent = assignment.username
 			assignmentElement.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
 
-			assignmentElement.querySelector('button.delete-assignment').addEventListener('click', event => {
+			deleteButton.classList.toggle(
+				'invisible',
+				!this.#toggleRemoveButton.classList.contains('active')
+			)
+			deleteButton.addEventListener('click', event => {
 				this.#delete(event.currentTarget, assignment)
 			})
 
