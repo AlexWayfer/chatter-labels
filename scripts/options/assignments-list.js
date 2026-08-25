@@ -12,6 +12,8 @@ export class AssignmentsList {
 	#toggleAddButton
 	#toggleRemoveButton
 	#form
+	#toastAdded
+	#toastError
 
 	constructor(element, mainStorage, label, assignments) {
 		this.#mainStorage = mainStorage
@@ -23,6 +25,8 @@ export class AssignmentsList {
 		this.#toggleAddButton = element.querySelector('button.toggle-add-assignments')
 		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
 		this.#form = element.querySelector('form.add-assignments')
+		this.#toastAdded = new Toast(this.#form.querySelector('.added'))
+		this.#toastError = new Toast(this.#form.querySelector('.error'))
 
 		this.#toggleAddButton.addEventListener('click', _event => {
 			this.#toggleAddButton.classList.toggle('active')
@@ -106,7 +110,7 @@ export class AssignmentsList {
 			)
 		} catch (error) {
 			deleteButton.disabled = false
-			new Toast(this.#form.querySelector('.error')).show(error)
+			this.#toastError.show(error)
 			throw error
 		}
 	}
@@ -115,14 +119,12 @@ export class AssignmentsList {
 		const
 			textarea = this.#form.querySelector('textarea'),
 			saveButton = this.#form.querySelector('button[type="submit"]'),
-			toastAdded = new Toast(this.#form.querySelector('.added')),
-			toastError = new Toast(this.#form.querySelector('.error')),
 			nicknames = this.#parseNicknames(textarea.value)
 
 		if (!nicknames.length) return
 
 		if (!this.#label) {
-			toastError.show('Save the label first')
+			this.#toastError.show('Save the label first')
 			return
 		}
 
@@ -160,16 +162,16 @@ export class AssignmentsList {
 
 			if (newAssignments.length) {
 				await this.#mainStorage.set('assignments', this.#assignments)
-				toastAdded.show()
+				this.#toastAdded.show()
 			}
 
 			textarea.value = unknownNicknames.join('\n')
 
 			if (unknownNicknames.length) {
-				toastError.show(`Unknown nicknames: ${unknownNicknames.join(', ')}`)
+				this.#toastError.show(`Unknown nicknames: ${unknownNicknames.join(', ')}`)
 			}
 		} catch (error) {
-			toastError.show(error)
+			this.#toastError.show(error)
 			throw error
 		} finally {
 			saveButton.disabled = false
