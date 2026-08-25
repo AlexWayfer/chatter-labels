@@ -3,10 +3,11 @@
 
 	.chatter-labels-icon {
 		--size: 1.8rem;
+
 		height: var(--size);
 		width: auto;
 		min-width: var(--size);
-		margin: 0 .3rem .2rem 0;
+		margin: 0 0.3rem 0.2rem 0;
 		vertical-align: middle;
 	}
 }
