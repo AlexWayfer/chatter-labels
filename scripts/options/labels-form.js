@@ -1,10 +1,8 @@
 import { logger } from '../logger.js'
-import { Assignment } from '../models/assignment.js'
 import { Label } from '../models/label.js'
-import { TwitchAPI } from '../twitch/api.js'
+import { AssignmentsList } from './assignments-list.js'
 import { Form } from './form.js'
 import { IconField } from './icon-field.js'
-import { Toast } from './toast.js'
 
 export class LabelsForm extends Form {
 	#mainStorage
@@ -91,19 +89,12 @@ export class LabelsForm extends Form {
 			this.#updateMoveButtons()
 		})
 
-		fieldsetElement.querySelector('button.show-add-assignments').addEventListener('click', _event => {
-			fieldsetElement.querySelector('button.show-add-assignments').hidden = true
-			fieldsetElement.querySelector('form.add-assignments').hidden = false
-			fieldsetElement.querySelector('textarea').focus()
-		})
-
-		fieldsetElement.querySelector('form.add-assignments').addEventListener('submit', event => {
-			event.preventDefault()
-
-			this.#addAssignments(fieldsetElement)
-		})
-
-		this.#renderAssignmentList(fieldsetElement)
+		new AssignmentsList(
+			fieldsetElement.querySelector('.assignments'),
+			this.#mainStorage,
+			data.id ? data : null,
+			this.#assignments
+		)
 
 		this.#fieldsetsElement.append(fieldsetFragment)
 		this.#updateMoveButtons()
@@ -132,7 +123,6 @@ export class LabelsForm extends Form {
 
 		this.#mainStorage.subscribe('assignments', assignments => {
 			this.#assignments = assignments
-			this.#renderAssignmentLists()
 		})
 	}
 
@@ -160,145 +150,6 @@ export class LabelsForm extends Form {
 
 			await this.#mainStorage.set('assignments', this.#assignments)
 		})
-	}
-
-	#renderAssignmentLists() {
-		Array.from(this.#fieldsetsElement.children).forEach(
-			fieldset => this.#renderAssignmentList(fieldset)
-		)
-	}
-
-	#renderAssignmentList(fieldsetElement) {
-		const
-			listElement = fieldsetElement.querySelector('.assignments ul'),
-			template = fieldsetElement.querySelector('template#assignment'),
-			labelId = fieldsetElement.querySelector('input[name="id"]').value
-
-		listElement.replaceChildren()
-
-		for (const assignment of this.#assignments) {
-			if (assignment.label.id != labelId) continue
-
-			const
-				assignmentFragment = document.importNode(template.content, true),
-				assignmentElement = assignmentFragment.querySelector('li')
-
-			assignmentElement.querySelector('.username').textContent = assignment.username
-			assignmentElement.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
-
-			assignmentElement.querySelector('button.delete-assignment').addEventListener('click', event => {
-				this.#deleteAssignment(event.currentTarget, assignment)
-			})
-
-			listElement.append(assignmentFragment)
-		}
-	}
-
-	async #deleteAssignment(deleteButton, assignment) {
-		if (!confirm(`Delete assignment "${assignment.username}" from "${assignment.label.name}"?`)) return
-
-		deleteButton.disabled = true
-
-		try {
-			this.#assignments = this.#assignments.filter(existing =>
-				existing.userId != assignment.userId || existing.label.id != assignment.label.id
-			)
-
-			await this.#mainStorage.set('assignments', this.#assignments)
-		} catch (error) {
-			deleteButton.disabled = false
-			new Toast(deleteButton.closest('.assignments').querySelector('.error')).show(error)
-			throw error
-		}
-	}
-
-	async #addAssignments(fieldsetElement) {
-		const
-			form = fieldsetElement.querySelector('form.add-assignments'),
-			textarea = form.querySelector('textarea'),
-			addButton = form.querySelector('button[type="submit"]'),
-			toastAdded = new Toast(form.querySelector('.added')),
-			toastError = new Toast(form.querySelector('.error')),
-			nicknames = this.#parseNicknames(textarea.value)
-
-		if (!nicknames.length) {
-			form.hidden = true
-			fieldsetElement.querySelector('button.show-add-assignments').hidden = false
-			return
-		}
-
-		const
-			labelId = fieldsetElement.querySelector('input[name="id"]').value,
-			label = this.#labels.find(label => label.id == labelId)
-
-		if (!label) {
-			toastError.show('Save the label first')
-			return
-		}
-
-		addButton.disabled = true
-
-		try {
-			const
-				newAssignments = [],
-				unknownNicknames = []
-
-			for (const nickname of nicknames) {
-				const user = await TwitchAPI.fetchUser(nickname)
-
-				if (!user) {
-					unknownNicknames.push(nickname)
-					continue
-				}
-
-				if (this.#assignments.some(assignment =>
-					assignment.label.id == label.id && assignment.userId == user.id
-				)) {
-					continue
-				}
-
-				const assignment = new Assignment({
-					userId: user.id,
-					username: user.displayName,
-					label,
-					assignedAt: new Date().toISOString()
-				})
-
-				this.#assignments.push(assignment)
-				newAssignments.push(assignment)
-			}
-
-			if (newAssignments.length) {
-				await this.#mainStorage.set('assignments', this.#assignments)
-				toastAdded.show()
-			}
-
-			textarea.value = unknownNicknames.join('\n')
-
-			if (unknownNicknames.length) {
-				toastError.show(`Unknown nicknames: ${unknownNicknames.join(', ')}`)
-			}
-		} catch (error) {
-			toastError.show(error)
-			throw error
-		} finally {
-			addButton.disabled = false
-		}
-	}
-
-	#parseNicknames(text) {
-		const nicknames = []
-
-		for (const line of text.split('\n')) {
-			const nickname = line.trim().replace(/^@/, '')
-
-			if (!nickname) continue
-			if (nicknames.some(existing => existing.toLowerCase() == nickname.toLowerCase())) continue
-
-			nicknames.push(nickname)
-		}
-
-		return nicknames
 	}
 
 	#validateUniqueNames() {
