@@ -9,7 +9,7 @@ export class AssignmentsList {
 	#unsubscribe
 	#listElement
 	#template
-	#showButton
+	#toggleAddButton
 	#toggleRemoveButton
 	#form
 
@@ -20,14 +20,15 @@ export class AssignmentsList {
 
 		this.#listElement = element.querySelector('ul')
 		this.#template = element.querySelector('template#assignment')
-		this.#showButton = element.querySelector('button.show-add-assignments')
+		this.#toggleAddButton = element.querySelector('button.toggle-add-assignments')
 		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
 		this.#form = element.querySelector('form.add-assignments')
 
-		this.#showButton.addEventListener('click', _event => {
-			this.#showButton.hidden = true
-			this.#form.hidden = false
-			this.#form.querySelector('textarea').focus()
+		this.#toggleAddButton.addEventListener('click', _event => {
+			this.#toggleAddButton.classList.toggle('active')
+			this.#form.hidden = !this.#form.hidden
+
+			if (!this.#form.hidden) this.#form.querySelector('textarea').focus()
 		})
 
 		this.#toggleRemoveButton.addEventListener('click', _event => {
@@ -107,14 +108,14 @@ export class AssignmentsList {
 	async #add() {
 		const
 			textarea = this.#form.querySelector('textarea'),
-			addButton = this.#form.querySelector('button[type="submit"]'),
+			saveButton = this.#form.querySelector('button[type="submit"]'),
 			toastAdded = new Toast(this.#form.querySelector('.added')),
 			toastError = new Toast(this.#form.querySelector('.error')),
 			nicknames = this.#parseNicknames(textarea.value)
 
 		if (!nicknames.length) {
 			this.#form.hidden = true
-			this.#showButton.hidden = false
+			this.#toggleAddButton.classList.remove('active')
 			return
 		}
 
@@ -123,7 +124,7 @@ export class AssignmentsList {
 			return
 		}
 
-		addButton.disabled = true
+		saveButton.disabled = true
 
 		try {
 			const
@@ -169,7 +170,7 @@ export class AssignmentsList {
 			toastError.show(error)
 			throw error
 		} finally {
-			addButton.disabled = false
+			saveButton.disabled = false
 		}
 	}
 
