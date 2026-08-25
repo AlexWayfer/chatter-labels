@@ -1,14 +1,12 @@
 import { logger } from '../logger.js'
 import { GitHubGist } from '../storage/providers/github-gist.js'
 import { Form } from './form.js'
-import { Toast } from './toast.js'
 
 export class GitHubGistForm extends Form {
 	#storage
 	#optionsStorage
 	#tokenInputElement
 	#existingGistElement
-	#toastError
 
 	static async create(element, optionsStorage) {
 		const storage = await optionsStorage.get('storage')
@@ -23,7 +21,6 @@ export class GitHubGistForm extends Form {
 		this.#optionsStorage = optionsStorage
 		this.#tokenInputElement = this._element.querySelector('input[name="token"]')
 		this.#existingGistElement = this._element.querySelector('.existing-gist')
-		this.#toastError = new Toast(this._element.querySelector('.toast.error'))
 
 		this._setTokenInputElementValue(this.#storage.githubGist?.token)
 		this._setExistingGistElementHref(this.#storage.githubGist?.gistId)

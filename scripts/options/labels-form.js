@@ -58,7 +58,7 @@ export class LabelsForm extends Form {
 			fieldsetElement = fieldsetFragment.querySelector('fieldset')
 
 		fieldsetElement.querySelectorAll('input[name]').forEach(input => {
-			input.value = data[input.name] ?? (input.name == 'id' ? crypto.randomUUID(): '')
+			input.value = data[input.name] ?? (input.name == 'id' ? crypto.randomUUID() : '')
 		})
 
 		new IconField(fieldsetElement)
@@ -113,7 +113,7 @@ export class LabelsForm extends Form {
 	#renderLabels() {
 		this.#fieldsetsElement.replaceChildren()
 
-		this.#labels.forEach(label => { this.add(label) })
+		this.#labels.forEach(label => this.add(label))
 	}
 
 	#subscribe() {

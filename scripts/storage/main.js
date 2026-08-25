@@ -8,10 +8,10 @@ export class MainStorage extends BaseStorage {
 	static PORT_NAME = 'main-storage'
 
 	_parsers = {
-		labels: (rawLabels) => {
+		labels: rawLabels => {
 			return rawLabels.map(data => new Label(data))
 		},
-		assignments: (rawAssignments) => {
+		assignments: rawAssignments => {
 			return rawAssignments.map(({ labelId, ...data }) => {
 				return new Assignment({
 					...data,

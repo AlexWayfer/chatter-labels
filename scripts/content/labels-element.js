@@ -32,17 +32,17 @@ export class LabelsElement {
 	}
 
 	static async #syncUsername(user, mainStorage, assignments) {
-		if (!assignments.some(assignment =>
-			assignment.userId == user.id && assignment.username != user.name
+		if (!assignments.some(
+			assignment => assignment.userId == user.id && assignment.username != user.name
 		)) {
 			return assignments
 		}
 
-		const updatedAssignments = assignments.map(assignment =>
-			assignment.userId == user.id
+		const updatedAssignments = assignments.map(assignment => {
+			return assignment.userId == user.id
 				? new Assignment({ ...assignment, username: user.name })
 				: assignment
-		)
+		})
 
 		await mainStorage.set('assignments', updatedAssignments)
 
@@ -137,8 +137,8 @@ export class LabelsElement {
 					const
 						label = this.#labels.find(label => label.id == checkbox.value),
 						existing = this.#assignments.find(
-							assignment => assignment.userId == this.#user.id
-								&& assignment.label.id == checkbox.value
+							assignment => assignment.userId == this.#user.id &&
+								assignment.label.id == checkbox.value
 						)
 
 					return new Assignment({

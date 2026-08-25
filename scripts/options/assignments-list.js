@@ -104,9 +104,9 @@ export class AssignmentsList {
 		try {
 			await this.#mainStorage.set(
 				'assignments',
-				this.#assignments.filter(existing =>
-					existing.userId != assignment.userId || existing.label.id != assignment.label.id
-				)
+				this.#assignments.filter(existing => {
+					return existing.userId != assignment.userId || existing.label.id != assignment.label.id
+				})
 			)
 		} catch (error) {
 			deleteButton.disabled = false
@@ -143,9 +143,11 @@ export class AssignmentsList {
 					continue
 				}
 
-				if (this.#assignments.some(assignment =>
-					assignment.label.id == this.#label.id && assignment.userId == user.id
-				)) {
+				if (
+					this.#assignments.some(assignment => {
+						return assignment.label.id == this.#label.id && assignment.userId == user.id
+					})
+				) {
 					continue
 				}
 

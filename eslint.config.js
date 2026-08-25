@@ -30,17 +30,27 @@ export default [
 			'@stylistic/arrow-parens': ['warn', 'as-needed'],
 			'@stylistic/padded-blocks': ['warn', 'never'],
 			'@stylistic/function-call-argument-newline': ['warn', 'consistent'],
-			'@stylistic/quote-props': ['warn', 'as-needed'],
+			'@stylistic/quote-props': ['warn', 'consistent-as-needed'],
 			'@stylistic/dot-location': ['warn', 'property'],
 			'@stylistic/spaced-comment': ['warn', 'always', { markers: ['//'] }],
 			'@stylistic/object-property-newline': ['warn', { allowAllPropertiesOnSameLine: true }],
 			'@stylistic/multiline-comment-style': ['warn', 'separate-lines'],
-			'@stylistic/multiline-ternary': ['warn', 'never'],
+			'@stylistic/multiline-ternary': ['warn', 'always-multiline'],
 			'@stylistic/function-paren-newline': ['warn', 'multiline-arguments'],
 			'@stylistic/array-element-newline': ['warn', 'consistent'],
+			'@stylistic/indent-binary-ops': ['error', 'tab'],
 			'@stylistic/space-before-function-paren': [
 				'error',
 				{ anonymous: 'always', named: 'never', asyncArrow: 'always' }
+			],
+			'@stylistic/array-bracket-newline': ['warn', 'consistent'],
+			'@stylistic/lines-between-class-members': [
+				'warn',
+				{
+					enforce: [
+						{ blankLine: 'always', prev: 'method', next: 'method' }
+					]
+				}
 			]
 		}
 	},
