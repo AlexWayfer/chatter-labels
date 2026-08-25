@@ -55,60 +55,56 @@
 						<button type="button" class="down"><div class="icon"></div></button>
 					</div>
 
-					<div class="content">
-						<div class="label">
-							<div class="fields">
-								<input type="hidden" name="id" form="labels-form" />
+					<div class="fields">
+						<input type="hidden" name="id" form="labels-form" />
 
-								<label>
-									Icon:
-									<img class="icon-preview" alt="" />
-									<input type="hidden" name="icon" form="labels-form" />
-									<input type="file" class="icon" form="labels-form" accept="image/*" required />
-								</label>
+						<label>
+							Icon:
+							<img class="icon-preview" alt="" />
+							<input type="hidden" name="icon" form="labels-form" />
+							<input type="file" class="icon" form="labels-form" accept="image/*" required />
+						</label>
 
-								<label>
-									Name:
-									<input
-										type="text"
-										name="name"
-										form="labels-form"
-										required
-										autocomplete="off"
-									/>
-								</label>
-							</div>
-						</div>
-
-						<div class="assignments">
-							<h4>Assignments:</h4>
-
-							<template id="assignment">
-								<li>
-									<button type="button" class="delete-assignment invisible"><div class="icon"></div></button>
-									<span class="username"></span> <span class="assigned-at"></span>
-								</li>
-							</template>
-
-							<ul>
-							</ul>
-
-							<button type="button" class="toggle-add-assignments">Add</button>
-							<button type="button" class="toggle-remove-assignments">Remove</button>
-							<form class="add-assignments" hidden>
-								<textarea
-									rows="3"
-									placeholder="One nickname per line"
-								></textarea>
-								<button type="submit">Save</button>
-								<span class="toast added" hidden>Added!</span>
-								<span class="toast error" hidden></span>
-							</form>
-						</div>
+						<label>
+							Name:
+							<input
+								type="text"
+								name="name"
+								form="labels-form"
+								required
+								autocomplete="off"
+							/>
+						</label>
 					</div>
 
 					<div class="buttons">
 						<button type="button" class="delete"><div class="icon"></div></button>
+					</div>
+
+					<div class="assignments">
+						<h4>Assignments:</h4>
+
+						<template id="assignment">
+							<li>
+								<button type="button" class="delete-assignment invisible"><div class="icon"></div></button>
+								<span class="username"></span> <span class="assigned-at"></span>
+							</li>
+						</template>
+
+						<ul>
+						</ul>
+
+						<button type="button" class="toggle-add-assignments">Add</button>
+						<button type="button" class="toggle-remove-assignments">Remove</button>
+						<form class="add-assignments" hidden>
+							<textarea
+								rows="3"
+								placeholder="One nickname per line"
+							></textarea>
+							<button type="submit">Save</button>
+							<span class="toast added" hidden>Added!</span>
+							<span class="toast error" hidden></span>
+						</form>
 					</div>
 				</fieldset>
 			</template>

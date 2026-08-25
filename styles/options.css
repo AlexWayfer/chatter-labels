@@ -72,7 +72,8 @@ body {
 			fieldset {
 				--input-label-padding: 0.2em;
 
-				display: flex;
+				display: grid;
+				grid-template-columns: auto 1fr auto;
 				align-items: center;
 				padding: 0.5em;
 				margin-bottom: 0.6em;
@@ -81,6 +82,14 @@ body {
 				.buttons {
 					display: flex;
 					flex-direction: column;
+				}
+
+				.move {
+					margin-right: 0.2em;
+				}
+
+				.buttons {
+					margin-left: 0.2em;
 				}
 
 				.buttons button,
@@ -119,15 +128,7 @@ body {
 					}
 				}
 
-				.content {
-					flex: 1;
-				}
-
-				.buttons {
-					align-self: start;
-				}
-
-				.label {
+				.fields {
 					label {
 						display: inline-block;
 						position: relative;
@@ -161,6 +162,8 @@ body {
 			}
 
 			.assignments {
+				grid-column: 2;
+
 				h4 {
 					margin: 1em 0 0.6em var(--input-label-padding);
 				}
@@ -208,6 +211,7 @@ body {
 
 				textarea {
 					display: block;
+					box-sizing: border-box;
 					width: 100%;
 					margin: 0.6em 0 0.4em;
 					font-family: inherit;
