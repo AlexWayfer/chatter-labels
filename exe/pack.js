@@ -19,7 +19,7 @@ if (!fs.existsSync(packageDir)) {
 console.info('Packing...')
 
 await zip(
-	'images/**/*, pages/**/*, scripts/compiled/**/*, styles/**/*, manifest.json, README.md',
+	'images/**/*, pages/**/*, scripts/**/*, styles/**/*, manifest.json, README.md',
 	packagePath
 )
 
