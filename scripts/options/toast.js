@@ -14,6 +14,6 @@ export class Toast {
 		this.#timeoutId = setTimeout(() => {
 			this._element.hidden = true
 			if (text) this._element.textContent = ''
-		}, 1500)
+		}, this._element.classList.contains('error') ? 3000 : 1500)
 	}
 }
