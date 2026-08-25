@@ -77,6 +77,7 @@ export class LabelsForm extends Form {
 			const name = fieldsetElement.querySelector('input[name="name"]').value
 
 			if (
+				data.id &&
 				!confirm([
 					`Remove label "${name}" from the list?`,
 					'Click "Save" to apply.'
