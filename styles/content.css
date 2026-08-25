@@ -25,6 +25,27 @@
 	}
 
 	form {
+		.empty-list-notice {
+			display: none;
+			color: var(--color-text-alt-2);
+			font-size: var(--font-size-base);
+
+			.configure {
+				display: block;
+				color: var(--color-text-link);
+			}
+		}
+
+		&:not(:has(.fieldsets > fieldset)) {
+			.empty-list-notice {
+				display: block;
+			}
+
+			button[type="submit"] {
+				display: none;
+			}
+		}
+
 		.fieldsets {
 			margin-bottom: 6px;
 

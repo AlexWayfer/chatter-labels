@@ -105,6 +105,10 @@ export class LabelsElement {
 		})
 
 		this.#formFieldsetsElement = this.#formElement.querySelector('.fieldsets')
+		this.#formElement.querySelector('.configure').addEventListener('click', event => {
+			event.preventDefault()
+			chrome.runtime.sendMessage({ type: 'open-options' })
+		})
 	}
 
 	#createLabelElement(label, assignment) {

@@ -31,3 +31,7 @@ chrome.runtime.onConnect.addListener(port => {
 
 	logger.debug(`'${port.name}' port connected.`)
 })
+
+chrome.runtime.onMessage.addListener(message => {
+	if (message.type == 'open-options') chrome.runtime.openOptionsPage()
+})
