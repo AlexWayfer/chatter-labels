@@ -28,7 +28,13 @@ export class AssignmentsList {
 			this.#toggleAddButton.classList.toggle('active')
 			this.#form.hidden = !this.#form.hidden
 
-			if (!this.#form.hidden) this.#form.querySelector('textarea').focus()
+			const textarea = this.#form.querySelector('textarea')
+
+			if (this.#form.hidden) {
+				textarea.value = ''
+			} else {
+				textarea.focus()
+			}
 		})
 
 		this.#toggleRemoveButton.addEventListener('click', _event => {
@@ -113,11 +119,7 @@ export class AssignmentsList {
 			toastError = new Toast(this.#form.querySelector('.error')),
 			nicknames = this.#parseNicknames(textarea.value)
 
-		if (!nicknames.length) {
-			this.#form.hidden = true
-			this.#toggleAddButton.classList.remove('active')
-			return
-		}
+		if (!nicknames.length) return
 
 		if (!this.#label) {
 			toastError.show('Save the label first')
