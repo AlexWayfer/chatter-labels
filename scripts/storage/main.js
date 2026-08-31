@@ -1,11 +1,10 @@
-import { logger } from '../logger.js'
 import { BaseStorage } from './base.js'
 import { GitHubGist } from './providers/github-gist.js'
 import { Label } from '../models/label.js'
 import { Assignment } from '../models/assignment.js'
 
 export class MainStorage extends BaseStorage {
-	static PORT_NAME = 'main-storage'
+	static NAME = 'main-storage'
 
 	_parsers = {
 		labels: rawLabels => {
@@ -46,13 +45,9 @@ export class MainStorage extends BaseStorage {
 	}
 
 	async _load() {
-		const rawData = await this._provider.get(['labels', 'assignments'])
-
-		this._data.labels = this._parsers.labels(rawData.labels ?? []),
-		this._data.assignments = this._parsers.assignments(rawData.assignments ?? [])
-
-		this._loaded = true
-
-		logger.debug('Main Storage data loaded.')
+		return super._load({
+			labels: [],
+			assignments: []
+		})
 	}
 }

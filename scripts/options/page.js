@@ -13,13 +13,6 @@ const
 
 // logger.debug('optionsStorage = ', optionsStorage)
 
-window.addEventListener('pageshow', event => {
-	if (event.persisted) {
-		optionsStorage.reconnect()
-		mainStorage.reconnect()
-	}
-})
-
 GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), optionsStorage)
 
 LabelsForm.create(document.querySelector('.labels'), mainStorage)

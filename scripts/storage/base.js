@@ -1,13 +1,17 @@
 import { logger } from '../logger.js'
 
 export class BaseStorage {
-	// static PORT_NAME // Must be defined
+	// static NAME // Must be defined
+
+	static get _updatedAtKey() {
+		return `${this.NAME}:updatedAt`
+	}
 
 	_provider
 	_data = {}
 	_loaded = false
 	_subscriptions
-	_port
+	_ownUpdatedAt
 
 	static async create(...args) {
 		return new this(...args)
@@ -16,7 +20,7 @@ export class BaseStorage {
 	constructor() {
 		this._subscriptions = new Map()
 
-		this._connect()
+		this._listenUpdatedAt()
 	}
 
 	async get(key) {
@@ -31,14 +35,13 @@ export class BaseStorage {
 
 		await this._provider.set(key, serializedValue)
 
-		const parsedValue = this._parsers[key] ? this._parsers[key](serializedValue) : serializedValue
+		this._apply(key, serializedValue)
+		this.notify(key, this._data[key])
 
-		this._data[key] = parsedValue
-		this.notify(key, parsedValue)
+		this._ownUpdatedAt = Date.now()
+		await chrome.storage.local.set({ [this.constructor._updatedAtKey]: this._ownUpdatedAt })
 
 		logger.debug(`${this.constructor.name} data[${key}] saved.`)
-
-		this._broadcast({ type: `${this.constructor.PORT_NAME}:update`, key, serializedValue })
 	}
 
 	subscribe(key, callback) {
@@ -64,61 +67,47 @@ export class BaseStorage {
 		}
 	}
 
-	reconnect() {
-		logger.debug(`${this.constructor.name} reconnecting port.`)
+	_listenUpdatedAt() {
+		chrome.storage.onChanged.addListener(async (changes, areaName) => {
+			if (areaName != 'local') return
 
-		try {
-			this._port?.disconnect()
-		} catch {
-			// Already disconnected.
+			const change = changes[this.constructor._updatedAtKey]
+
+			if (!change || change.newValue == null) return
+			if (change.newValue === this._ownUpdatedAt) return
+
+			logger.debug(`${this.constructor.name} pulling after updatedAt change.`)
+
+			const changedKeys = await this._load()
+
+			for (const key of changedKeys) {
+				this.notify(key, this._data[key])
+			}
+		})
+	}
+
+	async _load(defaults) {
+		const keys = Object.keys(defaults)
+		const rawData = await this._provider.get(keys)
+		const changedKeys = []
+
+		for (const key of keys) {
+			if (this._apply(key, rawData[key] ?? defaults[key])) changedKeys.push(key)
 		}
 
-		this._port = null
-		this._connect()
+		this._loaded = true
+
+		logger.debug(`${this.constructor.name} data loaded.`)
+
+		return changedKeys
 	}
 
-	async _load() {
-		throw new Error(`${this.constructor.name} must implement _load().`)
-	}
+	_apply(key, serializedValue) {
+		const value = this._parsers[key] ? this._parsers[key](serializedValue) : serializedValue
 
-	_connect() {
-		this._port = chrome.runtime.connect({ name: this.constructor.PORT_NAME })
+		if (JSON.stringify(this._data[key]) === JSON.stringify(value)) return false
 
-		this._port.onDisconnect.addListener(() => {
-			logger.debug(`${this.constructor.name} port disconnected.`)
-			this._port = null
-		})
-
-		this._listen()
-	}
-
-	_broadcast(message) {
-		try {
-			if (!this._port) this._connect()
-			this._port.postMessage(message)
-		} catch {
-			this._connect()
-			this._port.postMessage(message)
-		}
-	}
-
-	_listen() {
-		this._port.onMessage.addListener(message => {
-			if (message.type != `${this.constructor.PORT_NAME}:update`) return
-
-			const
-				{ key, serializedValue } = message,
-				value = this._parsers[key] ? this._parsers[key](serializedValue) : serializedValue
-
-			logger.debug(`${this.constructor.name} message with '${key}' received.`)
-			logger.debug('serializedValue = ', serializedValue)
-			logger.debug('value = ', value)
-
-			this._data[key] = value
-
-			this.notify(key, value)
-		})
-
-		logger.debug(`${this.constructor.name} listens.`)
+		this._data[key] = value
+		return true
 	}
 }
