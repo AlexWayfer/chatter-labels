@@ -15,6 +15,7 @@ export class AssignmentsList {
 	#form
 	#textarea
 	#toastError
+	#unknownNicknames = []
 
 	constructor(element, mainStorage, label, assignments) {
 		this.#element = element
@@ -72,6 +73,8 @@ export class AssignmentsList {
 	}
 
 	async takePending() {
+		this.#unknownNicknames = []
+
 		if (!this.#label) return []
 
 		const nicknames = this.#parseNicknames()
@@ -108,13 +111,17 @@ export class AssignmentsList {
 			)
 		}
 
-		this.#textarea.value = unknownNicknames.join('\n')
-
-		if (unknownNicknames.length) {
-			this.#toastError.show(`Unknown nicknames: ${unknownNicknames.join(', ')}`)
-		}
+		this.#unknownNicknames = unknownNicknames
 
 		return newAssignments
+	}
+
+	keepUnknownNicknames() {
+		this.#textarea.value = this.#unknownNicknames.join('\n')
+
+		if (this.#unknownNicknames.length) {
+			this.#toastError.show(`Unknown nicknames: ${this.#unknownNicknames.join(', ')}`)
+		}
 	}
 
 	get #removing() {
@@ -190,10 +197,14 @@ export class AssignmentsList {
 		try {
 			const newAssignments = await this.takePending()
 
-			if (!newAssignments.length) return
+			if (!newAssignments.length) {
+				this.keepUnknownNicknames()
+				return
+			}
 
 			this.#assignments = [...this.#assignments, ...newAssignments]
 			await this.#mainStorage.set('assignments', this.#assignments)
+			this.keepUnknownNicknames()
 			this.toastAdded.show()
 		} catch (error) {
 			this.#toastError.show(error)

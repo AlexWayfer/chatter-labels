@@ -186,6 +186,9 @@ export class LabelsForm extends Form {
 			await this.#mainStorage.set('assignments', this.#assignments)
 
 			for (const list of listsWithPending) list.toastAdded.show()
+			for (const fieldset of labelsByFieldset.keys()) {
+				this.#assignmentsLists.get(fieldset).keepUnknownNicknames()
+			}
 		})
 	}
 
