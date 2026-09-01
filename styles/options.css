@@ -218,15 +218,26 @@ body {
 					resize: vertical;
 				}
 			}
-
-			&:not(:has(fieldset)) + .empty-list-notice {
-				display: block;
-			}
 		}
 
+		.loading-notice,
 		.empty-list-notice {
 			display: none;
 			color: gray;
+		}
+
+		&.loading {
+			.loading-notice {
+				display: block;
+			}
+
+			form[name="labels"] {
+				display: none;
+			}
+		}
+
+		&:not(.loading):not(:has(.fieldsets > fieldset)) .empty-list-notice {
+			display: block;
 		}
 	}
 

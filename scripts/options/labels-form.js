@@ -49,6 +49,7 @@ export class LabelsForm extends Form {
 		})
 
 		this.#renderLabels()
+		this._element.classList.remove('loading')
 
 		this.#subscribe()
 	}
