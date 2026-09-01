@@ -75,10 +75,12 @@ export class LabelsForm extends Form {
 		})
 
 		fieldsetElement.querySelector('button.delete').addEventListener('click', _event => {
-			const name = fieldsetElement.querySelector('input[name="name"]').value
+			const
+				id = fieldsetElement.querySelector('input[name="id"]').value,
+				name = fieldsetElement.querySelector('input[name="name"]').value
 
 			if (
-				data.id &&
+				this.#labels.some(label => label.id == id) &&
 				!confirm([
 					`Remove label "${name}" from the list?`,
 					'Click "Save" to apply.'
