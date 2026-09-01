@@ -4,6 +4,7 @@ import { Toast } from './toast.js'
 
 export class AssignmentsList {
 	#mainStorage
+	#element
 	#label
 	#assignments
 	#unsubscribe
@@ -17,8 +18,8 @@ export class AssignmentsList {
 	#toastError
 
 	constructor(element, mainStorage, label, assignments) {
+		this.#element = element
 		this.#mainStorage = mainStorage
-		this.#label = label
 		this.#assignments = assignments
 
 		this.#listElement = element.querySelector('ul')
@@ -61,15 +62,19 @@ export class AssignmentsList {
 			this.#render()
 		})
 
+		this.label = label
+	}
+
+	/** @param {import('../models/label.js').Label | null} newLabel */
+	set label(newLabel) {
+		this.#label = newLabel
+		this.#element.hidden = !newLabel
 		this.#render()
 	}
 
-	/** @param {import('../models/label.js').Label} newLabel */
-	set label(newLabel) {
-		this.#label = newLabel
-	}
-
 	async takePending() {
+		if (!this.#label) return []
+
 		const nicknames = this.#parseNicknames()
 
 		if (!nicknames.length) return []
@@ -179,11 +184,6 @@ export class AssignmentsList {
 	}
 
 	async #add() {
-		if (!this.#label) {
-			this.#toastError.show('Save the label first')
-			return
-		}
-
 		const saveButton = this.#form.querySelector('button[type="submit"]')
 
 		saveButton.disabled = true
