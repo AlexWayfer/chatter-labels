@@ -160,13 +160,12 @@ export class LabelsForm extends Form {
 
 			logger.debug('this.#labels = ', this.#labels)
 
-			await this.#mainStorage.set('labels', this.#labels)
-
 			this.#assignments = this.#assignments.filter(
 				assignment => this.#labels.some(label => label.id == assignment.label.id)
 			)
 
 			await this.#mainStorage.set('assignments', this.#assignments)
+			await this.#mainStorage.set('labels', this.#labels)
 
 			for (const [fieldset, label] of labelsByFieldset) {
 				this.#assignmentsLists.get(fieldset).label = label

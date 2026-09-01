@@ -80,6 +80,8 @@ export class BaseStorage {
 
 			const changedKeys = await this._load()
 
+			logger.debug(`${this.constructor.name} changedKeys = `, changedKeys)
+
 			for (const key of changedKeys) {
 				this.notify(key, this._data[key])
 			}

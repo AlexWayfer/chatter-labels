@@ -24,7 +24,7 @@ export class GitHubGist {
 			// in this case we have to get complete content by `raw_url`
 			const content =
 				file.truncated
-					? await (await fetch(file.raw_url)).text()
+					? await (await fetch(file.raw_url, { cache: 'no-store' })).text()
 					: file.content
 
 			result[key] = JSON.parse(content)
@@ -98,6 +98,7 @@ export class GitHubGist {
 	async #request(method, path, body = undefined) {
 		const response = await fetch(`${this.constructor.API_BASE}${path}`, {
 			method: method,
+			cache: 'no-store',
 			headers: {
 				'Authorization': `Bearer ${this.token}`,
 				'X-GitHub-Api-Version': this.constructor.API_VERSION,
