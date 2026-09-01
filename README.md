@@ -1,5 +1,11 @@
 # Chatter Labels for Twitch
 
+<p>
+	<a target="_blank" href="https://chromewebstore.google.com/detail/chatter-labels-for-twitch/ngobainhmihgaihpbnocjaemgffoiomp" >
+		<img src="images/chrome-web-store.png" alt="Chrome Web Store" width="200" />
+	</a>
+</p>
+
 Chrome extension for assignment your custom labels to chatters on Twitch.
 
 ## Credentials
