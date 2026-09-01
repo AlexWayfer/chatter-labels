@@ -42,11 +42,7 @@ export class AssignmentsList {
 		})
 
 		this.#toggleRemoveButton.addEventListener('click', _event => {
-			this.#toggleRemoveButton.classList.toggle('active')
-
-			this.#listElement.querySelectorAll('button.delete-assignment').forEach(button => {
-				button.classList.toggle('invisible')
-			})
+			this.#removing = !this.#removing
 		})
 
 		this.#form.addEventListener('submit', event => {
@@ -73,14 +69,34 @@ export class AssignmentsList {
 		this.#label = newLabel
 	}
 
+	get #removing() {
+		return this.#toggleRemoveButton.classList.contains('active')
+	}
+
+	/** @param {boolean} removing */
+	set #removing(removing) {
+		this.#toggleRemoveButton.classList.toggle('active', removing)
+		this.#listElement.querySelectorAll('button.delete-assignment').forEach(button => {
+			button.classList.toggle('invisible', !removing)
+		})
+	}
+
 	#render() {
 		this.#listElement.replaceChildren()
 
-		if (!this.#label) return
+		if (!this.#label) {
+			this.#toggleRemoveButton.hidden = true
+			this.#removing = false
+			return
+		}
 
-		for (const assignment of this.#assignments) {
-			if (assignment.label.id != this.#label.id) continue
+		const labelAssignments = this.#assignments.filter(
+			assignment => assignment.label.id == this.#label.id
+		)
 
+		this.#toggleRemoveButton.hidden = !labelAssignments.length
+
+		for (const assignment of labelAssignments) {
 			const
 				assignmentFragment = document.importNode(this.#template.content, true),
 				assignmentElement = assignmentFragment.querySelector('li'),
@@ -89,16 +105,14 @@ export class AssignmentsList {
 			assignmentElement.querySelector('.username').textContent = assignment.username
 			assignmentElement.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
 
-			deleteButton.classList.toggle(
-				'invisible',
-				!this.#toggleRemoveButton.classList.contains('active')
-			)
 			deleteButton.addEventListener('click', event => {
 				this.#delete(event.currentTarget, assignment)
 			})
 
 			this.#listElement.append(assignmentFragment)
 		}
+
+		this.#removing = !this.#toggleRemoveButton.hidden && this.#removing
 	}
 
 	async #delete(deleteButton, assignment) {
