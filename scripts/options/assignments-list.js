@@ -68,6 +68,11 @@ export class AssignmentsList {
 		this.#render()
 	}
 
+	/** @param {import('../models/label.js').Label} newLabel */
+	set label(newLabel) {
+		this.#label = newLabel
+	}
+
 	#render() {
 		this.#listElement.replaceChildren()
 

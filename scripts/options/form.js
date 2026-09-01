@@ -9,7 +9,7 @@ export class Form {
 	}
 
 	async _save(logic) {
-		this._submitButtonElement.disabled = true
+		this._saving = true
 
 		try {
 			await logic()
@@ -19,7 +19,15 @@ export class Form {
 
 			throw error
 		} finally {
-			this._submitButtonElement.disabled = false
+			this._saving = false
 		}
+	}
+
+	get _saving() {
+		return this._submitButtonElement.disabled
+	}
+
+	set _saving(saving) {
+		this._submitButtonElement.disabled = saving
 	}
 }

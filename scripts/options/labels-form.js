@@ -8,6 +8,7 @@ export class LabelsForm extends Form {
 	#mainStorage
 	#labels
 	#assignments
+	#assignmentsLists = new WeakMap()
 	#fieldsetsElement
 	#fieldsetTemplate
 
@@ -87,24 +88,31 @@ export class LabelsForm extends Form {
 			}
 
 			fieldsetElement.remove()
+			this.#assignmentsLists.delete(fieldsetElement)
 			this.#updateMoveButtons()
 		})
 
-		new AssignmentsList(
+		const list = new AssignmentsList(
 			fieldsetElement.querySelector('.assignments'),
 			this.#mainStorage,
 			data.id ? data : null,
 			this.#assignments
 		)
 
+		this.#assignmentsLists.set(fieldsetElement, list)
+
 		this.#fieldsetsElement.append(fieldsetFragment)
 		this.#updateMoveButtons()
 	}
 
-	#updateMoveButtons() {
-		const fieldsets = this.#fieldsetsElement.children
+	get #fieldsets() {
+		return Array.from(this.#fieldsetsElement.children)
+	}
 
-		Array.from(fieldsets).forEach((fieldset, index) => {
+	#updateMoveButtons() {
+		const fieldsets = this.#fieldsets
+
+		fieldsets.forEach((fieldset, index) => {
 			fieldset.querySelector('button.up').hidden = index == 0
 			fieldset.querySelector('button.down').hidden = index == fieldsets.length - 1
 		})
@@ -119,6 +127,9 @@ export class LabelsForm extends Form {
 	#subscribe() {
 		this.#mainStorage.subscribe('labels', labels => {
 			this.#labels = labels
+
+			if (this._saving) return
+
 			this.#renderLabels()
 		})
 
@@ -128,18 +139,24 @@ export class LabelsForm extends Form {
 	}
 
 	async _save() {
-		super._save(async () => {
-			this.#labels = Array.from(this.#fieldsetsElement.children).map(fieldset => {
+		await super._save(async () => {
+			const labelsByFieldset = new Map()
+
+			for (const fieldset of this.#fieldsets) {
 				logger.debug('fieldset inputs = ', fieldset.querySelectorAll('input[name]'))
 
-				return new Label(
+				const label = new Label(
 					Object.fromEntries(
 						Array.from(fieldset.querySelectorAll('input[name]')).map(
 							input => [input.name, input.value]
 						)
 					)
 				)
-			})
+
+				labelsByFieldset.set(fieldset, label)
+			}
+
+			this.#labels = [...labelsByFieldset.values()]
 
 			logger.debug('this.#labels = ', this.#labels)
 
@@ -150,6 +167,10 @@ export class LabelsForm extends Form {
 			)
 
 			await this.#mainStorage.set('assignments', this.#assignments)
+
+			for (const [fieldset, label] of labelsByFieldset) {
+				this.#assignmentsLists.get(fieldset).label = label
+			}
 		})
 	}
 
