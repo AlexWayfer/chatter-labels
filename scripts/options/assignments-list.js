@@ -83,10 +83,11 @@ export class AssignmentsList {
 
 		const
 			newAssignments = [],
-			unknownNicknames = []
+			unknownNicknames = [],
+			users = await TwitchAPI.fetchUsers(nicknames)
 
-		for (const nickname of nicknames) {
-			const user = await TwitchAPI.fetchUser(nickname)
+		for (const [index, nickname] of nicknames.entries()) {
+			const user = users[index]
 
 			if (!user) {
 				unknownNicknames.push(nickname)

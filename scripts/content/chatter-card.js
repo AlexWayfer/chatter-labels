@@ -30,7 +30,7 @@ export class ChatterCard {
 
 		logger.debug('login = ', login)
 
-		const userResponse = await TwitchAPI.fetchUser(login)
+		const [userResponse] = await TwitchAPI.fetchUsers([login])
 
 		return { name: userResponse.displayName, id: userResponse.id }
 	}
