@@ -169,14 +169,23 @@ export class LabelsForm extends Form {
 				assignment => this.#labels.some(label => label.id == assignment.label.id)
 			)
 
+			const listsWithPending = []
+
 			for (const [fieldset, label] of labelsByFieldset) {
 				const list = this.#assignmentsLists.get(fieldset)
 
 				list.label = label
-				this.#assignments.push(...await list.takePending())
+				const pending = await list.takePending()
+
+				if (!pending.length) continue
+
+				this.#assignments.push(...pending)
+				listsWithPending.push(list)
 			}
 
 			await this.#mainStorage.set('assignments', this.#assignments)
+
+			for (const list of listsWithPending) list.toastAdded.show()
 		})
 	}
 

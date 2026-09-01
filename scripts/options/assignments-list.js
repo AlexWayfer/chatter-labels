@@ -14,7 +14,6 @@ export class AssignmentsList {
 	#toggleRemoveButton
 	#form
 	#textarea
-	#toastAdded
 	#toastError
 
 	constructor(element, mainStorage, label, assignments) {
@@ -28,7 +27,7 @@ export class AssignmentsList {
 		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
 		this.#form = element.querySelector('form.add-assignments')
 		this.#textarea = this.#form.querySelector('textarea')
-		this.#toastAdded = new Toast(this.#form.querySelector('.added'))
+		this.toastAdded = new Toast(this.#form.querySelector('.added'))
 		this.#toastError = new Toast(this.#form.querySelector('.error'))
 
 		this.#toggleAddButton.addEventListener('click', _event => {
@@ -195,7 +194,7 @@ export class AssignmentsList {
 
 			this.#assignments = [...this.#assignments, ...newAssignments]
 			await this.#mainStorage.set('assignments', this.#assignments)
-			this.#toastAdded.show()
+			this.toastAdded.show()
 		} catch (error) {
 			this.#toastError.show(error)
 			throw error
