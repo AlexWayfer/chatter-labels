@@ -11,12 +11,17 @@ export class MainStorage extends BaseStorage {
 			return rawLabels.map(data => new Label(data))
 		},
 		assignments: rawAssignments => {
-			return rawAssignments.map(({ labelId, ...data }) => {
-				return new Assignment({
-					...data,
-					label: this._data.labels.find(label => label.id == labelId)
-				})
-			})
+			const assignments = []
+
+			for (const { labelId, ...data } of rawAssignments) {
+				const label = this._data.labels.find(label => label.id == labelId)
+
+				if (!label) continue
+
+				assignments.push(new Assignment({ ...data, label }))
+			}
+
+			return assignments
 		}
 	}
 

@@ -12,6 +12,7 @@ export class AssignmentsList {
 	#toggleAddButton
 	#toggleRemoveButton
 	#form
+	#textarea
 	#toastAdded
 	#toastError
 
@@ -25,6 +26,7 @@ export class AssignmentsList {
 		this.#toggleAddButton = element.querySelector('button.toggle-add-assignments')
 		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
 		this.#form = element.querySelector('form.add-assignments')
+		this.#textarea = this.#form.querySelector('textarea')
 		this.#toastAdded = new Toast(this.#form.querySelector('.added'))
 		this.#toastError = new Toast(this.#form.querySelector('.error'))
 
@@ -32,12 +34,10 @@ export class AssignmentsList {
 			this.#toggleAddButton.classList.toggle('active')
 			this.#form.hidden = !this.#form.hidden
 
-			const textarea = this.#form.querySelector('textarea')
-
 			if (this.#form.hidden) {
-				textarea.value = ''
+				this.#textarea.value = ''
 			} else {
-				textarea.focus()
+				this.#textarea.focus()
 			}
 		})
 
@@ -67,6 +67,50 @@ export class AssignmentsList {
 	/** @param {import('../models/label.js').Label} newLabel */
 	set label(newLabel) {
 		this.#label = newLabel
+	}
+
+	async takePending() {
+		const nicknames = this.#parseNicknames()
+
+		if (!nicknames.length) return []
+
+		const
+			newAssignments = [],
+			unknownNicknames = []
+
+		for (const nickname of nicknames) {
+			const user = await TwitchAPI.fetchUser(nickname)
+
+			if (!user) {
+				unknownNicknames.push(nickname)
+				continue
+			}
+
+			if (
+				this.#assignments.some(assignment => {
+					return assignment.label.id == this.#label.id && assignment.userId == user.id
+				})
+			) {
+				continue
+			}
+
+			newAssignments.push(
+				new Assignment({
+					userId: user.id,
+					username: user.displayName,
+					label: this.#label,
+					assignedAt: new Date().toISOString()
+				})
+			)
+		}
+
+		this.#textarea.value = unknownNicknames.join('\n')
+
+		if (unknownNicknames.length) {
+			this.#toastError.show(`Unknown nicknames: ${unknownNicknames.join(', ')}`)
+		}
+
+		return newAssignments
 	}
 
 	get #removing() {
@@ -135,62 +179,23 @@ export class AssignmentsList {
 	}
 
 	async #add() {
-		const
-			textarea = this.#form.querySelector('textarea'),
-			saveButton = this.#form.querySelector('button[type="submit"]'),
-			nicknames = this.#parseNicknames(textarea.value)
-
-		if (!nicknames.length) return
-
 		if (!this.#label) {
 			this.#toastError.show('Save the label first')
 			return
 		}
 
+		const saveButton = this.#form.querySelector('button[type="submit"]')
+
 		saveButton.disabled = true
 
 		try {
-			const
-				newAssignments = [],
-				unknownNicknames = []
+			const newAssignments = await this.takePending()
 
-			for (const nickname of nicknames) {
-				const user = await TwitchAPI.fetchUser(nickname)
+			if (!newAssignments.length) return
 
-				if (!user) {
-					unknownNicknames.push(nickname)
-					continue
-				}
-
-				if (
-					this.#assignments.some(assignment => {
-						return assignment.label.id == this.#label.id && assignment.userId == user.id
-					})
-				) {
-					continue
-				}
-
-				const assignment = new Assignment({
-					userId: user.id,
-					username: user.displayName,
-					label: this.#label,
-					assignedAt: new Date().toISOString()
-				})
-
-				this.#assignments.push(assignment)
-				newAssignments.push(assignment)
-			}
-
-			if (newAssignments.length) {
-				await this.#mainStorage.set('assignments', this.#assignments)
-				this.#toastAdded.show()
-			}
-
-			textarea.value = unknownNicknames.join('\n')
-
-			if (unknownNicknames.length) {
-				this.#toastError.show(`Unknown nicknames: ${unknownNicknames.join(', ')}`)
-			}
+			this.#assignments = [...this.#assignments, ...newAssignments]
+			await this.#mainStorage.set('assignments', this.#assignments)
+			this.#toastAdded.show()
 		} catch (error) {
 			this.#toastError.show(error)
 			throw error
@@ -199,10 +204,10 @@ export class AssignmentsList {
 		}
 	}
 
-	#parseNicknames(text) {
+	#parseNicknames() {
 		const nicknames = []
 
-		for (const line of text.split('\n')) {
+		for (const line of this.#textarea.value.split('\n')) {
 			const nickname = line.trim().replace(/^@/, '')
 
 			if (!nickname) continue
