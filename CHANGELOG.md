@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1 (2026-09-01)
+## 1.1 (2026-09-02)
 
 *   Fix synchronization between tabs.
 *   Don't clear assignments in form on options page after labels saving.
