@@ -189,13 +189,11 @@ body {
 					}
 
 					li {
-						.username {
-							margin-right: 0.2em;
-						}
-
 						.assigned-at {
+							margin-left: 0.4em;
 							font-size: 0.8em;
 							color: gray;
+							user-select: none;
 						}
 
 						button {
