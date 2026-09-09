@@ -2,6 +2,8 @@ export class ChatMessage {
 	static USERNAME_SELECTOR =
 		'.chat-line__username, .message-author__username, .message-author__username--clickable'
 
+	static ICONS_SELECTOR = '.chatter-labels-icons'
+
 	#element
 	#chat
 	#iconsElement
@@ -20,16 +22,26 @@ export class ChatMessage {
 			labels = this.#assignedLabels(userId)
 
 		if (!usernameElement || !labels.length) {
-			this.#iconsElement?.remove()
+			for (const icons of this.#element.querySelectorAll(this.constructor.ICONS_SELECTOR)) {
+				icons.remove()
+			}
+
 			this.#iconsElement = null
 			return
 		}
 
+		this.#iconsElement = this.#element.querySelector(this.constructor.ICONS_SELECTOR)
+
 		if (!this.#iconsElement) {
 			this.#iconsElement = document.createElement('span')
 			this.#iconsElement.classList.add('chatter-labels-icons')
-			usernameElement.before(this.#iconsElement)
 		}
+
+		for (const extra of this.#element.querySelectorAll(this.constructor.ICONS_SELECTOR)) {
+			if (extra != this.#iconsElement) extra.remove()
+		}
+
+		usernameElement.before(this.#iconsElement)
 
 		this.#iconsElement.replaceChildren(
 			...labels.map(label => {
