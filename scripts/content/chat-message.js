@@ -1,5 +1,6 @@
 export class ChatMessage {
-	static USERNAME_SELECTOR = '.chat-line__username, .message-author__username--clickable'
+	static USERNAME_SELECTOR =
+		'.chat-line__username, .message-author__username, .message-author__username--clickable'
 
 	#element
 	#chat

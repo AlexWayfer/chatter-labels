@@ -2,8 +2,8 @@ import { logger } from '../logger.js'
 import { ChatMessage } from './chat-message.js'
 
 export class Chat {
-	static CONTAINER_SELECTOR = '.chat-scrollable-area__message-container'
-	static MESSAGE_SELECTOR = '.chat-line__message'
+	static CONTAINER_SELECTOR = '.chat-scrollable-area__message-container, .message-list'
+	static MESSAGE_SELECTOR = '.chat-line__message, .vcml-message'
 
 	static async create(mainStorage) {
 		const
@@ -37,7 +37,10 @@ export class Chat {
 	}
 
 	userIdFrom(element) {
-		const target = element.querySelector('.chat-line__message--alert .message') ?? element
+		const target =
+			element.querySelector('.chat-line__message--alert .message')
+			?? element.querySelector(':scope > [id]')
+			?? element
 
 		if (target.dataset.userId) return target.dataset.userId
 
