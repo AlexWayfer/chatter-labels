@@ -201,13 +201,16 @@ export class AssignmentsList {
 		const sorted = [...assignments]
 
 		switch (this.#sortSelect.value) {
-			case 'alphabet':
-				sorted.sort((a, b) => a.user.formattedUsername.localeCompare(
-					b.user.formattedUsername,
+			case 'alphabet': {
+				const key = user => user.login || user.username
+
+				sorted.sort((a, b) => key(a.user).localeCompare(
+					key(b.user),
 					undefined,
 					{ sensitivity: 'base' }
 				))
 				break
+			}
 			case 'date':
 				sorted.sort((a, b) => a.assignedAt.localeCompare(b.assignedAt))
 				break
