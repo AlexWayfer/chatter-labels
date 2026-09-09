@@ -200,9 +200,20 @@ body {
 
 				ul {
 					margin: 0.6em 0;
+					max-height: 18em;
+					overflow: auto;
+					overscroll-behavior: contain;
 
 					&:not(:has(li)) {
 						display: none;
+					}
+
+					&.scrollable {
+						box-sizing: border-box;
+						padding-block: 0.25em;
+						padding-right: 0.5em;
+						border: var(--input-border);
+						border-radius: var(--input-border-radius);
 					}
 
 					li {

@@ -182,6 +182,11 @@ export class AssignmentsList {
 		}
 
 		this.#removing = !this.#toggleRemoveButton.hidden && this.#removing
+
+		this.#listElement.classList.toggle(
+			'scrollable',
+			this.#listElement.scrollHeight > this.#listElement.clientHeight
+		)
 	}
 
 	async #copy() {

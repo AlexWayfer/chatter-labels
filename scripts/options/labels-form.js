@@ -88,6 +88,8 @@ export class LabelsForm extends Form {
 			this.#updateMoveButtons()
 		})
 
+		this.#fieldsetsElement.append(fieldsetFragment)
+
 		const list = new AssignmentsList(
 			fieldsetElement.querySelector('.assignments'),
 			this.#mainStorage,
@@ -96,8 +98,6 @@ export class LabelsForm extends Form {
 		)
 
 		this.#assignmentsLists.set(fieldsetElement, list)
-
-		this.#fieldsetsElement.append(fieldsetFragment)
 		this.#updateMoveButtons()
 	}
 
