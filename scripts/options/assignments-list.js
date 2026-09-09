@@ -9,6 +9,7 @@ export class AssignmentsList {
 	#assignments
 	#unsubscribe
 	#listElement
+	#countElement
 	#template
 	#toggleAddButton
 	#toggleRemoveButton
@@ -23,6 +24,7 @@ export class AssignmentsList {
 		this.#assignments = assignments
 
 		this.#listElement = element.querySelector('ul')
+		this.#countElement = element.querySelector('.count')
 		this.#template = element.querySelector('template#assignment')
 		this.#toggleAddButton = element.querySelector('button.toggle-add-assignments')
 		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
@@ -141,6 +143,7 @@ export class AssignmentsList {
 		this.#listElement.replaceChildren()
 
 		if (!this.#label) {
+			this.#countElement.textContent = '0'
 			this.#toggleRemoveButton.hidden = true
 			this.#removing = false
 			return
@@ -150,6 +153,7 @@ export class AssignmentsList {
 			assignment => assignment.label.id == this.#label.id
 		)
 
+		this.#countElement.textContent = labelAssignments.length
 		this.#toggleRemoveButton.hidden = !labelAssignments.length
 
 		for (const assignment of labelAssignments) {
