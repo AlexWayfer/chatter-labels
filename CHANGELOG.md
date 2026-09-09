@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 (2026-09-09)
+
+*   Remake default `confirm` to custom dialog.
+
 ## 1.2 (2026-09-09)
 
 *   Make long assignments lists "collapsed" and scrollable on options page.
