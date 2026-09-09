@@ -169,6 +169,23 @@ body {
 					margin: 1em 0 0.6em var(--input-label-padding);
 				}
 
+				.copy-assignments {
+					display: inline-grid;
+					place-items: center;
+
+					& > span {
+						grid-area: 1 / 1;
+					}
+
+					&:not(.copied) .text-copied {
+						visibility: hidden;
+					}
+
+					&.copied .text-copy {
+						visibility: hidden;
+					}
+				}
+
 				.toggle-add-assignments.active {
 					color: #373;
 					border-color: #373;

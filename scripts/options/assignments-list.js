@@ -14,9 +14,11 @@ export class AssignmentsList {
 	#template
 	#toggleAddButton
 	#toggleRemoveButton
+	#copyButton
 	#form
 	#textarea
 	#toastError
+	#copyTimeoutId
 	#unknownNicknames = []
 
 	constructor(element, mainStorage, label, assignments) {
@@ -29,6 +31,7 @@ export class AssignmentsList {
 		this.#template = element.querySelector('template#assignment')
 		this.#toggleAddButton = element.querySelector('button.toggle-add-assignments')
 		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
+		this.#copyButton = element.querySelector('button.copy-assignments')
 		this.#form = element.querySelector('form.add-assignments')
 		this.#textarea = this.#form.querySelector('textarea')
 		this.toastAdded = new Toast(this.#form.querySelector('.added'))
@@ -47,6 +50,10 @@ export class AssignmentsList {
 
 		this.#toggleRemoveButton.addEventListener('click', _event => {
 			this.#removing = !this.#removing
+		})
+
+		this.#copyButton.addEventListener('click', _event => {
+			this.#copy()
 		})
 
 		this.#form.addEventListener('submit', event => {
@@ -144,6 +151,7 @@ export class AssignmentsList {
 
 		if (!this.#label) {
 			this.#countElement.textContent = '0'
+			this.#copyButton.hidden = true
 			this.#toggleRemoveButton.hidden = true
 			this.#removing = false
 			return
@@ -154,6 +162,7 @@ export class AssignmentsList {
 		)
 
 		this.#countElement.textContent = labelAssignments.length
+		this.#copyButton.hidden = !labelAssignments.length
 		this.#toggleRemoveButton.hidden = !labelAssignments.length
 
 		for (const assignment of labelAssignments) {
@@ -173,6 +182,28 @@ export class AssignmentsList {
 		}
 
 		this.#removing = !this.#toggleRemoveButton.hidden && this.#removing
+	}
+
+	async #copy() {
+		const nicknames = this.#assignments
+			.filter(assignment => assignment.label.id == this.#label.id)
+			.map(assignment => assignment.user.login || assignment.user.username)
+
+		try {
+			await navigator.clipboard.writeText(nicknames.join('\n'))
+
+			this.#copyButton.classList.add('copied')
+			this.#copyButton.disabled = true
+
+			clearTimeout(this.#copyTimeoutId)
+			this.#copyTimeoutId = setTimeout(() => {
+				this.#copyButton.classList.remove('copied')
+				this.#copyButton.disabled = false
+			}, 1500)
+		} catch (error) {
+			this.#toastError.show(error.message)
+			throw error
+		}
 	}
 
 	async #delete(deleteButton, assignment) {
