@@ -297,7 +297,7 @@ body {
 			}
 		}
 
-		&:not(.loading):not(.error):not(:has(.fieldsets > fieldset)) .empty-list-notice {
+		&:not(.loading, .error, :has(.fieldsets > fieldset)) .empty-list-notice {
 			display: block;
 		}
 	}
