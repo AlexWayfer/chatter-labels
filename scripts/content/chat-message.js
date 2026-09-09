@@ -44,7 +44,7 @@ export class ChatMessage {
 	#assignedLabels(userId) {
 		if (!userId) return []
 
-		const userAssignments = this.#chat.assignments.filter(assignment => assignment.userId == userId)
+		const userAssignments = this.#chat.assignments.filter(assignment => assignment.user.id == userId)
 
 		if (!userAssignments.length) return []
 

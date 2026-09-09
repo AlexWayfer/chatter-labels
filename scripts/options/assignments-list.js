@@ -1,4 +1,5 @@
 import { Assignment } from '../models/assignment.js'
+import { User } from '../models/user.js'
 import { TwitchAPI } from '../twitch/api.js'
 import { Toast } from './toast.js'
 
@@ -98,7 +99,7 @@ export class AssignmentsList {
 
 			if (
 				this.#assignments.some(assignment => {
-					return assignment.label.id == this.#label.id && assignment.userId == user.id
+					return assignment.label.id == this.#label.id && assignment.user.id == user.id
 				})
 			) {
 				continue
@@ -106,8 +107,7 @@ export class AssignmentsList {
 
 			newAssignments.push(
 				new Assignment({
-					userId: user.id,
-					username: user.displayName,
+					user: User.fromTwitch(user),
 					label: this.#label,
 					assignedAt: new Date().toISOString()
 				})
@@ -162,7 +162,7 @@ export class AssignmentsList {
 				assignmentElement = assignmentFragment.querySelector('li'),
 				deleteButton = assignmentElement.querySelector('button.delete-assignment')
 
-			assignmentElement.querySelector('.username').textContent = assignment.username
+			assignmentElement.querySelector('.username').textContent = assignment.user.formattedUsername
 			assignmentElement.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
 
 			deleteButton.addEventListener('click', event => {
@@ -176,7 +176,7 @@ export class AssignmentsList {
 	}
 
 	async #delete(deleteButton, assignment) {
-		if (!confirm(`Delete assignment "${assignment.username}" from "${assignment.label.name}"?`)) return
+		if (!confirm(`Delete assignment "${assignment.user.formattedUsername}" from "${assignment.label.name}"?`)) return
 
 		deleteButton.disabled = true
 
@@ -184,7 +184,7 @@ export class AssignmentsList {
 			await this.#mainStorage.set(
 				'assignments',
 				this.#assignments.filter(existing => {
-					return existing.userId != assignment.userId || existing.label.id != assignment.label.id
+					return existing.user.id != assignment.user.id || existing.label.id != assignment.label.id
 				})
 			)
 		} catch (error) {

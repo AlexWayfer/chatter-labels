@@ -22,7 +22,7 @@ export class LabelsElement {
 	static async create(user, mainStorage) {
 		const
 			labels = await mainStorage.get('labels'),
-			assignments = await this.#syncUsername(
+			assignments = await this.#syncUser(
 				user,
 				mainStorage,
 				await mainStorage.get('assignments')
@@ -31,16 +31,16 @@ export class LabelsElement {
 		return new this(user, mainStorage, labels, assignments)
 	}
 
-	static async #syncUsername(user, mainStorage, assignments) {
+	static async #syncUser(user, mainStorage, assignments) {
 		if (!assignments.some(
-			assignment => assignment.userId == user.id && assignment.username != user.name
+			assignment => assignment.user.id == user.id && !assignment.user.equals(user)
 		)) {
 			return assignments
 		}
 
 		const updatedAssignments = assignments.map(assignment => {
-			return assignment.userId == user.id
-				? new Assignment({ ...assignment, username: user.name })
+			return assignment.user.id == user.id
+				? new Assignment({ ...assignment, user })
 				: assignment
 		})
 
@@ -87,7 +87,7 @@ export class LabelsElement {
 			this.#createLabelElement(
 				label,
 				this.#assignments.find(
-					assignment => assignment.userId == this.#user.id && assignment.label.id == label.id
+					assignment => assignment.user.id == this.#user.id && assignment.label.id == label.id
 				)
 			)
 		})
@@ -137,13 +137,12 @@ export class LabelsElement {
 					const
 						label = this.#labels.find(label => label.id == checkbox.value),
 						existing = this.#assignments.find(
-							assignment => assignment.userId == this.#user.id &&
+							assignment => assignment.user.id == this.#user.id &&
 								assignment.label.id == checkbox.value
 						)
 
 					return new Assignment({
-						userId: this.#user.id,
-						username: this.#user.name,
+						user: this.#user,
 						label,
 						assignedAt: existing?.assignedAt ?? new Date().toISOString()
 					})
@@ -151,7 +150,7 @@ export class LabelsElement {
 			)
 
 			this.#assignments = [
-				...this.#assignments.filter(assignment => assignment.userId != this.#user.id),
+				...this.#assignments.filter(assignment => assignment.user.id != this.#user.id),
 				...newAssignments
 			]
 

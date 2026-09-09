@@ -18,7 +18,7 @@ export class MainStorage extends BaseStorage {
 
 				if (!label) continue
 
-				assignments.push(new Assignment({ ...data, label }))
+				assignments.push(Assignment.fromJSON(data, label))
 			}
 
 			return assignments

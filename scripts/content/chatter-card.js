@@ -1,4 +1,5 @@
 import { logger } from '../logger.js'
+import { User } from '../models/user.js'
 import { TwitchAPI } from '../twitch/api.js'
 import { LabelsElement } from './labels-element.js'
 
@@ -32,7 +33,7 @@ export class ChatterCard {
 
 		const [userResponse] = await TwitchAPI.fetchUsers([login])
 
-		return { name: userResponse.displayName, id: userResponse.id }
+		return User.fromTwitch(userResponse)
 	}
 
 	#element

@@ -1,9 +1,18 @@
+import { User } from './user.js'
+
 export class Assignment {
-	constructor({ userId, username, label, assignedAt }) {
-		this.userId = userId
-		this.username = username
+	constructor({ user, label, assignedAt }) {
+		this.user = user
 		this.label = label
 		this.assignedAt = assignedAt
+	}
+
+	static fromJSON({ userId, username, login, assignedAt }, label) {
+		return new this({
+			user: new User({ id: userId, username, login }),
+			label,
+			assignedAt
+		})
 	}
 
 	get formattedAssignedAt() {
@@ -18,8 +27,9 @@ export class Assignment {
 
 	toJSON() {
 		return {
-			userId: this.userId,
-			username: this.username,
+			userId: this.user.id,
+			username: this.user.username,
+			login: this.user.login,
 			labelId: this.label.id,
 			assignedAt: this.assignedAt
 		}
