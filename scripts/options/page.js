@@ -14,5 +14,4 @@ const
 // logger.debug('optionsStorage = ', optionsStorage)
 
 GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), optionsStorage)
-
-LabelsForm.create(document.querySelector('.labels'), mainStorage)
+new LabelsForm(document.querySelector('.labels'), mainStorage, optionsStorage)

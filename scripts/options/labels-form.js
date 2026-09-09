@@ -6,26 +6,20 @@ import { IconField } from './icon-field.js'
 
 export class LabelsForm extends Form {
 	#mainStorage
+	#optionsStorage
 	#labels
 	#assignments
 	#assignmentsLists = new WeakMap()
 	#fieldsetsElement
 	#fieldsetTemplate
 
-	static async create(element, mainStorage) {
-		const
-			labels = await mainStorage.get('labels'),
-			assignments = await mainStorage.get('assignments')
-
-		new this(element, mainStorage, labels, assignments)
-	}
-
-	constructor(element, mainStorage, labels, assignments) {
+	constructor(element, mainStorage, optionsStorage) {
 		super(element)
 
 		this.#mainStorage = mainStorage
-		this.#labels = labels
-		this.#assignments = assignments
+		this.#optionsStorage = optionsStorage
+		this.#labels = []
+		this.#assignments = []
 
 		this.#fieldsetsElement = this._element.querySelector('.fieldsets')
 		this.#fieldsetTemplate = this._element.querySelector('template#label')
@@ -48,10 +42,9 @@ export class LabelsForm extends Form {
 			this._save()
 		})
 
-		this.#renderLabels()
-		this._element.classList.remove('loading')
-
 		this.#subscribe()
+
+		this.#load()
 	}
 
 	add(data = {}) {
@@ -139,6 +132,26 @@ export class LabelsForm extends Form {
 		this.#mainStorage.subscribe('assignments', assignments => {
 			this.#assignments = assignments
 		})
+
+		this.#optionsStorage.subscribe('storage', () => {
+			if (this._element.classList.contains('error')) this.#load()
+		})
+	}
+
+	async #load() {
+		this._element.classList.add('loading')
+		this._element.classList.remove('error')
+
+		try {
+			this.#labels = await this.#mainStorage.get('labels')
+			this.#assignments = await this.#mainStorage.get('assignments')
+			this.#renderLabels()
+			this._element.classList.remove('loading')
+		} catch (error) {
+			this._element.classList.remove('loading')
+			this._element.classList.add('error')
+			this._element.querySelector('.error-notice').textContent = error.message
+		}
 	}
 
 	async _save() {

@@ -221,9 +221,14 @@ body {
 		}
 
 		.loading-notice,
+		.error-notice,
 		.empty-list-notice {
 			display: none;
 			color: gray;
+		}
+
+		.error-notice {
+			color: red;
 		}
 
 		&.loading {
@@ -236,7 +241,17 @@ body {
 			}
 		}
 
-		&:not(.loading):not(:has(.fieldsets > fieldset)) .empty-list-notice {
+		&.error {
+			.error-notice {
+				display: block;
+			}
+
+			form[name="labels"] {
+				display: none;
+			}
+		}
+
+		&:not(.loading):not(.error):not(:has(.fieldsets > fieldset)) .empty-list-notice {
 			display: block;
 		}
 	}

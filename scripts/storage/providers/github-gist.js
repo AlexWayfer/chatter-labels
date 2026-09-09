@@ -109,6 +109,8 @@ export class GitHubGist {
 		})
 
 		if (!response.ok) {
+			if (response.status == 401) throw new Error('Incorrect GitHub token.')
+
 			throw new Error(`Failed to ${method} ${path}: ${response.status} ${response.statusText}`)
 		}
 

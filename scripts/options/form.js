@@ -15,7 +15,7 @@ export class Form {
 			await logic()
 			this._toastSaved.show()
 		} catch (error) {
-			this._toastError.show(error)
+			this._toastError.show(error.message)
 
 			throw error
 		} finally {
