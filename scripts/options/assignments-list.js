@@ -15,6 +15,7 @@ export class AssignmentsList {
 	#toggleAddButton
 	#toggleRemoveButton
 	#copyButton
+	#sortSelect
 	#form
 	#textarea
 	#toastError
@@ -32,6 +33,7 @@ export class AssignmentsList {
 		this.#toggleAddButton = element.querySelector('button.toggle-add-assignments')
 		this.#toggleRemoveButton = element.querySelector('button.toggle-remove-assignments')
 		this.#copyButton = element.querySelector('button.copy-assignments')
+		this.#sortSelect = element.querySelector('select.sort-assignments')
 		this.#form = element.querySelector('form.add-assignments')
 		this.#textarea = this.#form.querySelector('textarea')
 		this.toastAdded = new Toast(this.#form.querySelector('.added'))
@@ -54,6 +56,10 @@ export class AssignmentsList {
 
 		this.#copyButton.addEventListener('click', _event => {
 			this.#copy()
+		})
+
+		this.#sortSelect.addEventListener('change', _event => {
+			this.#render()
 		})
 
 		this.#form.addEventListener('submit', event => {
@@ -152,17 +158,19 @@ export class AssignmentsList {
 		if (!this.#label) {
 			this.#countElement.textContent = '0'
 			this.#copyButton.hidden = true
+			this.#sortSelect.hidden = true
 			this.#toggleRemoveButton.hidden = true
 			this.#removing = false
 			return
 		}
 
-		const labelAssignments = this.#assignments.filter(
-			assignment => assignment.label.id == this.#label.id
+		const labelAssignments = this.#sort(
+			this.#assignments.filter(assignment => assignment.label.id == this.#label.id)
 		)
 
 		this.#countElement.textContent = labelAssignments.length
 		this.#copyButton.hidden = !labelAssignments.length
+		this.#sortSelect.hidden = !labelAssignments.length
 		this.#toggleRemoveButton.hidden = !labelAssignments.length
 
 		for (const assignment of labelAssignments) {
@@ -189,10 +197,29 @@ export class AssignmentsList {
 		)
 	}
 
+	#sort(assignments) {
+		const sorted = [...assignments]
+
+		switch (this.#sortSelect.value) {
+			case 'alphabet':
+				sorted.sort((a, b) => a.user.formattedUsername.localeCompare(
+					b.user.formattedUsername,
+					undefined,
+					{ sensitivity: 'base' }
+				))
+				break
+			case 'date':
+				sorted.sort((a, b) => a.assignedAt.localeCompare(b.assignedAt))
+				break
+		}
+
+		return sorted
+	}
+
 	async #copy() {
-		const nicknames = this.#assignments
-			.filter(assignment => assignment.label.id == this.#label.id)
-			.map(assignment => assignment.user.login || assignment.user.username)
+		const nicknames = this.#sort(
+			this.#assignments.filter(assignment => assignment.label.id == this.#label.id)
+		).map(assignment => assignment.user.login || assignment.user.username)
 
 		try {
 			await navigator.clipboard.writeText(nicknames.join('\n'))

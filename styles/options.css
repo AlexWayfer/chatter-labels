@@ -11,7 +11,8 @@ body {
 
 	button,
 	input,
-	textarea {
+	textarea,
+	select {
 		font-size: inherit;
 
 		/* Position */
@@ -24,8 +25,15 @@ body {
 	fieldset,
 	button,
 	input,
-	textarea {
+	textarea,
+	select {
 		border-radius: var(--input-border-radius);
+	}
+
+	input,
+	textarea,
+	select {
+		background-color: Field;
 	}
 
 	input[type="file"] {
@@ -166,7 +174,14 @@ body {
 				grid-column: 2;
 
 				h4 {
+					display: flex;
+					align-items: center;
 					margin: 1em 0 0.6em var(--input-label-padding);
+
+					select {
+						margin-left: auto;
+						font-size: 0.8em;
+					}
 				}
 
 				.copy-assignments {
