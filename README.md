@@ -1,5 +1,7 @@
 # Chatter Labels for Twitch
 
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/AlexWayfer/chatter-labels/ci.yml?style=flat-square)](https://github.com/AlexWayfer/chatter-labels/actions)
+
 <p>
 	<a target="_blank" href="https://chromewebstore.google.com/detail/chatter-labels-for-twitch/ngobainhmihgaihpbnocjaemgffoiomp" >
 		<img src="images/chrome-web-store.png" alt="Chrome Web Store" width="200" />
