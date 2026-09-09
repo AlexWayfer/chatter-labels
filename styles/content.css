@@ -6,7 +6,6 @@
 
 		height: var(--size);
 		width: auto;
-		min-width: var(--size);
 		margin: 0 0.3rem 0.2rem 0;
 		vertical-align: middle;
 	}

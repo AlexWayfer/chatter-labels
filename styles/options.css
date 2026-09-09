@@ -141,6 +141,7 @@ body {
 							width: auto;
 							min-width: var(--size);
 							padding: 0.2em;
+							object-fit: contain;
 							vertical-align: middle;
 							border: var(--input-border);
 							border-radius: var(--input-border-radius);
