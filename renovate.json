@@ -1,6 +1,25 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": [
-		"config:recommended"
-	]
+		"config:recommended",
+		":disableDependencyDashboard"
+	],
+	"packageRules": [
+		{
+			"matchPackageNames": ["remark*"],
+			"matchDatasources": ["npm"],
+			"groupName": "remark packages"
+		},
+		{
+			"matchPackageNames": ["*eslint*"],
+			"matchDatasources": ["npm"],
+			"groupName": "ESLint packages"
+		},
+		{
+			"matchPackageNames": ["*stylelint*"],
+			"matchDatasources": ["npm"],
+			"groupName": "Stylelint packages"
+		}
+	],
+	"separateMajorMinor": false
 }
