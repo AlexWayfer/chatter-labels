@@ -1,6 +1,7 @@
 # Chatter Labels for Twitch
 
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/AlexWayfer/chatter-labels/ci.yml?style=flat-square)](https://github.com/AlexWayfer/chatter-labels/actions)
+[![Depfu](https://img.shields.io/depfu/AlexWayfer/chatter-labels?style=flat-square)](https://depfu.com/repos/github/AlexWayfer/chatter-labels)
 
 <p>
 	<a target="_blank" href="https://chromewebstore.google.com/detail/chatter-labels-for-twitch/ngobainhmihgaihpbnocjaemgffoiomp" >
