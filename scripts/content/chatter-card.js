@@ -3,7 +3,7 @@ import { User } from '../models/user.js'
 import { TwitchAPI } from '../twitch/api.js'
 import { LabelsElement } from './labels-element.js'
 
-const instances = new Set()
+const claimedKey = `chatterLabels${chrome.runtime.id}`
 
 export class ChatterCard {
 	static createIfNeeded(node, mainStorage) {
@@ -13,8 +13,9 @@ export class ChatterCard {
 
 		if (!element) return
 		if (!['viewer-card', 'mod-view-user-details'].includes(element.dataset.aTarget)) return
-		if (element.dataset.labelsInjected) return
+		if (claimedKey in element.dataset) return
 
+		element.dataset[claimedKey] = ''
 		this.create(element, mainStorage)
 	}
 
@@ -42,15 +43,11 @@ export class ChatterCard {
 		this.#element = element
 		this.labelsElement = labelsElement
 
-		instances.add(this)
-
 		this.#observeRemoval()
 
 		this.#element
 			.querySelector('.viewer-card-header__background')
 			.after(this.labelsElement.element)
-
-		this.#element.dataset.labelsInjected = true
 	}
 
 	#observeRemoval() {
@@ -58,7 +55,7 @@ export class ChatterCard {
 			if (this.#element.isConnected) return
 
 			this.labelsElement.unsubscribe()
-			instances.delete(this)
+			delete this.#element.dataset[claimedKey]
 			observer.disconnect()
 			logger.debug('Labels Element instance deleted.')
 		})

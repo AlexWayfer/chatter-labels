@@ -103,10 +103,8 @@ export class Chat {
 				: [...node.querySelectorAll(this.constructor.MESSAGE_SELECTOR)]
 
 		for (const element of messages) {
-			if (element.dataset.labelsInjected) continue
+			if (this.#messagesByElement.has(element)) continue
 			if (!element.querySelector('.chat-line__username')) continue
-
-			element.dataset.labelsInjected = true
 
 			const message = new ChatMessage(element, this)
 
