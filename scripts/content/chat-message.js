@@ -1,4 +1,6 @@
 export class ChatMessage {
+	static USERNAME_SELECTOR = '.chat-line__username, .message-author__username--clickable'
+
 	#element
 	#chat
 	#iconsElement
@@ -12,10 +14,11 @@ export class ChatMessage {
 
 	render() {
 		const
+			usernameElement = this.#element.querySelector(this.constructor.USERNAME_SELECTOR),
 			userId = this.#chat.userIdFrom(this.#element),
 			labels = this.#assignedLabels(userId)
 
-		if (!labels.length) {
+		if (!usernameElement || !labels.length) {
 			this.#iconsElement?.remove()
 			this.#iconsElement = null
 			return
@@ -24,7 +27,7 @@ export class ChatMessage {
 		if (!this.#iconsElement) {
 			this.#iconsElement = document.createElement('span')
 			this.#iconsElement.classList.add('chatter-labels-icons')
-			this.#element.querySelector('.chat-line__username').before(this.#iconsElement)
+			usernameElement.before(this.#iconsElement)
 		}
 
 		this.#iconsElement.replaceChildren(

@@ -37,11 +37,13 @@ export class Chat {
 	}
 
 	userIdFrom(element) {
-		if (element.dataset.userId) return element.dataset.userId
+		const target = element.querySelector('.chat-line__message--alert .message') ?? element
 
-		element.dispatchEvent(new Event('chatter-labels:resolve-user-id'))
+		if (target.dataset.userId) return target.dataset.userId
 
-		return element.dataset.userId
+		target.dispatchEvent(new Event('chatter-labels:resolve-user-id'))
+
+		return target.dataset.userId
 	}
 
 	attachIfNeeded(node) {
@@ -102,9 +104,13 @@ export class Chat {
 				? [node]
 				: [...node.querySelectorAll(this.constructor.MESSAGE_SELECTOR)]
 
+		const closest = node.closest(this.constructor.MESSAGE_SELECTOR)
+
+		if (closest && !messages.includes(closest)) messages.push(closest)
+
 		for (const element of messages) {
 			if (this.#messagesByElement.has(element)) continue
-			if (!element.querySelector('.chat-line__username')) continue
+			if (!element.querySelector(ChatMessage.USERNAME_SELECTOR)) continue
 
 			const message = new ChatMessage(element, this)
 
