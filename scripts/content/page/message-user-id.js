@@ -20,12 +20,15 @@ class MessageUserId {
 		}
 
 		for (let depth = 0; depth < 40 && fiber; depth++) {
-			const message = fiber.memoizedProps?.message
+			const
+				message = fiber.memoizedProps?.message ?? fiber.memoizedProps?.autoModMessage,
+				user = message?.user ?? message?.sender
 
-			if (message?.user?.userID && message.user.login != 'automod')
-				return String(message.user.userID)
+			if (user?.login != 'automod') {
+				const userId = user?.userID ?? user?.id ?? message?.userID
 
-			if (message?.sender?.id) return String(message.sender.id)
+				if (userId) return String(userId)
+			}
 
 			fiber = fiber.return
 		}

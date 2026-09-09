@@ -2,8 +2,9 @@ import { logger } from '../logger.js'
 import { ChatMessage } from './chat-message.js'
 
 export class Chat {
-	static CONTAINER_SELECTOR = '.chat-scrollable-area__message-container, .message-list'
-	static MESSAGE_SELECTOR = '.chat-line__message, .vcml-message'
+	static CONTAINER_SELECTOR =
+		'.chat-scrollable-area__message-container, .message-list, [data-highlight-selector="automod-queue"]'
+	static MESSAGE_SELECTOR = '.chat-line__message, .vcml-message, .automod-queue-item'
 
 	static async create(mainStorage) {
 		const
@@ -53,6 +54,12 @@ export class Chat {
 		for (const container of this.#containersIn(node)) {
 			this.#watchContainer(container)
 		}
+
+		if (node.nodeType !== Node.ELEMENT_NODE) return
+
+		const closest = node.closest(this.constructor.CONTAINER_SELECTOR)
+
+		if (closest) this.#watchContainer(closest)
 	}
 
 	detachIfNeeded(node) {
