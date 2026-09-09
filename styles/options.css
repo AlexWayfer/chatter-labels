@@ -314,4 +314,25 @@ body {
 			color: red;
 		}
 	}
+
+	dialog.confirm {
+		padding: 1em 1.2em;
+		border: var(--input-border);
+		border-radius: var(--input-border-radius);
+
+		&::backdrop {
+			background: rgb(0 0 0 / 35%);
+		}
+
+		.message {
+			margin: 0 0 1em;
+			white-space: pre-line;
+		}
+
+		.buttons {
+			display: flex;
+			justify-content: center;
+			gap: 0.5em;
+		}
+	}
 }

@@ -1,6 +1,7 @@
 import { logger } from '../logger.js'
 import { Label } from '../models/label.js'
 import { AssignmentsList } from './assignments-list.js'
+import { confirm } from './confirm-dialog.js'
 import { Form } from './form.js'
 import { IconField } from './icon-field.js'
 
@@ -68,14 +69,14 @@ export class LabelsForm extends Form {
 			this.#updateMoveButtons()
 		})
 
-		fieldsetElement.querySelector('button.delete').addEventListener('click', _event => {
+		fieldsetElement.querySelector('button.delete').addEventListener('click', async _event => {
 			const
 				id = fieldsetElement.querySelector('input[name="id"]').value,
 				name = fieldsetElement.querySelector('input[name="name"]').value
 
 			if (
 				this.#labels.some(label => label.id == id) &&
-				!confirm([
+				!await confirm([
 					`Remove label "${name}" from the list?`,
 					'Click "Save" to apply.'
 				].join('\n'))

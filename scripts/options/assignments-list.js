@@ -1,6 +1,7 @@
 import { Assignment } from '../models/assignment.js'
 import { User } from '../models/user.js'
 import { TwitchAPI } from '../twitch/api.js'
+import { confirm } from './confirm-dialog.js'
 import { Toast } from './toast.js'
 
 export class AssignmentsList {
@@ -242,7 +243,7 @@ export class AssignmentsList {
 	}
 
 	async #delete(deleteButton, assignment) {
-		if (!confirm(`Delete assignment "${assignment.user.formattedUsername}" from "${assignment.label.name}"?`)) return
+		if (!await confirm(`Delete assignment "${assignment.user.formattedUsername}" from "${assignment.label.name}"?`)) return
 
 		deleteButton.disabled = true
 
