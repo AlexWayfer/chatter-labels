@@ -3,7 +3,7 @@ import { ChatMessage } from './chat-message.js'
 
 export class Chat {
 	static CONTAINER_SELECTOR =
-		'.chat-scrollable-area__message-container, .message-list, [data-highlight-selector="automod-queue"]'
+		'.chat-scrollable-area__message-container, .message-list, [role="list"]:has(.automod-queue-item)'
 	static MESSAGE_SELECTOR = '.chat-line__message, .vcml-message, .automod-queue-item'
 
 	static async create(mainStorage) {
