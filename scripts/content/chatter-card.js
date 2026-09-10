@@ -30,9 +30,12 @@ export class ChatterCard {
 	}
 
 	static async create(element, mainStorage) {
-		const
-			userInfo = await this.#fetchUserInfo(element),
-			labelsElement = await LabelsElement.create(userInfo, mainStorage)
+		const userInfo = await this.#fetchUserInfo(element)
+
+		element.dataset.userId = userInfo.id
+		element.dispatchEvent(new Event('chatter-labels:user-id', { bubbles: true }))
+
+		const labelsElement = await LabelsElement.create(userInfo, mainStorage)
 
 		return new this(element, labelsElement)
 	}
@@ -67,6 +70,7 @@ export class ChatterCard {
 		this.labelsElement.unsubscribe()
 		this.labelsElement.element.remove()
 		delete this.#element.dataset[claimedKey]
+		delete this.#element.dataset.userId
 		instances.delete(this)
 	}
 

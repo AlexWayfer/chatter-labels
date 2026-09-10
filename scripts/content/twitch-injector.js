@@ -23,10 +23,13 @@ const observer = new MutationObserver(mutations => {
 	}
 })
 
+const refreshChat = () => chat.refresh()
+
 window.addEventListener(
 	'chatter-labels:teardown',
 	() => {
 		observer.disconnect()
+		document.removeEventListener('chatter-labels:user-id', refreshChat, true)
 		chat.destroy()
 		ChatterCard.destroyAll()
 	},
@@ -34,6 +37,8 @@ window.addEventListener(
 )
 
 observer.observe(document.body, { childList: true, subtree: true })
+
+document.addEventListener('chatter-labels:user-id', refreshChat, true)
 
 chat.attachIfNeeded(document.body)
 ChatterCard.createIfNeeded(document.body, mainStorage)

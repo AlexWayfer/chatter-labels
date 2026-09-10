@@ -1,5 +1,6 @@
 import { logger } from '../logger.js'
 import { ChatMessage } from './chat-message.js'
+import { ChatterCard } from './chatter-card.js'
 
 export class Chat {
 	static CONTAINER_SELECTOR =
@@ -48,6 +49,7 @@ export class Chat {
 		target.dispatchEvent(new Event('chatter-labels:resolve-user-id'))
 
 		return target.dataset.userId
+			?? element.closest(ChatterCard.CARD_SELECTOR)?.dataset.userId
 	}
 
 	attachIfNeeded(node) {
@@ -154,13 +156,19 @@ export class Chat {
 	#subscribe() {
 		this.#mainStorage.subscribe('labels', labels => {
 			this.#labels = labels
-			this.#renderMessages()
+			this.refresh()
 		})
 
 		this.#mainStorage.subscribe('assignments', assignments => {
 			this.#assignments = assignments
-			this.#renderMessages()
+			this.refresh()
 		})
+	}
+
+	refresh() {
+		for (const container of this.#containers.keys()) this.#createMessagesIfNeeded(container)
+
+		this.#renderMessages()
 	}
 
 	#renderMessages() {
