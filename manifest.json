@@ -1,7 +1,7 @@
 {
 	"name": "Chatter Labels for Twitch",
 	"description": "Labels for chatters on Twitch",
-	"version": "1.2.1",
+	"version": "1.3",
 	"manifest_version": 3,
 	"icons": {
 		"128": "images/icons/128.png",
