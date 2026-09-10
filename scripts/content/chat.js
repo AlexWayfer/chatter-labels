@@ -63,16 +63,15 @@ export class Chat {
 
 	userIdFrom(element) {
 		const target =
-			element.querySelector('.chat-line__message--alert .message')
-			?? element.querySelector(':scope > [id]')
-			?? element
+			element.querySelector('.chat-line__message--alert .message') ??
+			element.querySelector(':scope > [id]') ??
+			element
 
 		if (target.dataset.userId) return target.dataset.userId
 
 		target.dispatchEvent(new Event('chatter-labels:resolve-user-id'))
 
-		return target.dataset.userId
-			?? element.closest(ChatterCard.CARD_SELECTOR)?.dataset.userId
+		return target.dataset.userId ?? element.closest(ChatterCard.CARD_SELECTOR)?.dataset.userId
 	}
 
 	attachIfNeeded(node) {
