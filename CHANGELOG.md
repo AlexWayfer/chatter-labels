@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3 (2026-09-10)
+
+*   Add labels icons for user chat history.
+*   Fix labels icons for blocked by automod messages.
+*   Add labels icons for automod queue.
+*   Fix duplicating labels icons after moving block in moderation mode.
+*   Add ability to (temporarily) hide icons in chat.
+*   Re-activate extension after reloading (or updating) in browser.
+*   Refactor code for Chats.
+
 ## 1.2.1 (2026-09-09)
 
 *   Remake default `confirm` to custom dialog.
