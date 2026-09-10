@@ -54,6 +54,11 @@ export class LabelsForm extends Form {
 			fieldsetElement = fieldsetFragment.querySelector('fieldset')
 
 		fieldsetElement.querySelectorAll('input[name]').forEach(input => {
+			if (input.type == 'checkbox') {
+				input.checked = data[input.name] ?? true
+				return
+			}
+
 			input.value = data[input.name] ?? (input.name == 'id' ? crypto.randomUUID() : '')
 		})
 
@@ -165,7 +170,7 @@ export class LabelsForm extends Form {
 				const label = new Label(
 					Object.fromEntries(
 						Array.from(fieldset.querySelectorAll('input[name]')).map(
-							input => [input.name, input.value]
+							input => [input.name, input.type == 'checkbox' ? input.checked : input.value]
 						)
 					)
 				)

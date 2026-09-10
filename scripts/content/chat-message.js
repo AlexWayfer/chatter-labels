@@ -63,7 +63,7 @@ export class ChatMessage {
 		if (!userAssignments.length) return []
 
 		return this.#chat.labels.filter(
-			label => userAssignments.some(assignment => assignment.label?.id == label.id)
+			label => label.enabled && userAssignments.some(assignment => assignment.label?.id == label.id)
 		)
 	}
 }
