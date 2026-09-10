@@ -7,12 +7,13 @@
 		"128": "images/icons/128.png",
 		"512": "images/icons/512.png"
 	},
-	"permissions": ["storage"],
+	"permissions": ["storage", "scripting"],
 	"background": {
 		"service_worker": "scripts/service-worker.js",
 		"type": "module"
 	},
 	"host_permissions": [
+		"https://*.twitch.tv/*",
 		"https://api.github.com/*",
 		"https://gist.githubusercontent.com/*",
 		"https://gql.twitch.tv/*"

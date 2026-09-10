@@ -106,6 +106,10 @@ export class Chat {
 		this.#forgetMessagesIn(container)
 	}
 
+	destroy() {
+		for (const container of [...this.#containers.keys()]) this.#unwatchContainer(container)
+	}
+
 	#createMessagesIfNeeded(node) {
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 

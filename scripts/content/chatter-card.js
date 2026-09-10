@@ -4,19 +4,29 @@ import { TwitchAPI } from '../twitch/api.js'
 import { LabelsElement } from './labels-element.js'
 
 const claimedKey = `chatterLabels${chrome.runtime.id}`
+const instances = new Set()
 
 export class ChatterCard {
+	static CARD_SELECTOR =
+		'[data-a-target="viewer-card"], [data-a-target="mod-view-user-details"]'
+
 	static createIfNeeded(node, mainStorage) {
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 
-		const element = node.matches('[data-a-target]') ? node : node.querySelector('[data-a-target]')
+		const cards = node.matches(this.CARD_SELECTOR)
+			? [node]
+			: [...node.querySelectorAll(this.CARD_SELECTOR)]
 
-		if (!element) return
-		if (!['viewer-card', 'mod-view-user-details'].includes(element.dataset.aTarget)) return
-		if (claimedKey in element.dataset) return
+		for (const element of cards) {
+			if (claimedKey in element.dataset) continue
 
-		element.dataset[claimedKey] = ''
-		this.create(element, mainStorage)
+			element.dataset[claimedKey] = ''
+			this.create(element, mainStorage)
+		}
+	}
+
+	static destroyAll() {
+		for (const instance of [...instances]) instance.destroy()
 	}
 
 	static async create(element, mainStorage) {
@@ -38,11 +48,13 @@ export class ChatterCard {
 	}
 
 	#element
+	#removalObserver
 
 	constructor(element, labelsElement) {
 		this.#element = element
 		this.labelsElement = labelsElement
 
+		instances.add(this)
 		this.#observeRemoval()
 
 		this.#element
@@ -50,18 +62,24 @@ export class ChatterCard {
 			.after(this.labelsElement.element)
 	}
 
+	destroy() {
+		this.#removalObserver?.disconnect()
+		this.labelsElement.unsubscribe()
+		this.labelsElement.element.remove()
+		delete this.#element.dataset[claimedKey]
+		instances.delete(this)
+	}
+
 	#observeRemoval() {
-		const observer = new MutationObserver(() => {
+		this.#removalObserver = new MutationObserver(() => {
 			if (this.#element.isConnected) return
 
-			this.labelsElement.unsubscribe()
-			delete this.#element.dataset[claimedKey]
-			observer.disconnect()
+			this.destroy()
 			logger.debug('Labels Element instance deleted.')
 		})
 
 		//// There can be multiple parents, and Twitch can remove one of them
 		// logger.debug('Chatter Card parent node = ', this.#chatterCard.parentNode)
-		observer.observe(document.body, { childList: true, subtree: true })
+		this.#removalObserver.observe(document.body, { childList: true, subtree: true })
 	}
 }
