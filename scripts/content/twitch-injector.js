@@ -8,29 +8,32 @@ window.dispatchEvent(new Event('chatter-labels:teardown'))
 const
 	optionsStorage = await OptionsStorage.create(),
 	mainStorage = await MainStorage.create(optionsStorage),
-	chat = await Chat.create(mainStorage)
+	chats = await Chat.createAll(mainStorage)
 
 const observer = new MutationObserver(mutations => {
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {
 			ChatterCard.createIfNeeded(addedNode, mainStorage)
-			chat.attachIfNeeded(addedNode)
+
+			for (const chat of chats) chat.attachIfNeeded(addedNode)
 		}
 
 		for (const removedNode of mutation.removedNodes) {
-			chat.detachIfNeeded(removedNode)
+			for (const chat of chats) chat.detachIfNeeded(removedNode)
 		}
 	}
 })
 
-const refreshChat = () => chat.refresh()
+const refreshChats = () => {
+	for (const chat of chats) chat.refresh()
+}
 
 window.addEventListener(
 	'chatter-labels:teardown',
 	() => {
 		observer.disconnect()
-		document.removeEventListener('chatter-labels:user-id', refreshChat, true)
-		chat.destroy()
+		document.removeEventListener('chatter-labels:user-id', refreshChats, true)
+		for (const chat of chats) chat.destroy()
 		ChatterCard.destroyAll()
 	},
 	{ once: true }
@@ -38,7 +41,7 @@ window.addEventListener(
 
 observer.observe(document.body, { childList: true, subtree: true })
 
-document.addEventListener('chatter-labels:user-id', refreshChat, true)
+document.addEventListener('chatter-labels:user-id', refreshChats, true)
 
-chat.attachIfNeeded(document.body)
+for (const chat of chats) chat.attachIfNeeded(document.body)
 ChatterCard.createIfNeeded(document.body, mainStorage)

@@ -3,29 +3,48 @@ import { ChatMessage } from './chat-message.js'
 import { ChatterCard } from './chatter-card.js'
 
 export class Chat {
-	static CONTAINER_SELECTOR =
-		'.chat-scrollable-area__message-container, .message-list, [role="list"]:has(.automod-queue-item)'
-	static MESSAGE_SELECTOR = '.chat-line__message, .vcml-message, .automod-queue-item'
+	static KINDS = [
+		{
+			name: 'live',
+			containerSelector: '.chat-scrollable-area__message-container',
+			messageSelector: '.chat-line__message',
+			usernameSelector: '.chat-line__username'
+		},
+		{
+			name: 'history',
+			containerSelector: '.message-list',
+			messageSelector: '.vcml-message',
+			usernameSelector: '.message-author__username'
+		},
+		{
+			name: 'automod',
+			containerSelector: '[role="list"]:has(.automod-queue-item)',
+			messageSelector: '.automod-queue-item',
+			usernameSelector: '.message-author__username--clickable'
+		}
+	]
 
-	static async create(mainStorage) {
+	static async createAll(mainStorage) {
 		const
 			labels = await mainStorage.get('labels'),
 			assignments = await mainStorage.get('assignments')
 
-		return new this(mainStorage, labels, assignments)
+		return this.KINDS.map(kind => new this(mainStorage, labels, assignments, kind))
 	}
 
 	#mainStorage
 	#labels
 	#assignments
+	#kind
 	#messages = new Set()
 	#messagesByElement = new WeakMap()
 	#containers = new Map()
 
-	constructor(mainStorage, labels, assignments) {
+	constructor(mainStorage, labels, assignments, kind) {
 		this.#mainStorage = mainStorage
 		this.#labels = labels
 		this.#assignments = assignments
+		this.#kind = kind
 
 		this.#subscribe()
 	}
@@ -36,6 +55,10 @@ export class Chat {
 
 	get assignments() {
 		return this.#assignments
+	}
+
+	get kind() {
+		return this.#kind
 	}
 
 	userIdFrom(element) {
@@ -59,7 +82,7 @@ export class Chat {
 
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 
-		const closest = node.closest(this.constructor.CONTAINER_SELECTOR)
+		const closest = node.closest(this.#kind.containerSelector)
 
 		if (closest) this.#watchContainer(closest)
 	}
@@ -73,13 +96,13 @@ export class Chat {
 	#containersIn(node) {
 		if (node.nodeType !== Node.ELEMENT_NODE) return []
 
-		return node.matches(this.constructor.CONTAINER_SELECTOR)
+		return node.matches(this.#kind.containerSelector)
 			? [node]
-			: [...node.querySelectorAll(this.constructor.CONTAINER_SELECTOR)]
+			: [...node.querySelectorAll(this.#kind.containerSelector)]
 	}
 
 	#watchContainer(container) {
-		logger.debug('Chat watch container')
+		logger.debug(`Chat watch ${this.#kind.name} container`)
 
 		if (this.#containers.has(container)) return
 
@@ -101,7 +124,7 @@ export class Chat {
 	}
 
 	#unwatchContainer(container) {
-		logger.debug('Chat unwatch container')
+		logger.debug(`Chat unwatch ${this.#kind.name} container`)
 
 		this.#containers.get(container)?.disconnect()
 		this.#containers.delete(container)
@@ -115,18 +138,14 @@ export class Chat {
 	#createMessagesIfNeeded(node) {
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 
-		const messages =
-			node.matches(this.constructor.MESSAGE_SELECTOR)
-				? [node]
-				: [...node.querySelectorAll(this.constructor.MESSAGE_SELECTOR)]
-
-		const closest = node.closest(this.constructor.MESSAGE_SELECTOR)
+		const messages = this.#messageElementsIn(node)
+		const closest = node.closest(this.#kind.messageSelector)
 
 		if (closest && !messages.includes(closest)) messages.push(closest)
 
 		for (const element of messages) {
 			if (this.#messagesByElement.has(element)) continue
-			if (!element.querySelector(ChatMessage.USERNAME_SELECTOR)) continue
+			if (!element.querySelector(this.#kind.usernameSelector)) continue
 
 			const message = new ChatMessage(element, this)
 
@@ -138,12 +157,7 @@ export class Chat {
 	#forgetMessagesIn(node) {
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 
-		const messages =
-			node.matches(this.constructor.MESSAGE_SELECTOR)
-				? [node]
-				: [...node.querySelectorAll(this.constructor.MESSAGE_SELECTOR)]
-
-		for (const element of messages) {
+		for (const element of this.#messageElementsIn(node)) {
 			const message = this.#messagesByElement.get(element)
 
 			if (!message) continue
@@ -151,6 +165,12 @@ export class Chat {
 			this.#messages.delete(message)
 			this.#messagesByElement.delete(element)
 		}
+	}
+
+	#messageElementsIn(node) {
+		return node.matches(this.#kind.messageSelector)
+			? [node]
+			: [...node.querySelectorAll(this.#kind.messageSelector)]
 	}
 
 	#subscribe() {

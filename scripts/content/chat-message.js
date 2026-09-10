@@ -1,7 +1,4 @@
 export class ChatMessage {
-	static USERNAME_SELECTOR =
-		'.chat-line__username, .message-author__username, .message-author__username--clickable'
-
 	static ICONS_SELECTOR = `.chatter-labels-icons[data-chatter-labels-ext="${chrome.runtime.id}"]`
 
 	#element
@@ -17,7 +14,7 @@ export class ChatMessage {
 
 	render() {
 		const
-			usernameElement = this.#element.querySelector(this.constructor.USERNAME_SELECTOR),
+			usernameElement = this.#element.querySelector(this.#chat.kind.usernameSelector),
 			userId = this.#chat.userIdFrom(this.#element),
 			labels = this.#assignedLabels(userId)
 
