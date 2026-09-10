@@ -2,7 +2,7 @@ export class ChatMessage {
 	static USERNAME_SELECTOR =
 		'.chat-line__username, .message-author__username, .message-author__username--clickable'
 
-	static ICONS_SELECTOR = '.chatter-labels-icons'
+	static ICONS_SELECTOR = `.chatter-labels-icons[data-chatter-labels-ext="${chrome.runtime.id}"]`
 
 	#element
 	#chat
@@ -35,6 +35,7 @@ export class ChatMessage {
 		if (!this.#iconsElement) {
 			this.#iconsElement = document.createElement('span')
 			this.#iconsElement.classList.add('chatter-labels-icons')
+			this.#iconsElement.dataset.chatterLabelsExt = chrome.runtime.id
 		}
 
 		for (const extra of this.#element.querySelectorAll(this.constructor.ICONS_SELECTOR)) {
