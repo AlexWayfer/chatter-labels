@@ -45,6 +45,64 @@
 	padding: 8px;
 }
 
+.chatter-labels-lurkology {
+	--font-size-base: 14px;
+	--color-text-base: var(--text);
+	--color-text-alt-2: var(--dim);
+	--color-text-link: var(--accent);
+	--color-border-base: var(--line);
+	--color-background-base: var(--surface);
+	--color-background-input: var(--raised);
+	--color-background-button-primary-default: var(--accent);
+	--color-text-button-primary: var(--accent-ink);
+	--color-background-button-disabled: var(--raised);
+	--color-text-button-disabled: var(--dim);
+	--font-size-3: 16px;
+	--line-height-heading: 1.25;
+	--line-height-body: 1.5;
+	--button-size-small: 32px;
+	--button-padding-x: 10px;
+	--button-text-default: 14px;
+	--button-border-radius-default: 6px;
+
+	&.chatter-labels-control {
+		max-width: none;
+		margin-top: 0;
+
+		> button {
+			width: 100%;
+			padding: 8px 12px;
+			border: 1px solid var(--line);
+			border-radius: 6px;
+			color: var(--text);
+			cursor: default;
+			user-select: none;
+
+			&:hover {
+				background: var(--raised);
+			}
+		}
+	}
+
+	&.chatter-labels-popup {
+		font-size: 14px;
+		font-family: inherit;
+		line-height: 1.5;
+		pointer-events: auto;
+
+		.chatter-labels .icon {
+			display: inline-block;
+		}
+	}
+}
+
+.chatter-labels-lurkology-page .chatter-labels-icons .chatter-labels-icon {
+	--size: 16px;
+
+	display: inline-block;
+	margin: 0 4px 0 0;
+}
+
 .chatter-labels-popup {
 	position: fixed;
 	inset: auto;

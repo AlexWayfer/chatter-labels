@@ -11,6 +11,10 @@
 
 Chrome extension for assignment your custom labels to chatters on Twitch.
 
+Also shows your labels in [Lurkology chat logs](https://lurkology.com/logs).
+Click an author's name to manage their labels in the user card. Assignments are
+shared with Twitch and matched by Twitch user ID, including historical usernames.
+
 ## Credentials
 
 * [Extension icon](https://www.flaticon.com/free-icon/tag_16568959)

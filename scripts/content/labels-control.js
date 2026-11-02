@@ -69,8 +69,8 @@ export class LabelsControl {
 		this.#renderSummary()
 	}
 
-	mountPopup() {
-		document.body.append(this.popup)
+	mountPopup(parent = document.body) {
+		parent.append(this.popup)
 	}
 
 	get isConnected() {

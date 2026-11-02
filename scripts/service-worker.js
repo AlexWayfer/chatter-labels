@@ -3,7 +3,7 @@ chrome.runtime.onMessage.addListener(message => {
 })
 
 chrome.runtime.onInstalled.addListener(async () => {
-	const tabs = await chrome.tabs.query({ url: 'https://*.twitch.tv/*' })
+	const tabs = await chrome.tabs.query({ url: ['https://*.twitch.tv/*', 'https://lurkology.com/*'] })
 
 	for (const tab of tabs) {
 		try {
@@ -11,6 +11,13 @@ chrome.runtime.onInstalled.addListener(async () => {
 				target: { tabId: tab.id },
 				files: ['styles/content.css']
 			})
+			if (new URL(tab.url).hostname === 'lurkology.com') {
+				await chrome.scripting.executeScript({
+					target: { tabId: tab.id },
+					world: 'MAIN',
+					files: ['scripts/content/page/lurkology-user-id.js']
+				})
+			}
 			await chrome.scripting.executeScript({
 				target: { tabId: tab.id },
 				files: ['scripts/content/loader.js']
