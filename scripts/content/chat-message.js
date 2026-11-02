@@ -14,12 +14,14 @@ export class ChatMessage {
 
 	render() {
 		const
-			usernameElement = this.#element.querySelector(this.#chat.kind.usernameSelector),
+			usernameElement = this.#chat.kind.usernameSelector
+				? this.#element.querySelector(this.#chat.kind.usernameSelector)
+				: this.#element,
 			userId = this.#chat.userIdFrom(this.#element),
 			labels = this.#assignedLabels(userId)
 
 		if (!usernameElement || !labels.length) {
-			for (const icons of this.#element.querySelectorAll(this.constructor.ICONS_SELECTOR)) {
+			for (const icons of this.#existingIcons()) {
 				icons.remove()
 			}
 
@@ -27,7 +29,7 @@ export class ChatMessage {
 			return
 		}
 
-		this.#iconsElement = this.#element.querySelector(this.constructor.ICONS_SELECTOR)
+		this.#iconsElement = this.#existingIcons()[0]
 
 		if (!this.#iconsElement) {
 			this.#iconsElement = document.createElement('span')
@@ -35,7 +37,7 @@ export class ChatMessage {
 			this.#iconsElement.dataset.chatterLabelsExt = chrome.runtime.id
 		}
 
-		for (const extra of this.#element.querySelectorAll(this.constructor.ICONS_SELECTOR)) {
+		for (const extra of this.#existingIcons()) {
 			if (extra != this.#iconsElement) extra.remove()
 		}
 
@@ -53,6 +55,19 @@ export class ChatMessage {
 				return iconElement
 			})
 		)
+	}
+
+	#existingIcons() {
+		if (this.#chat.kind.usernameSelector) {
+			return [...this.#element.querySelectorAll(this.constructor.ICONS_SELECTOR)]
+		}
+		const previous = this.#element.previousElementSibling
+
+		return previous?.matches(this.constructor.ICONS_SELECTOR) ? [previous] : []
+	}
+
+	destroy() {
+		if (!this.#chat.kind.usernameSelector) this.#iconsElement?.remove()
 	}
 
 	#assignedLabels(userId) {

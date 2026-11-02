@@ -172,6 +172,61 @@ const whisperHTML = login => `
 	</div>
 `
 
+for (const [container, usernameClass] of [
+	['moderation-actions-list-item', 'moderation-actions-list-item__clickable-name'],
+	['activity-base-list-item__subtitle', 'tw-link']
+]) {
+	test(`labels each user in ${container} and follows reused buttons`, async () => {
+		const lookup = mock.method(TwitchAPI, 'fetchUsers', () => assert.fail('Unexpected user lookup'))
+		const wrapper = attach(`
+			<div class="${container}">
+				<span><button class="${usernameClass}">One</button></span>
+				<button class="${usernameClass}">Two</button>
+				<button aria-label="Menu">Menu</button>
+			</div>
+		`, wrapper => {
+			const mod = container === 'moderation-actions-list-item'
+			const fragments = mod ? 'localizedStringFragments' : 'fragments'
+			const id = mod ? 'id' : 'userID'
+			const owner = { memoizedProps: { [mod ? 'event' : 'activity']: {
+				user: { id: '2', login: 'two' },
+				title: { [fragments]: [{ token: { [id]: '1', login: 'one', displayName: '名前' } }] },
+				content: { [fragments]: [{ token: { [id]: '2', login: 'two', displayName: 'Two' } }] }
+			} } }
+
+			for (const button of wrapper.querySelectorAll(`.${usernameClass}`)) {
+				button.__reactFiber$test = { memoizedProps: {}, return: owner }
+			}
+		})
+		const buttons = wrapper.querySelectorAll(`.${usernameClass}`)
+
+		assert.equal(buttons[0].previousElementSibling?.querySelector('img')?.alt, 'Label')
+		assert.equal(buttons[1].previousElementSibling?.matches('.chatter-labels-icons'), false)
+		buttons[0].textContent = 'Two'
+		buttons[1].textContent = '名前 (one)'
+		await setImmediate()
+		assert.equal(buttons[0].previousElementSibling, null)
+		assert.equal(buttons[1].previousElementSibling?.querySelector('img')?.alt, 'Label')
+		for (const chat of chats) chat.refresh()
+		assert.equal(wrapper.querySelectorAll('.chatter-labels-icons').length, 1)
+		buttons[1].textContent = 'Unknown'
+		await setImmediate()
+		assert.equal(buttons[1].dataset.userId, undefined)
+		assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)
+		buttons[1].textContent = '名前'
+		await setImmediate()
+		assert.equal(wrapper.querySelectorAll('.chatter-labels-icons').length, 1)
+		for (const callback of subscriptions.get('assignments')) callback([])
+		assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)
+		for (const callback of subscriptions.get('assignments')) callback(storage.assignments)
+		assert.equal(wrapper.querySelectorAll('.chatter-labels-icons').length, 1)
+		buttons[1].remove()
+		await setImmediate()
+		assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)
+		assert.equal(lookup.mock.callCount(), 0)
+	})
+}
+
 test('renders whisper labels synchronously from React without user lookups', () => {
 	const lookup = mock.method(TwitchAPI, 'fetchUsers', () => assert.fail('Unexpected user lookup'))
 	const wrapper = attach(`
@@ -227,6 +282,38 @@ const whisperMessageHTML = username => `
 		<span>: </span><span class="message">Hello</span>
 	</div></div>
 `
+
+test('clears event IDs when props disappear and rejects conflicting tokens or unrelated ancestors', () => {
+	const token = { userID: '1', login: 'one', displayName: 'One' }
+	const wrapper = attach('<div class="activity-base-list-item__subtitle"><button class="tw-link">One</button></div>', wrapper => {
+		wrapper.querySelector('button').__reactFiber$test = { memoizedProps: {
+			activity: { title: { fragments: [{ token }] } }
+		} }
+	})
+	const button = wrapper.querySelector('button')
+	const fiber = button.__reactFiber$test
+
+	assert.equal(button.dataset.userId, '1')
+	fiber.return = { memoizedProps: {
+		user: { id: '1' }, activity: { title: { fragments: [{ token }] } }
+	} }
+	fiber.memoizedProps.activity = {}
+	for (const chat of chats) chat.refresh()
+	assert.equal(button.dataset.userId, undefined)
+	assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)
+	fiber.memoizedProps.activity = null
+	for (const chat of chats) chat.refresh()
+	assert.equal(button.dataset.userId, undefined)
+	fiber.memoizedProps.activity = { title: { fragments: [
+		{ token }, { token: { ...token, userID: '2' } }
+	] } }
+	for (const chat of chats) chat.refresh()
+	assert.equal(button.dataset.userId, undefined)
+	assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)
+	fiber.memoizedProps.activity = { title: { fragments: [null, { token }, { token }] } }
+	for (const chat of chats) chat.refresh()
+	assert.equal(button.dataset.userId, '1')
+})
 
 test('labels the whisper header and each message author independently', async () => {
 	const lookup = mock.method(TwitchAPI, 'fetchUsers', () => assert.fail('Unexpected user lookup'))

@@ -26,6 +26,18 @@ export class Chat {
 			resolveUserEachRender: true
 		},
 		{
+			name: 'mod-actions',
+			containerSelector: '.moderation-actions-list-item',
+			messageSelector: '.moderation-actions-list-item__clickable-name',
+			resolveUserEachRender: true
+		},
+		{
+			name: 'activity-feed',
+			containerSelector: '.activity-base-list-item__subtitle',
+			messageSelector: 'button.tw-link',
+			resolveUserEachRender: true
+		},
+		{
 			name: 'history',
 			containerSelector: '.message-list',
 			messageSelector: '.vcml-message',
@@ -87,6 +99,7 @@ export class Chat {
 
 		target.dispatchEvent(new Event('chatter-labels:resolve-user-id'))
 
+		if (!this.#kind.usernameSelector) return target.dataset.userId
 		return target.dataset.userId ?? element.closest(ChatterCard.CARD_SELECTOR)?.dataset.userId
 	}
 
@@ -181,7 +194,7 @@ export class Chat {
 				}
 				continue
 			}
-			if (!element.querySelector(this.#kind.usernameSelector)) continue
+			if (this.#kind.usernameSelector && !element.querySelector(this.#kind.usernameSelector)) continue
 
 			const message = new ChatMessage(element, this)
 
@@ -198,6 +211,7 @@ export class Chat {
 
 			if (!message) continue
 
+			message.destroy()
 			this.#messages.delete(message)
 			this.#messagesByElement.delete(element)
 		}
