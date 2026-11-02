@@ -55,7 +55,7 @@ export default [
 		}
 	},
 	{
-		files: ['exe/*.js'],
+		files: ['exe/*.js', 'tests/*.js'],
 		languageOptions: {
 			globals: {
 				...globals.node

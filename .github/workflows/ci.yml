@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         script:
+          - test
           - lint:docs
           - lint:styles
           - lint:scripts

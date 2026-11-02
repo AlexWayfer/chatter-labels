@@ -6,7 +6,7 @@ export class Chat {
 	static KINDS = [
 		{
 			name: 'live',
-			containerSelector: '.chat-scrollable-area__message-container',
+			containerSelector: '.chat-scrollable-area__message-container, .chat-input-tray__open',
 			messageSelector: '.chat-line__message',
 			usernameSelector: '.chat-line__username'
 		},
