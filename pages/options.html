@@ -97,8 +97,18 @@
 
 						<template id="assignment">
 							<li>
-								<button type="button" class="delete-assignment invisible"><div class="icon"></div></button>
-								<span class="username"></span><span class="assigned-at"></span>
+								<div class="assignment-header">
+									<button type="button" class="delete-assignment invisible"><div class="icon"></div></button>
+									<span class="username"></span><span class="assigned-at"></span>
+								</div>
+								<details class="assignment-comment">
+									<summary>Comment</summary>
+									<form>
+										<input type="text" name="comment" aria-label="Assignment comment (optional)" />
+										<button type="submit">Save</button>
+										<span class="toast error" hidden></span>
+									</form>
+								</details>
 							</li>
 						</template>
 
@@ -116,6 +126,10 @@
 								rows="4"
 								placeholder="One nickname per line"
 							></textarea>
+							<label>
+								Comment for all added users (optional):
+								<input type="text" name="comment" />
+							</label>
 							<button type="submit">Save</button>
 							<span class="toast added" hidden>Added!</span>
 							<span class="toast error" hidden></span>

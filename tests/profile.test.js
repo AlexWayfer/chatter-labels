@@ -77,6 +77,7 @@ test('disables label checkboxes throughout saving, including storage rerenders',
 		})
 		await originalSet(key, value)
 		assert.equal(form.querySelector('input').disabled, true)
+		assert.equal(form.querySelector('[name="comment"]').disabled, true)
 	})
 
 	try {
@@ -84,6 +85,7 @@ test('disables label checkboxes throughout saving, including storage rerenders',
 		form.dispatchEvent(new Event('submit', { cancelable: true }))
 		assert.equal(button.disabled, true)
 		assert.equal(form.querySelector('input').disabled, true)
+		assert.equal(form.querySelector('[name="comment"]').disabled, true)
 		form.querySelector('input').click()
 		assert.equal(form.querySelector('input').checked, true)
 		form.dispatchEvent(new Event('submit', { cancelable: true }))
@@ -93,8 +95,50 @@ test('disables label checkboxes throughout saving, including storage rerenders',
 		assert.equal(button.disabled, false)
 		assert.equal(form.querySelector('input').disabled, false)
 		assert.equal(form.querySelector('input').checked, true)
+		assert.equal(form.querySelector('[name="comment"]').disabled, false)
 		form.querySelector('input').click()
 		assert.equal(form.querySelector('input').checked, false)
+	} finally {
+		editor.unsubscribe()
+	}
+})
+
+test('adds, edits and clears assignment comments without changing the assignment date', async () => {
+	const { storage } = setup()
+	const editor = await LabelsElement.create(new User({ id: 'one', login: 'one' }), storage)
+
+	document.body.append(editor.element)
+	const form = editor.element.querySelector('form')
+	const submit = async () => {
+		form.dispatchEvent(new Event('submit', { cancelable: true }))
+		await setImmediate()
+	}
+
+	try {
+		const checkbox = form.querySelector('input[name="label"]')
+		const comment = form.querySelector('input[name="comment"]')
+
+		assert.ok(comment)
+		assert.equal(comment.disabled, true)
+		checkbox.click()
+		assert.equal(comment.disabled, false)
+		comment.value = 'Reason <script>plain text</script>'
+		await submit()
+		const assignedAt = storage.assignments[0].assignedAt
+
+		assert.equal(storage.assignments[0].comment, comment.value)
+		assert.equal(form.querySelector('[name="comment"]').value, comment.value)
+		form.querySelector('[name="comment"]').value = 'Updated reason'
+		await submit()
+		assert.equal(storage.assignments[0].comment, 'Updated reason')
+		assert.equal(storage.assignments[0].assignedAt, assignedAt)
+		form.querySelector('[name="comment"]').value = ''
+		await submit()
+		assert.equal(storage.assignments[0].comment, '')
+		form.querySelector('input').click()
+		assert.equal(form.querySelector('[name="comment"]').disabled, true)
+		await submit()
+		assert.equal(storage.assignments.length, 0)
 	} finally {
 		editor.unsubscribe()
 	}

@@ -12,6 +12,7 @@ export class BaseStorage {
 	_loaded = false
 	_subscriptions
 	_ownUpdatedAt
+	#writeQueue = Promise.resolve()
 
 	static async create(...args) {
 		return new this(...args)
@@ -30,7 +31,22 @@ export class BaseStorage {
 		return this._data[key]
 	}
 
-	async set(key, value) {
+	set(key, value) {
+		return this.#enqueueWrite(() => this.#set(key, value))
+	}
+
+	update(key, updater) {
+		return this.#enqueueWrite(async () => this.#set(key, updater(await this.get(key))))
+	}
+
+	#enqueueWrite(logic) {
+		const write = this.#writeQueue.then(logic)
+
+		this.#writeQueue = write.catch(() => {})
+		return write
+	}
+
+	async #set(key, value) {
 		const serializedValue = Array.isArray(value) ? value.map(element => element.toJSON()) : value
 
 		await this._provider.set(key, serializedValue)

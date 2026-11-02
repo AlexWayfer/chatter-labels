@@ -19,9 +19,11 @@ export class AssignmentsList {
 	#sortSelect
 	#form
 	#textarea
+	#comment
 	#toastError
 	#copyTimeoutId
 	#unknownNicknames = []
+	#rows = new Map()
 
 	constructor(element, mainStorage, label, assignments) {
 		this.#element = element
@@ -37,6 +39,7 @@ export class AssignmentsList {
 		this.#sortSelect = element.querySelector('select.sort-assignments')
 		this.#form = element.querySelector('form.add-assignments')
 		this.#textarea = this.#form.querySelector('textarea')
+		this.#comment = this.#form.querySelector('input[name="comment"]')
 		this.toastAdded = new Toast(this.#form.querySelector('.added'))
 		this.#toastError = new Toast(this.#form.querySelector('.error'))
 
@@ -46,6 +49,7 @@ export class AssignmentsList {
 
 			if (this.#form.hidden) {
 				this.#textarea.value = ''
+				this.#comment.value = ''
 			} else {
 				this.#textarea.focus()
 			}
@@ -84,6 +88,10 @@ export class AssignmentsList {
 
 	/** @param {import('../models/label.js').Label | null} newLabel */
 	set label(newLabel) {
+		if (this.#label?.id != newLabel?.id) {
+			this.#rows.clear()
+			this.#listElement.replaceChildren()
+		}
 		this.#label = newLabel
 		this.#element.hidden = !newLabel
 		this.#render()
@@ -123,7 +131,8 @@ export class AssignmentsList {
 				new Assignment({
 					user: User.fromTwitch(user),
 					label: this.#label,
-					assignedAt: new Date().toISOString()
+					assignedAt: new Date().toISOString(),
+					comment: this.#comment.value
 				})
 			)
 		}
@@ -135,6 +144,7 @@ export class AssignmentsList {
 
 	keepUnknownNicknames() {
 		this.#textarea.value = this.#unknownNicknames.join('\n')
+		if (!this.#unknownNicknames.length) this.#comment.value = ''
 
 		if (this.#unknownNicknames.length) {
 			this.#toastError.show(`Unknown nicknames: ${this.#unknownNicknames.join(', ')}`)
@@ -154,8 +164,6 @@ export class AssignmentsList {
 	}
 
 	#render() {
-		this.#listElement.replaceChildren()
-
 		if (!this.#label) {
 			this.#countElement.textContent = '0'
 			this.#copyButton.hidden = true
@@ -174,21 +182,33 @@ export class AssignmentsList {
 		this.#sortSelect.hidden = !labelAssignments.length
 		this.#toggleRemoveButton.hidden = !labelAssignments.length
 
-		for (const assignment of labelAssignments) {
-			const
-				assignmentFragment = document.importNode(this.#template.content, true),
-				assignmentElement = assignmentFragment.querySelector('li'),
-				deleteButton = assignmentElement.querySelector('button.delete-assignment')
+		const nextRows = new Map()
 
-			assignmentElement.querySelector('.username').textContent = assignment.user.formattedUsername
-			assignmentElement.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
+		for (const [index, assignment] of labelAssignments.entries()) {
+			const key = String(assignment.user.id)
+			const row = this.#rows.get(key) ?? this.#createRow(assignment)
+			const comment = row.element.querySelector('input[name="comment"]')
 
-			deleteButton.addEventListener('click', event => {
-				this.#delete(event.currentTarget, assignment)
-			})
+			row.assignment = assignment
+			row.element.querySelector('.username').textContent = assignment.user.formattedUsername
+			row.element.querySelector('.assigned-at').textContent = assignment.formattedAssignedAt
+			if (comment.value === row.savedComment) {
+				comment.value = assignment.comment
+				if (row.savedComment !== assignment.comment) {
+					row.element.querySelector('details').open = !!assignment.comment
+				}
+			}
+			row.savedComment = assignment.comment
+			comment.setAttribute('aria-label', `Comment for ${assignment.user.formattedUsername} (optional)`)
+			nextRows.set(key, row)
+			const current = this.#listElement.children[index]
 
-			this.#listElement.append(assignmentFragment)
+			if (current !== row.element) this.#listElement.insertBefore(row.element, current ?? null)
 		}
+		for (const [key, row] of this.#rows) {
+			if (!nextRows.has(key)) row.element.remove()
+		}
+		this.#rows = nextRows
 
 		this.#removing = !this.#toggleRemoveButton.hidden && this.#removing
 
@@ -196,6 +216,23 @@ export class AssignmentsList {
 			'scrollable',
 			this.#listElement.scrollHeight > this.#listElement.clientHeight
 		)
+	}
+
+	#createRow(assignment) {
+		const element = document.importNode(this.#template.content, true).querySelector('li')
+		const row = { element, assignment, savedComment: assignment.comment }
+		const form = element.querySelector('form')
+
+		form.querySelector('input[name="comment"]').value = assignment.comment
+		element.querySelector('details').open = !!assignment.comment
+		form.addEventListener('submit', event => {
+			event.preventDefault()
+			this.#saveComment(form, row.assignment)
+		})
+		element.querySelector('button.delete-assignment').addEventListener('click', event => {
+			this.#delete(event.currentTarget, row.assignment)
+		})
+		return row
 	}
 
 	#sort(assignments) {
@@ -239,6 +276,31 @@ export class AssignmentsList {
 		} catch (error) {
 			this.#toastError.show(error.message)
 			throw error
+		}
+	}
+
+	async #saveComment(form, assignment) {
+		const button = form.querySelector('button')
+		const comment = form.querySelector('input[name="comment"]')
+
+		if (button.disabled) return
+		const value = comment.value
+
+		button.disabled = true
+		comment.disabled = true
+
+		try {
+			await this.#mainStorage.update('assignments', assignments => assignments.map(existing => {
+				return existing.user.id == assignment.user.id && existing.label.id == assignment.label.id
+					? new Assignment({ ...existing, comment: value })
+					: existing
+			}))
+			form.closest('details').open = !!comment.value
+		} catch (error) {
+			new Toast(form.querySelector('.error')).show(error.message)
+		} finally {
+			button.disabled = false
+			comment.disabled = false
 		}
 	}
 

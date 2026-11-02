@@ -115,11 +115,19 @@ export class LabelsElement {
 	#createLabelElement(label, assignment) {
 		const
 			labelElement = labelElementTemplate.content.cloneNode(true),
-			checkboxElement = labelElement.querySelector('input[name="label"]')
+			checkboxElement = labelElement.querySelector('input[name="label"]'),
+			commentElement = labelElement.querySelector('input[name="comment"]')
 
 		checkboxElement.value = label.id
 		checkboxElement.checked = !!assignment
 		checkboxElement.disabled = this.#saving
+		commentElement.value = assignment?.comment ?? ''
+		commentElement.disabled = this.#saving || !checkboxElement.checked
+		commentElement.parentElement.hidden = !checkboxElement.checked
+		checkboxElement.addEventListener('change', () => {
+			commentElement.disabled = this.#saving || !checkboxElement.checked
+			commentElement.parentElement.hidden = !checkboxElement.checked
+		})
 
 		labelElement.querySelector('.icon').src = label.icon
 		labelElement.querySelector('.name').textContent = label.name
@@ -134,6 +142,7 @@ export class LabelsElement {
 		this.#submitButtonElement.disabled = saving
 		this.#formElement.querySelectorAll('input[name="label"]').forEach(checkbox => {
 			checkbox.disabled = saving
+			checkbox.closest('fieldset').querySelector('input[name="comment"]').disabled = saving || !checkbox.checked
 		})
 	}
 
@@ -155,7 +164,8 @@ export class LabelsElement {
 					return new Assignment({
 						user: this.#user,
 						label,
-						assignedAt: existing?.assignedAt ?? new Date().toISOString()
+						assignedAt: existing?.assignedAt ?? new Date().toISOString(),
+						comment: checkbox.closest('fieldset').querySelector('input[name="comment"]').value
 					})
 				}
 			)

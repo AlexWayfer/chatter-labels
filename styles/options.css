@@ -109,7 +109,7 @@ body {
 
 				.buttons button,
 				.move button,
-				.assignments li button {
+				.assignments li button.delete-assignment {
 					background: transparent;
 					border: none;
 					cursor: pointer;
@@ -249,6 +249,53 @@ body {
 					}
 
 					li {
+						position: relative;
+
+						.assignment-header {
+							min-height: 1.8em;
+							padding-right: 6em;
+						}
+
+						.assignment-comment {
+							margin: 0;
+							font-size: 0.85em;
+
+							summary {
+								position: absolute;
+								top: 0;
+								right: 0;
+								padding: 0.25em 0.5em;
+								border: var(--input-border);
+								border-radius: var(--input-border-radius);
+								background: transparent;
+								color: inherit;
+								list-style: none;
+								cursor: default;
+								user-select: none;
+							}
+
+							&[open] summary {
+								background-color: #eee;
+							}
+
+							form {
+								display: grid;
+								grid-template-columns: minmax(0, 1fr) auto;
+								align-items: center;
+								gap: 0.4em;
+								margin: 0.2em 0 0.4em;
+
+								input[name="comment"] {
+									min-width: 0;
+									margin: 0;
+								}
+
+								.error {
+									grid-column: 1 / -1;
+								}
+							}
+						}
+
 						.assigned-at {
 							margin-left: 0.4em;
 							font-size: 0.8em;
@@ -268,12 +315,16 @@ body {
 					}
 				}
 
-				textarea {
+				textarea,
+				input[name="comment"] {
 					display: block;
 					box-sizing: border-box;
 					width: 100%;
 					margin: 0.6em 0 0.4em;
 					font-family: inherit;
+				}
+
+				textarea {
 					resize: vertical;
 				}
 			}
