@@ -1,7 +1,7 @@
 import { logger } from '../logger.js'
 import { User } from '../models/user.js'
 import { TwitchAPI } from '../twitch/api.js'
-import { LabelsElement } from './labels-element.js'
+import { LabelsControl } from './labels-control.js'
 
 const claimedKey = `chatterLabels${chrome.runtime.id}`
 const instances = new Set()
@@ -32,12 +32,17 @@ export class ChatterCard {
 	static async create(element, mainStorage) {
 		const userInfo = await this.#fetchUserInfo(element)
 
+		if (!element.isConnected) return
 		element.dataset.userId = userInfo.id
 		element.dispatchEvent(new Event('chatter-labels:user-id', { bubbles: true }))
 
-		const labelsElement = await LabelsElement.create(userInfo, mainStorage)
+		const control = await LabelsControl.create(userInfo, mainStorage)
 
-		return new this(element, labelsElement)
+		if (!element.isConnected) {
+			control.destroy()
+			return
+		}
+		return new this(element, control)
 	}
 
 	static async #fetchUserInfo(element) {
@@ -52,23 +57,25 @@ export class ChatterCard {
 
 	#element
 	#removalObserver
+	#control
 
-	constructor(element, labelsElement) {
+	constructor(element, control) {
 		this.#element = element
-		this.labelsElement = labelsElement
+		this.#control = control
+		control.element.classList.add('chatter-labels-card')
 
 		instances.add(this)
 		this.#observeRemoval()
 
 		this.#element
 			.querySelector('.viewer-card-header__background')
-			.after(this.labelsElement.element)
+			.after(control.element)
+		control.mountPopup()
 	}
 
 	destroy() {
 		this.#removalObserver?.disconnect()
-		this.labelsElement.unsubscribe()
-		this.labelsElement.element.remove()
+		this.#control.destroy()
 		delete this.#element.dataset[claimedKey]
 		delete this.#element.dataset.userId
 		instances.delete(this)

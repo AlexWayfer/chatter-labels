@@ -1,11 +1,8 @@
 import { User } from '../models/user.js'
 import { TwitchAPI } from '../twitch/api.js'
-import { LabelsElement } from './labels-element.js'
+import { LabelsControl } from './labels-control.js'
 
 const ANCHOR_SELECTOR = 'a:has(h1), a[data-a-target="channel-name"]'
-const response = await fetch(chrome.runtime.getURL('pages/content/profile.html'))
-const templates = new DOMParser().parseFromString(await response.text(), 'text/html')
-const cloneTemplate = id => templates.getElementById(id).content.firstElementChild.cloneNode(true)
 
 export class Profile {
 	#mainStorage
@@ -15,15 +12,7 @@ export class Profile {
 	#state = 'idle'
 	#retryTimer
 	#retryDelay = 1000
-	#element
-	#summary
-	#popup
-	#onKeyDown
-	#editor
-	#user
-	#labels
-	#assignments
-	#subscriptions = []
+	#control
 
 	constructor(mainStorage) {
 		this.#mainStorage = mainStorage
@@ -43,7 +32,7 @@ export class Profile {
 			this.#login = login
 		}
 		if (this.#state === 'loading' || this.#retryTimer) return
-		if (this.#state === 'ready' && this.#element.isConnected && this.#popup.isConnected) return
+		if (this.#state === 'ready' && this.#control.isConnected) return
 		this.#clearView()
 		this.#state = 'loading'
 		const version = ++this.#version
@@ -63,7 +52,7 @@ export class Profile {
 
 	handleMutations(mutations) {
 		if (this.#anchor && !this.#anchor.isConnected ||
-			this.#element && (!this.#element.isConnected || !this.#popup.isConnected)) {
+			this.#control && !this.#control.isConnected) {
 			this.refresh()
 			return
 		}
@@ -96,99 +85,26 @@ export class Profile {
 		if (version !== this.#version || !anchor.isConnected) return
 		if (!response) throw new Error(`Profile user not found: ${login}`)
 		const user = User.fromTwitch(response)
-		const editor = await LabelsElement.create(user, this.#mainStorage)
+		const control = await LabelsControl.create(user, this.#mainStorage)
 
 		try {
-			const [labels, assignments] = await Promise.all([
-				this.#mainStorage.get('labels'), this.#mainStorage.get('assignments')
-			])
-
 			if (version !== this.#version || !anchor.isConnected) return
-			this.#user = user
-			this.#labels = labels
-			this.#assignments = assignments
-			this.#editor = editor
-			this.#createElements()
-			this.#subscribe()
-			this.#renderSummary()
+			this.#control = control
+			const liveInfo = anchor.closest('.metadata-layout__support')?.parentElement
+
+			if (liveInfo) liveInfo.append(control.element)
+			else anchor.after(control.element)
+			control.mountPopup()
 			this.#state = 'ready'
 			this.#retryDelay = 1000
 		} finally {
-			if (this.#editor !== editor) editor.unsubscribe()
+			if (this.#control !== control) control.destroy()
 		}
-	}
-
-	#createElements() {
-		this.#element = cloneTemplate('profile-labels')
-		this.#summary = this.#element.querySelector('.chatter-labels-profile-summary')
-		this.#popup = cloneTemplate('profile-labels-popup')
-		const trigger = this.#element.querySelector('button')
-		const popupId = `chatter-labels-profile-${chrome.runtime.id}`
-		const anchorName = `--${popupId}`
-
-		trigger.setAttribute('popovertarget', popupId)
-		trigger.style.anchorName = anchorName
-		this.#popup.id = popupId
-		this.#popup.setAttribute('aria-label', `Labels for ${this.#user.formattedUsername}`)
-		this.#popup.style.positionAnchor = anchorName
-		this.#popup.querySelector('button').setAttribute('popovertarget', popupId)
-		this.#popup.append(this.#editor.element)
-		this.#onKeyDown = event => {
-			if (event.key !== 'Escape' || !this.#popup.matches(':popover-open')) return
-			event.preventDefault()
-			event.stopPropagation()
-			this.#popup.hidePopover()
-			trigger.focus()
-		}
-		document.addEventListener('keydown', this.#onKeyDown, true)
-		const liveInfo = this.#anchor.closest('.metadata-layout__support')?.parentElement
-
-		if (liveInfo) liveInfo.append(this.#element)
-		else this.#anchor.after(this.#element)
-		document.body.append(this.#popup)
-	}
-
-	#subscribe() {
-		this.#subscriptions = [
-			this.#mainStorage.subscribe('labels', labels => {
-				this.#labels = labels
-				this.#renderSummary()
-			}),
-			this.#mainStorage.subscribe('assignments', assignments => {
-				this.#assignments = assignments
-				this.#renderSummary()
-			})
-		]
-	}
-
-	#renderSummary() {
-		const assignedIds = new Set(this.#assignments
-			.filter(assignment => assignment.user.id == this.#user.id)
-			.map(assignment => String(assignment.label.id)))
-		const assigned = this.#labels.filter(label => assignedIds.has(String(label.id)))
-
-		this.#summary.replaceChildren(...assigned.map(label => {
-			const element = cloneTemplate('profile-label')
-
-			element.querySelector('img').src = label.icon
-			element.querySelector('.name').textContent = label.name
-			return element
-		}))
-		if (!assigned.length) this.#summary.textContent = 'No labels'
 	}
 
 	#clearView() {
-		if (this.#onKeyDown) document.removeEventListener('keydown', this.#onKeyDown, true)
-		this.#onKeyDown = null
-		this.#editor?.unsubscribe()
-		this.#editor = null
-		for (const unsubscribe of this.#subscriptions) unsubscribe()
-		this.#subscriptions = []
-		this.#element?.remove()
-		this.#element = null
-		this.#summary = null
-		this.#popup?.remove()
-		this.#popup = null
+		this.#control?.destroy()
+		this.#control = null
 	}
 
 	destroy() {

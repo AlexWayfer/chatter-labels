@@ -1,4 +1,4 @@
-.chatter-labels-profile {
+.chatter-labels-control {
 	margin-top: 4px;
 	max-width: 480px;
 	font-size: var(--font-size-base);
@@ -27,20 +27,25 @@
 			width: auto;
 		}
 
-		.chatter-labels-profile-edit {
+		.chatter-labels-edit {
 			width: 16px;
 			height: 16px;
 			flex-shrink: 0;
 			color: var(--color-text-link);
 		}
 
-		.chatter-labels-profile-summary {
+		.chatter-labels-summary {
 			display: contents;
 		}
 	}
 }
 
-.chatter-labels-profile-popup {
+.chatter-labels-card {
+	margin-top: 0;
+	padding: 8px;
+}
+
+.chatter-labels-popup {
 	position: fixed;
 	inset: auto;
 	top: anchor(bottom);
@@ -58,7 +63,7 @@
 	box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
 	padding: 8px;
 
-	.chatter-labels-profile-close {
+	.chatter-labels-close {
 		position: absolute;
 		top: 8px;
 		right: 8px;

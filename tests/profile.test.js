@@ -12,6 +12,7 @@ for (const name of ['document', 'Node', 'Event', 'MutationObserver', 'DOMParser'
 globalThis.chrome = { runtime: { id: 'test', getURL: path => new URL(`../${path}`, import.meta.url) } }
 const fetchMock = mock.method(globalThis, 'fetch', async url => new Response(await readFile(url)))
 const { Profile } = await import('../scripts/content/profile.js')
+const { ChatterCard } = await import('../scripts/content/chatter-card.js')
 const { TwitchAPI } = await import('../scripts/twitch/api.js')
 const { User } = await import('../scripts/models/user.js')
 
@@ -20,6 +21,7 @@ let profile
 
 afterEach(() => {
 	profile?.destroy()
+	ChatterCard.destroyAll()
 	document.body.replaceChildren()
 	mock.restoreAll()
 })
@@ -48,11 +50,80 @@ const setup = () => {
 	return { storage, subscriptions }
 }
 
+const createCard = async storage => {
+	const element = document.createElement('div')
+
+	element.innerHTML = `
+		<div class="viewer-card-header__background"></div>
+		<div class="viewer-card-header__display-name"><a href="/two">Two</a></div>
+	`
+	document.body.append(element)
+	await ChatterCard.create(element, storage)
+	return element
+}
+
+test('shares compact labels and independent popovers between cards and profiles', async () => {
+	const { storage, subscriptions } = setup()
+
+	await setImmediate()
+	const card = await createCard(storage)
+	const trigger = card.querySelector('button[popovertarget]')
+	const popup = document.getElementById(trigger?.getAttribute('popovertarget'))
+	const profileTrigger = document.querySelector('.chatter-labels-control button')
+
+	assert.ok(popup)
+	assert.notEqual(popup.id, profileTrigger.getAttribute('popovertarget'))
+	assert.equal(card.querySelector('form'), null)
+	assert.match(trigger.textContent, /No labels/)
+	popup.querySelector('input').checked = true
+	popup.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+	await setImmediate()
+	assert.equal(storage.assignments[0].user.id, 'two')
+	assert.match(trigger.textContent, /Friend/)
+	assert.match(profileTrigger.textContent, /No labels/)
+	let escapedToCard = false
+
+	mock.method(popup, 'matches', selector => selector === ':popover-open')
+	popup.hidePopover = () => {}
+	card.addEventListener('keydown', () => {
+		escapedToCard = true
+	})
+	trigger.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+	assert.equal(escapedToCard, false)
+	assert.equal(document.activeElement, trigger)
+	card.remove()
+	await setImmediate()
+	assert.equal(popup.isConnected, false)
+	assert.equal(subscriptions.get('assignments').size, 2)
+})
+
+test('does not attach a card editor after the card is removed during loading', async () => {
+	const { storage, subscriptions } = setup()
+
+	await setImmediate()
+	let resolve
+
+	mock.method(TwitchAPI, 'fetchUsers', () => new Promise(done => {
+		resolve = done
+	}))
+	const element = document.createElement('div')
+
+	element.innerHTML = '<div class="viewer-card-header__display-name"><a href="/late">Late</a></div>'
+	document.body.append(element)
+	const creating = ChatterCard.create(element, storage)
+
+	element.remove()
+	resolve([{ id: 'late', login: 'late', displayName: 'Late' }])
+	await creating
+	assert.equal(subscriptions.get('assignments').size, 2)
+	assert.equal(document.querySelectorAll('[popover]').length, 1)
+})
+
 test('shows an empty summary, assigns and removes labels through the shared editor', async () => {
 	const { storage } = setup()
 
 	await setImmediate()
-	const summary = document.querySelector('.chatter-labels-profile button')
+	const summary = document.querySelector('.chatter-labels-control button')
 
 	assert.match(summary.textContent, /No labels/)
 	const checkbox = document.querySelector('input[name="label"]')
@@ -79,7 +150,7 @@ test('replaces the editor on reused profile headers and cleans up subscriptions'
 	anchor.href = '/two'
 	profile.refresh()
 	await setImmediate()
-	assert.equal(document.querySelectorAll('.chatter-labels-profile').length, 1)
+	assert.equal(document.querySelectorAll('.chatter-labels-control').length, 1)
 	document.querySelector('input').checked = true
 	document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
 	await setImmediate()
@@ -102,7 +173,7 @@ test('ignores late user lookups after navigation and teardown', async () => {
 	profile.destroy()
 	resolve([new User({ id: 'late', username: 'Late', login: 'late' })])
 	await setImmediate()
-	assert.equal(document.querySelector('.chatter-labels-profile'), null)
+	assert.equal(document.querySelector('.chatter-labels-control'), null)
 })
 
 test('places live labels after stream information without splitting the existing header', async () => {
@@ -120,23 +191,23 @@ test('places live labels after stream information without splitting the existing
 	await setImmediate()
 	const support = document.querySelector('.metadata-layout__support')
 
-	assert.equal(support.querySelector('.chatter-labels-profile'), null)
+	assert.equal(support.querySelector('.chatter-labels-control'), null)
 	assert.equal(support.nextElementSibling.className, 'stream-info')
-	assert.equal(document.querySelector('.stream-info').nextElementSibling.className, 'chatter-labels-profile')
+	assert.equal(document.querySelector('.stream-info').nextElementSibling.className, 'chatter-labels-control')
 	assert.equal(document.querySelector('a').nextElementSibling.className, 'verified')
 })
 
 test('opens the shared editor in a native popover outside the profile layout and removes it on teardown', async () => {
 	setup()
 	await setImmediate()
-	const trigger = document.querySelector('.chatter-labels-profile button')
+	const trigger = document.querySelector('.chatter-labels-control button')
 	const popup = document.getElementById(trigger?.getAttribute('popovertarget'))
 
 	assert.ok(popup)
 	assert.equal(popup.getAttribute('popover'), 'auto')
 	assert.equal(popup.getAttribute('role'), 'dialog')
 	assert.equal(popup.parentElement, document.body)
-	assert.equal(document.querySelector('.chatter-labels-profile form'), null)
+	assert.equal(document.querySelector('.chatter-labels-control form'), null)
 	assert.ok(popup.querySelector('form'))
 	assert.equal(popup.querySelector('[popovertargetaction="hide"]').getAttribute('popovertarget'), popup.id)
 	let hidden = false
@@ -170,7 +241,7 @@ test('retries a temporary lookup failure without duplicate requests or subscript
 	t.mock.timers.tick(1000)
 	await setImmediate()
 	assert.equal(lookup.mock.callCount(), 2)
-	assert.equal(document.querySelectorAll('.chatter-labels-profile').length, 1)
+	assert.equal(document.querySelectorAll('.chatter-labels-control').length, 1)
 	assert.equal(subscriptions.get('assignments').size, 2)
 })
 
@@ -190,7 +261,7 @@ test('cancels scheduled retries when navigating away or destroying the profile',
 	t.mock.timers.tick(30000)
 	await setImmediate()
 	assert.equal(lookup.mock.callCount(), 1)
-	assert.equal(document.querySelector('.chatter-labels-profile-popup'), null)
+	assert.equal(document.querySelector('.chatter-labels-popup'), null)
 })
 
 test('ignores unrelated mutations and follows replaced or reused profile headers', async t => {
@@ -213,24 +284,24 @@ test('ignores unrelated mutations and follows replaced or reused profile headers
 
 	anchor.href = '/two'
 	await setImmediate()
-	assert.equal(document.querySelector('.chatter-labels-profile-popup').getAttribute('aria-label'), 'Labels for two')
+	assert.equal(document.querySelector('.chatter-labels-popup').getAttribute('aria-label'), 'Labels for two')
 	anchor.parentElement.innerHTML = '<a href="/three"><h1>Three</h1></a>'
 	await setImmediate()
-	assert.equal(document.querySelectorAll('.chatter-labels-profile').length, 1)
-	assert.equal(document.querySelector('.chatter-labels-profile-popup').getAttribute('aria-label'), 'Labels for three')
+	assert.equal(document.querySelectorAll('.chatter-labels-control').length, 1)
+	assert.equal(document.querySelector('.chatter-labels-popup').getAttribute('aria-label'), 'Labels for three')
 })
 
 test('keeps the pencil element when assignments change', async () => {
 	const { storage } = setup()
 
 	await setImmediate()
-	const pencil = document.querySelector('.chatter-labels-profile-edit')
+	const pencil = document.querySelector('.chatter-labels-edit')
 
 	document.querySelector('input').checked = true
 	document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
 	await setImmediate()
 	assert.equal(storage.assignments.length, 1)
-	assert.equal(document.querySelector('.chatter-labels-profile-edit'), pencil)
+	assert.equal(document.querySelector('.chatter-labels-edit'), pencil)
 })
 
 test('discovers a header when its login arrives after the heading', async t => {
@@ -244,5 +315,5 @@ test('discovers a header when its login arrives after the heading', async t => {
 	observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['href'] })
 	document.querySelector('a').href = '/loaded'
 	await setImmediate()
-	assert.equal(document.querySelector('.chatter-labels-profile-popup')?.getAttribute('aria-label'), 'Labels for loaded')
+	assert.equal(document.querySelector('.chatter-labels-popup')?.getAttribute('aria-label'), 'Labels for loaded')
 })
