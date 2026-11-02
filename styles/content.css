@@ -1,3 +1,77 @@
+.chatter-labels-profile {
+	margin-top: 4px;
+	max-width: 480px;
+	font-size: var(--font-size-base);
+
+	> button {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 12px;
+		cursor: pointer;
+		color: var(--color-text-alt-2);
+		padding: 4px 0;
+		background: transparent;
+		border: 0;
+		font: inherit;
+		text-align: start;
+
+		span {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		img {
+			height: 20px;
+			width: auto;
+		}
+
+		.chatter-labels-profile-edit {
+			width: 16px;
+			height: 16px;
+			flex-shrink: 0;
+			color: var(--color-text-link);
+		}
+
+		.chatter-labels-profile-summary {
+			display: contents;
+		}
+	}
+}
+
+.chatter-labels-profile-popup {
+	position: fixed;
+	inset: auto;
+	top: anchor(bottom);
+	left: anchor(left);
+	position-try-fallbacks: flip-block, flip-inline;
+	margin: 6px 0;
+	width: 320px;
+	max-width: calc(100vw - 24px);
+	max-height: calc(100dvh - 24px);
+	overflow: auto;
+	border: 1px solid var(--color-border-base);
+	border-radius: 4px;
+	background: var(--color-background-base);
+	color: var(--color-text-base);
+	box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
+	padding: 8px;
+
+	.chatter-labels-profile-close {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		width: 28px;
+		height: 28px;
+		font-size: 20px;
+		color: var(--color-text-base);
+		background: transparent;
+		border: 0;
+		cursor: pointer;
+	}
+}
+
 .chatter-labels-icons {
 	vertical-align: baseline;
 

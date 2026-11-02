@@ -2,15 +2,18 @@ import { OptionsStorage } from '../storage/options.js'
 import { MainStorage } from '../storage/main.js'
 import { ChatterCard } from './chatter-card.js'
 import { Chat } from './chat.js'
+import { Profile } from './profile.js'
 
 window.dispatchEvent(new Event('chatter-labels:teardown'))
 
 const
 	optionsStorage = await OptionsStorage.create(),
 	mainStorage = await MainStorage.create(optionsStorage),
-	chats = await Chat.createAll(mainStorage)
+	chats = await Chat.createAll(mainStorage),
+	profile = new Profile(mainStorage)
 
 const observer = new MutationObserver(mutations => {
+	profile.handleMutations(mutations)
 	for (const mutation of mutations) {
 		for (const addedNode of mutation.addedNodes) {
 			ChatterCard.createIfNeeded(addedNode, mainStorage)
@@ -35,11 +38,14 @@ window.addEventListener(
 		document.removeEventListener('chatter-labels:user-id', refreshChats, true)
 		for (const chat of chats) chat.destroy()
 		ChatterCard.destroyAll()
+		profile.destroy()
 	},
 	{ once: true }
 )
 
-observer.observe(document.body, { childList: true, subtree: true })
+observer.observe(document.body, {
+	childList: true, subtree: true, attributes: true, attributeFilter: ['href']
+})
 
 document.addEventListener('chatter-labels:user-id', refreshChats, true)
 

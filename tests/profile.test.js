@@ -1,0 +1,248 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { setImmediate } from 'node:timers/promises'
+import { afterEach, mock, test } from 'node:test'
+import { JSDOM } from 'jsdom'
+
+const { window } = new JSDOM('', { url: 'https://www.twitch.tv/one' })
+
+for (const name of ['document', 'Node', 'Event', 'MutationObserver', 'DOMParser']) {
+	globalThis[name] = window[name]
+}
+globalThis.chrome = { runtime: { id: 'test', getURL: path => new URL(`../${path}`, import.meta.url) } }
+const fetchMock = mock.method(globalThis, 'fetch', async url => new Response(await readFile(url)))
+const { Profile } = await import('../scripts/content/profile.js')
+const { TwitchAPI } = await import('../scripts/twitch/api.js')
+const { User } = await import('../scripts/models/user.js')
+
+fetchMock.mock.restore()
+let profile
+
+afterEach(() => {
+	profile?.destroy()
+	document.body.replaceChildren()
+	mock.restoreAll()
+})
+
+const setup = () => {
+	const subscriptions = new Map()
+	const storage = {
+		labels: [{ id: 'friend', name: 'Friend', icon: 'https://example.com/icon.png', enabled: true }],
+		assignments: [],
+		get(key) {
+			return this[key]
+		},
+		async set(key, value) {
+			this[key] = value
+			for (const callback of subscriptions.get(key) ?? []) callback(value)
+		},
+		subscribe(key, callback) {
+			if (!subscriptions.has(key)) subscriptions.set(key, new Set())
+			subscriptions.get(key).add(callback)
+			return () => subscriptions.get(key).delete(callback)
+		}
+	}
+	mock.method(TwitchAPI, 'fetchUsers', async ([login]) => [{ id: login, login, displayName: login }])
+	document.body.innerHTML = '<div><a href="/one"><h1>One</h1></a></div>'
+	profile = new Profile(storage)
+	return { storage, subscriptions }
+}
+
+test('shows an empty summary, assigns and removes labels through the shared editor', async () => {
+	const { storage } = setup()
+
+	await setImmediate()
+	const summary = document.querySelector('.chatter-labels-profile button')
+
+	assert.match(summary.textContent, /No labels/)
+	const checkbox = document.querySelector('input[name="label"]')
+
+	checkbox.checked = true
+	document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+	await setImmediate()
+	assert.equal(storage.assignments[0].user.id, 'one')
+	assert.equal(summary.querySelector('img').alt, '')
+	assert.match(summary.textContent, /Friend/)
+	document.querySelector('input[name="label"]').checked = false
+	document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+	await setImmediate()
+	assert.equal(storage.assignments.length, 0)
+	assert.match(summary.textContent, /No labels/)
+})
+
+test('replaces the editor on reused profile headers and cleans up subscriptions', async () => {
+	const { storage, subscriptions } = setup()
+
+	await setImmediate()
+	const anchor = document.querySelector('a')
+
+	anchor.href = '/two'
+	profile.refresh()
+	await setImmediate()
+	assert.equal(document.querySelectorAll('.chatter-labels-profile').length, 1)
+	document.querySelector('input').checked = true
+	document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+	await setImmediate()
+	assert.equal(storage.assignments[0].user.id, 'two')
+	assert.equal(subscriptions.get('assignments').size, 2)
+	anchor.parentElement.remove()
+	profile.refresh()
+	assert.equal(subscriptions.get('assignments').size, 0)
+})
+
+test('ignores late user lookups after navigation and teardown', async () => {
+	setup()
+	let resolve
+
+	mock.method(TwitchAPI, 'fetchUsers', () => new Promise(done => {
+		resolve = done
+	}))
+	document.querySelector('a').href = '/late'
+	profile.refresh()
+	profile.destroy()
+	resolve([new User({ id: 'late', username: 'Late', login: 'late' })])
+	await setImmediate()
+	assert.equal(document.querySelector('.chatter-labels-profile'), null)
+})
+
+test('places live labels after stream information without splitting the existing header', async () => {
+	setup()
+	document.body.innerHTML = `
+		<div><div class="metadata-layout__support">
+			<div><a href="/live"><h1>Live</h1></a><span class="verified">Verified</span></div>
+			<button>Subscribe</button>
+		</div><div class="stream-info">
+			<p class="stream-title">Stream title</p>
+			<a href="/directory/category/game">Game</a><span>Tag</span>
+		</div></div>
+	`
+	profile.refresh()
+	await setImmediate()
+	const support = document.querySelector('.metadata-layout__support')
+
+	assert.equal(support.querySelector('.chatter-labels-profile'), null)
+	assert.equal(support.nextElementSibling.className, 'stream-info')
+	assert.equal(document.querySelector('.stream-info').nextElementSibling.className, 'chatter-labels-profile')
+	assert.equal(document.querySelector('a').nextElementSibling.className, 'verified')
+})
+
+test('opens the shared editor in a native popover outside the profile layout and removes it on teardown', async () => {
+	setup()
+	await setImmediate()
+	const trigger = document.querySelector('.chatter-labels-profile button')
+	const popup = document.getElementById(trigger?.getAttribute('popovertarget'))
+
+	assert.ok(popup)
+	assert.equal(popup.getAttribute('popover'), 'auto')
+	assert.equal(popup.getAttribute('role'), 'dialog')
+	assert.equal(popup.parentElement, document.body)
+	assert.equal(document.querySelector('.chatter-labels-profile form'), null)
+	assert.ok(popup.querySelector('form'))
+	assert.equal(popup.querySelector('[popovertargetaction="hide"]').getAttribute('popovertarget'), popup.id)
+	let hidden = false
+
+	mock.method(popup, 'matches', selector => selector === ':popover-open')
+	popup.hidePopover = () => {
+		hidden = true
+	}
+	document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+	assert.equal(hidden, true)
+	assert.equal(document.activeElement, trigger)
+	profile.destroy()
+	assert.equal(popup.isConnected, false)
+})
+
+test('retries a temporary lookup failure without duplicate requests or subscriptions', async t => {
+	t.mock.timers.enable({ apis: ['setTimeout'] })
+	const { subscriptions } = setup()
+	let attempts = 0
+	const lookup = mock.method(TwitchAPI, 'fetchUsers', async ([login]) => {
+		if (++attempts === 1) throw new Error('Temporary failure')
+		return [{ id: login, login, displayName: login }]
+	})
+
+	mock.method(console, 'error', () => {})
+	document.querySelector('a').href = '/retry'
+	profile.refresh()
+	await setImmediate()
+	for (let i = 0; i < 10; i++) profile.refresh()
+	assert.equal(lookup.mock.callCount(), 1)
+	t.mock.timers.tick(1000)
+	await setImmediate()
+	assert.equal(lookup.mock.callCount(), 2)
+	assert.equal(document.querySelectorAll('.chatter-labels-profile').length, 1)
+	assert.equal(subscriptions.get('assignments').size, 2)
+})
+
+test('cancels scheduled retries when navigating away or destroying the profile', async t => {
+	t.mock.timers.enable({ apis: ['setTimeout'] })
+	setup()
+	const lookup = mock.method(TwitchAPI, 'fetchUsers', async () => {
+		throw new Error('Offline')
+	})
+
+	mock.method(console, 'error', () => {})
+	document.querySelector('a').href = '/offline'
+	profile.refresh()
+	await setImmediate()
+	document.body.replaceChildren()
+	profile.refresh()
+	t.mock.timers.tick(30000)
+	await setImmediate()
+	assert.equal(lookup.mock.callCount(), 1)
+	assert.equal(document.querySelector('.chatter-labels-profile-popup'), null)
+})
+
+test('ignores unrelated mutations and follows replaced or reused profile headers', async t => {
+	setup()
+	await setImmediate()
+	const observer = new MutationObserver(mutations => profile.handleMutations(mutations))
+
+	t.after(() => observer.disconnect())
+	observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] })
+	const search = mock.method(document, 'querySelector')
+	const chat = document.createElement('div')
+
+	document.body.append(chat)
+	for (let i = 0; i < 20; i++) {
+		chat.innerHTML = `<a href="/other">Message ${i}</a>`
+		await setImmediate()
+	}
+	assert.equal(search.mock.callCount(), 0)
+	const anchor = document.querySelector('a:has(h1)')
+
+	anchor.href = '/two'
+	await setImmediate()
+	assert.equal(document.querySelector('.chatter-labels-profile-popup').getAttribute('aria-label'), 'Labels for two')
+	anchor.parentElement.innerHTML = '<a href="/three"><h1>Three</h1></a>'
+	await setImmediate()
+	assert.equal(document.querySelectorAll('.chatter-labels-profile').length, 1)
+	assert.equal(document.querySelector('.chatter-labels-profile-popup').getAttribute('aria-label'), 'Labels for three')
+})
+
+test('keeps the pencil element when assignments change', async () => {
+	const { storage } = setup()
+
+	await setImmediate()
+	const pencil = document.querySelector('.chatter-labels-profile-edit')
+
+	document.querySelector('input').checked = true
+	document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+	await setImmediate()
+	assert.equal(storage.assignments.length, 1)
+	assert.equal(document.querySelector('.chatter-labels-profile-edit'), pencil)
+})
+
+test('discovers a header when its login arrives after the heading', async t => {
+	setup()
+	await setImmediate()
+	document.querySelector('a').setAttribute('href', '')
+	profile.refresh()
+	const observer = new MutationObserver(mutations => profile.handleMutations(mutations))
+
+	t.after(() => observer.disconnect())
+	observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['href'] })
+	document.querySelector('a').href = '/loaded'
+	await setImmediate()
+	assert.equal(document.querySelector('.chatter-labels-profile-popup')?.getAttribute('aria-label'), 'Labels for loaded')
+})
