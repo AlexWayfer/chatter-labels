@@ -46,11 +46,14 @@ export class ChatterCard {
 	}
 
 	static async #fetchUserInfo(element) {
-		const login = element.querySelector('.viewer-card-header__display-name a').href.split('/').pop()
+		const name = element.querySelector('.viewer-card-header__display-name a, .viewer-card-header__display-name button')
+		const login = name.getAttribute('href')?.split('/')
+			.filter(Boolean)
+			.pop() ?? name.textContent.trim()
 
 		logger.debug('login = ', login)
 
-		const [userResponse] = await TwitchAPI.fetchUsers([login])
+		const userResponse = await TwitchAPI.fetchUser(login)
 
 		return User.fromTwitch(userResponse)
 	}

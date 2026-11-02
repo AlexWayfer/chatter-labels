@@ -45,6 +45,7 @@ const setup = () => {
 		}
 	}
 	mock.method(TwitchAPI, 'fetchUsers', async ([login]) => [{ id: login, login, displayName: login }])
+	mock.method(TwitchAPI, 'fetchUser', async login => ({ id: login, login, displayName: login }))
 	document.body.innerHTML = '<div><a href="/one"><h1>One</h1></a></div>'
 	profile = new Profile(storage)
 	return { storage, subscriptions }
@@ -103,7 +104,7 @@ test('does not attach a card editor after the card is removed during loading', a
 	await setImmediate()
 	let resolve
 
-	mock.method(TwitchAPI, 'fetchUsers', () => new Promise(done => {
+	mock.method(TwitchAPI, 'fetchUser', () => new Promise(done => {
 		resolve = done
 	}))
 	const element = document.createElement('div')
@@ -113,10 +114,47 @@ test('does not attach a card editor after the card is removed during loading', a
 	const creating = ChatterCard.create(element, storage)
 
 	element.remove()
-	resolve([{ id: 'late', login: 'late', displayName: 'Late' }])
+	resolve({ id: 'late', login: 'late', displayName: 'Late' })
 	await creating
 	assert.equal(subscriptions.get('assignments').size, 2)
 	assert.equal(document.querySelectorAll('[popover]').length, 1)
+})
+
+test('shows and edits saved labels on a suspended account with a disabled name button', async () => {
+	const { storage } = setup()
+
+	await setImmediate()
+	const user = new User({ id: '52608844', login: 'olegsvs', username: 'olegsvs' })
+
+	await storage.set('assignments', [{ user, label: storage.labels[0] }])
+	const lookup = mock.method(TwitchAPI, 'fetchUser', async () => ({
+		id: user.id, login: user.login, displayName: user.username
+	}))
+	const card = document.createElement('div')
+
+	card.innerHTML = `
+		<div class="viewer-card-header__background"></div>
+		<div class="viewer-card-header__display-name"><h4><button disabled>olegsvs</button></h4></div>
+	`
+	document.body.append(card)
+	await ChatterCard.create(card, storage)
+	assert.deepEqual(lookup.mock.calls[0].arguments, ['olegsvs'])
+	assert.equal(card.dataset.userId, user.id)
+	const trigger = card.querySelector('button[popovertarget]')
+	const popup = document.getElementById(trigger.getAttribute('popovertarget'))
+
+	assert.match(trigger.textContent, /Friend/)
+	assert.equal(popup.querySelector('input').checked, true)
+	popup.querySelector('input').checked = false
+	popup.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+	await setImmediate()
+	assert.equal(storage.assignments.length, 0)
+	assert.match(trigger.textContent, /No labels/)
+	popup.querySelector('input').checked = true
+	popup.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+	await setImmediate()
+	assert.equal(storage.assignments[0].user.id, user.id)
+	assert.match(trigger.textContent, /Friend/)
 })
 
 test('shows an empty summary, assigns and removes labels through the shared editor', async () => {
