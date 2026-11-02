@@ -15,6 +15,7 @@ const { Profile } = await import('../scripts/content/profile.js')
 const { ChatterCard } = await import('../scripts/content/chatter-card.js')
 const { TwitchAPI } = await import('../scripts/twitch/api.js')
 const { User } = await import('../scripts/models/user.js')
+const { LabelsElement } = await import('../scripts/content/labels-element.js')
 
 fetchMock.mock.restore()
 let profile
@@ -62,6 +63,42 @@ const createCard = async storage => {
 	await ChatterCard.create(element, storage)
 	return element
 }
+
+test('disables label checkboxes throughout saving, including storage rerenders', async () => {
+	const { storage } = setup()
+	const editor = await LabelsElement.create(new User({ id: 'one', login: 'one' }), storage)
+	const form = editor.element.querySelector('form')
+	const button = form.querySelector('button[type="submit"]')
+	const originalSet = storage.set.bind(storage)
+	let finish
+	const saving = mock.method(storage, 'set', async (key, value) => {
+		await new Promise(resolve => {
+			finish = resolve
+		})
+		await originalSet(key, value)
+		assert.equal(form.querySelector('input').disabled, true)
+	})
+
+	try {
+		form.querySelector('input').checked = true
+		form.dispatchEvent(new Event('submit', { cancelable: true }))
+		assert.equal(button.disabled, true)
+		assert.equal(form.querySelector('input').disabled, true)
+		form.querySelector('input').click()
+		assert.equal(form.querySelector('input').checked, true)
+		form.dispatchEvent(new Event('submit', { cancelable: true }))
+		assert.equal(saving.mock.callCount(), 1)
+		finish()
+		await setImmediate()
+		assert.equal(button.disabled, false)
+		assert.equal(form.querySelector('input').disabled, false)
+		assert.equal(form.querySelector('input').checked, true)
+		form.querySelector('input').click()
+		assert.equal(form.querySelector('input').checked, false)
+	} finally {
+		editor.unsubscribe()
+	}
+})
 
 test('shares compact labels and independent popovers between cards and profiles', async () => {
 	const { storage, subscriptions } = setup()

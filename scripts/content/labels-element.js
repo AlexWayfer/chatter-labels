@@ -18,6 +18,7 @@ export class LabelsElement {
 	#formElement
 	#submitButtonElement
 	#formFieldsetsElement
+	#saving = false
 
 	static async create(user, mainStorage) {
 		const
@@ -118,6 +119,7 @@ export class LabelsElement {
 
 		checkboxElement.value = label.id
 		checkboxElement.checked = !!assignment
+		checkboxElement.disabled = this.#saving
 
 		labelElement.querySelector('.icon').src = label.icon
 		labelElement.querySelector('.name').textContent = label.name
@@ -127,8 +129,17 @@ export class LabelsElement {
 		this.#formFieldsetsElement.append(labelElement)
 	}
 
+	#setSaving(saving) {
+		this.#saving = saving
+		this.#submitButtonElement.disabled = saving
+		this.#formElement.querySelectorAll('input[name="label"]').forEach(checkbox => {
+			checkbox.disabled = saving
+		})
+	}
+
 	async #save() {
-		this.#submitButtonElement.disabled = true
+		if (this.#saving) return
+		this.#setSaving(true)
 
 		try {
 			const newAssignments = Array.from(
@@ -158,7 +169,7 @@ export class LabelsElement {
 
 			await this.#mainStorage.set('assignments', this.#assignments)
 		} finally {
-			this.#submitButtonElement.disabled = false
+			this.#setSaving(false)
 		}
 	}
 }
