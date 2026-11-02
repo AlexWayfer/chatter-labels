@@ -9,3 +9,5 @@ When you propose a commit message, put it in a fenced code block, so it can be c
 Include a concise subject and a detailed body explaining what changed and why.
 
 When making commits yourself, prefer separate commits for unrelated changes whenever possible.
+
+After making commits yourself, you may push them immediately without asking for additional permission.
