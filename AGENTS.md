@@ -1,5 +1,11 @@
 # Agent notes
 
+## UI consistency
+
+Before adding or changing a control, inspect comparable controls in the project and follow their existing styles and behavior. Do not invent separate styling for an equivalent control.
+
+Controls styled as buttons, including native `summary` toggles, must match existing buttons in cursor, text selection, borders, spacing, and backgrounds. On the options page, text buttons use the default cursor; do not add `cursor: pointer` to them. Keep the shared border and indicate toggle state through the background, as Add and Remove do. Preserve explicitly requested differences.
+
 ## Commit messages
 
 Commit messages are in English.
