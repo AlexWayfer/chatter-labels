@@ -11,6 +11,21 @@ export class Chat {
 			usernameSelector: '.chat-line__username'
 		},
 		{
+			name: 'whispers',
+			containerSelector: '.whispers-inbox__list-items, .whispers-threads-box__scrollable-area',
+			messageSelector: '.whispers-list-item',
+			usernameSelector: '.whispers-list-item__user-name',
+			resolveUserEachRender: true,
+			userAttributes: ['data-a-target']
+		},
+		{
+			name: 'whisper-dialog',
+			containerSelector: '.whispers__thread, .whispers-thread',
+			messageSelector: '.whispers__header, .thread-header, .thread-message__message',
+			usernameSelector: '.tw-interactable p, [id^="whisper-thread-header-name-"], .thread-message__message--user-name',
+			resolveUserEachRender: true
+		},
+		{
 			name: 'history',
 			containerSelector: '.message-list',
 			messageSelector: '.vcml-message',
@@ -62,12 +77,13 @@ export class Chat {
 	}
 
 	userIdFrom(element) {
-		const target =
-			element.querySelector('.chat-line__message--alert .message') ??
-			element.querySelector(':scope > [id]') ??
-			element
+		const target = this.#kind.resolveUserEachRender
+			? element
+			: element.querySelector('.chat-line__message--alert .message') ??
+				element.querySelector(':scope > [id]') ??
+				element
 
-		if (target.dataset.userId) return target.dataset.userId
+		if (target.dataset.userId && !this.#kind.resolveUserEachRender) return target.dataset.userId
 
 		target.dispatchEvent(new Event('chatter-labels:resolve-user-id'))
 
@@ -107,6 +123,8 @@ export class Chat {
 
 		const observer = new MutationObserver(mutations => {
 			for (const mutation of mutations) {
+				if (mutation.type !== 'childList') this.#createMessagesIfNeeded(mutation.target)
+
 				for (const addedNode of mutation.addedNodes) {
 					this.#createMessagesIfNeeded(addedNode)
 				}
@@ -117,7 +135,15 @@ export class Chat {
 			}
 		})
 
-		observer.observe(container, { childList: true, subtree: true })
+		observer.observe(container, {
+			childList: true,
+			subtree: true,
+			characterData: !!this.#kind.resolveUserEachRender,
+			...this.#kind.userAttributes && {
+				attributes: true,
+				attributeFilter: this.#kind.userAttributes
+			}
+		})
 		this.#containers.set(container, observer)
 		this.#createMessagesIfNeeded(container)
 	}
@@ -135,6 +161,9 @@ export class Chat {
 	}
 
 	#createMessagesIfNeeded(node) {
+		if (node.nodeType === Node.TEXT_NODE && this.#kind.resolveUserEachRender) {
+			node = node.parentElement
+		}
 		if (node.nodeType !== Node.ELEMENT_NODE) return
 
 		const messages = this.#messageElementsIn(node)
@@ -143,7 +172,15 @@ export class Chat {
 		if (closest && !messages.includes(closest)) messages.push(closest)
 
 		for (const element of messages) {
-			if (this.#messagesByElement.has(element)) continue
+			const existing = this.#messagesByElement.get(element)
+
+			if (existing) {
+				if (this.#kind.resolveUserEachRender &&
+					!node.closest(ChatMessage.ICONS_SELECTOR)) {
+					existing.render()
+				}
+				continue
+			}
 			if (!element.querySelector(this.#kind.usernameSelector)) continue
 
 			const message = new ChatMessage(element, this)

@@ -4,9 +4,11 @@ import { setImmediate } from 'node:timers/promises'
 import { beforeEach, afterEach, mock, test } from 'node:test'
 import { JSDOM } from 'jsdom'
 
-const { window } = new JSDOM()
+const { window } = new JSDOM('', { runScripts: 'outside-only' })
 
-for (const name of ['document', 'Node', 'MutationObserver', 'DOMParser']) {
+window.eval(await readFile(new URL('../scripts/content/page/message-user-id.js', import.meta.url), 'utf8'))
+
+for (const name of ['document', 'Node', 'Element', 'Event', 'MutationObserver', 'DOMParser']) {
 	globalThis[name] = window[name]
 }
 
@@ -19,6 +21,7 @@ globalThis.chrome = {
 
 const fetchMock = mock.method(globalThis, 'fetch', async url => new Response(await readFile(url)))
 const { Chat } = await import('../scripts/content/chat.js')
+const { TwitchAPI } = await import('../scripts/twitch/api.js')
 
 fetchMock.mock.restore()
 
@@ -34,10 +37,11 @@ const messageHTML = userId => `
 	</div>
 `
 
-const attach = html => {
+const attach = (html, prepare = () => {}) => {
 	const wrapper = document.createElement('div')
 
 	wrapper.innerHTML = html
+	prepare(wrapper)
 	document.body.append(wrapper)
 	for (const chat of chats) chat.attachIfNeeded(wrapper)
 	return wrapper
@@ -62,6 +66,7 @@ beforeEach(async () => {
 afterEach(() => {
 	for (const chat of chats) chat.destroy()
 	document.body.replaceChildren()
+	mock.restoreAll()
 })
 
 test('renders labels in an already open thread and the main chat without duplicates', () => {
@@ -154,4 +159,155 @@ test('updates thread labels when labels or assignments change', () => {
 	assert.equal(wrapper.querySelectorAll('.chatter-labels-icon').length, 1)
 	update('labels', [])
 	assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)
+})
+
+const whisperHTML = login => `
+	<div class="whispers-list-item">
+		<button role="listitem" data-a-target="whisper-with-${login}">
+			<div><strong class="whispers-list-item__user-name">${login}</strong>
+				<div class="whispers-list-item__last-message">Preview</div>
+			</div>
+		</button>
+		<button class="whispers-list-item__archive-button">Archive Thread</button>
+	</div>
+`
+
+test('renders whisper labels synchronously from React without user lookups', () => {
+	const lookup = mock.method(TwitchAPI, 'fetchUsers', () => assert.fail('Unexpected user lookup'))
+	const wrapper = attach(`
+		<div class="whispers-inbox__list-items">${whisperHTML('one')}${whisperHTML('two')}</div>
+	`, wrapper => {
+		for (const [index, row] of wrapper.querySelectorAll('.whispers-list-item').entries()) {
+			row.__reactFiber$test = { memoizedProps: { user: { id: String(index + 1) } } }
+		}
+	})
+
+	const rows = wrapper.querySelectorAll('.whispers-list-item')
+
+	assert.equal(lookup.mock.callCount(), 0)
+	assert.equal(rows[0].querySelector('.whispers-list-item__user-name')
+		.previousElementSibling.className, 'chatter-labels-icons')
+	assert.equal(rows[0].querySelector('.whispers-list-item__last-message').textContent, 'Preview')
+	assert.equal(rows[1].querySelector('.chatter-labels-icons'), null)
+	for (const callback of subscriptions.get('assignments')) {
+		callback([{ user: { id: '2' }, label: { id: 'label' } }])
+	}
+	assert.equal(rows[0].querySelector('.chatter-labels-icons'), null)
+	assert.equal(rows[1].querySelector('img').alt, 'Label')
+	assert.equal(lookup.mock.callCount(), 0)
+})
+
+test('refreshes React IDs when a whisper row is reused or receives delayed user data', async () => {
+	const wrapper = attach(`<div class="whispers-inbox__list-items">${whisperHTML('one')}</div>`, wrapper => {
+		wrapper.querySelector('.whispers-list-item').__reactFiber$test = {
+			memoizedProps: { user: { id: '1' } }
+		}
+	})
+	const list = wrapper.firstElementChild
+	const row = list.firstElementChild
+
+	assert.equal(row.querySelectorAll('.chatter-labels-icon').length, 1)
+	row.__reactFiber$test.memoizedProps = { user: { id: '2' } }
+	row.querySelector('[role="listitem"]').dataset.aTarget = 'whisper-with-two'
+	await setImmediate()
+	assert.equal(row.querySelector('.chatter-labels-icons'), null)
+	row.__reactFiber$test.memoizedProps = {}
+	row.querySelector('.whispers-list-item__user-name').textContent = 'Pending'
+	await setImmediate()
+	assert.equal(row.dataset.userId, undefined)
+	row.__reactFiber$test.memoizedProps = { user: { id: '1' } }
+	row.querySelector('.whispers-list-item__user-name').textContent = '名前'
+	await setImmediate()
+	assert.equal(row.querySelectorAll('.chatter-labels-icon').length, 1)
+})
+
+const whisperMessageHTML = username => `
+	<div class="thread-message__message"><div>
+		<span class="thread-message__message--user-name">${username}</span>
+		<span>: </span><span class="message">Hello</span>
+	</div></div>
+`
+
+test('labels the whisper header and each message author independently', async () => {
+	const lookup = mock.method(TwitchAPI, 'fetchUsers', () => assert.fail('Unexpected user lookup'))
+	const wrapper = attach(`
+		<div class="whispers__thread">
+			<div class="whispers__header"><button class="tw-interactable"><div>
+				<p>One</p><svg></svg>
+			</div></button></div>
+			<div class="whispers__messages">
+				${whisperMessageHTML('One')}${whisperMessageHTML('Self')}
+			</div>
+		</div>
+	`, wrapper => {
+		wrapper.querySelector('.whispers__header').__reactFiber$test = {
+			memoizedProps: { data: {
+				currentUser: { id: '2' },
+				whisperThread: { participants: [{ id: '1' }, { id: '2' }] }
+			} }
+		}
+		for (const [index, message] of wrapper.querySelectorAll('.thread-message__message').entries()) {
+			message.__reactFiber$test = { memoizedProps: { message: { from: String(index + 1) } } }
+		}
+	})
+
+	assert.equal(lookup.mock.callCount(), 0)
+	assert.equal(wrapper.querySelector('.whispers__header p').previousElementSibling
+		.className, 'chatter-labels-icons')
+	const messages = wrapper.querySelectorAll('.thread-message__message')
+
+	assert.equal(messages[0].querySelectorAll('.chatter-labels-icon').length, 1)
+	assert.equal(messages[1].querySelector('.chatter-labels-icons'), null)
+	wrapper.querySelector('.whispers__messages').insertAdjacentHTML('beforeend', whisperMessageHTML('One'))
+	wrapper.querySelector('.thread-message__message:last-child').__reactFiber$test = {
+		memoizedProps: { message: { from: '1' } }
+	}
+	await setImmediate()
+	assert.equal(wrapper.querySelectorAll('.chatter-labels-icon').length, 3)
+	const headerName = wrapper.querySelector('.whispers__header p')
+
+	wrapper.querySelector('.whispers__header').__reactFiber$test.memoizedProps = {
+		data: { currentUser: { id: '2' }, whisperThread: { participants: [{ id: '2' }, { id: '3' }] } }
+	}
+	headerName.firstChild.data = 'Self'
+	await setImmediate()
+	assert.equal(wrapper.querySelector('.whispers__header .chatter-labels-icons'), null)
+	assert.equal(lookup.mock.callCount(), 0)
+})
+
+test('labels the regular whispers inbox and multiple floating dialogs independently', () => {
+	const wrapper = attach(`
+		<div class="whispers-threads-box__scrollable-area">${whisperHTML('One')}</div>
+		${['One', 'Other'].map(name => `
+			<div class="whispers-thread">
+				<div class="thread-header"><button><span id="whisper-thread-header-name-${name}">${name}</span></button></div>
+				${whisperMessageHTML(name)}${whisperMessageHTML('Self')}
+			</div>
+		`).join('')}
+	`, wrapper => {
+		wrapper.querySelector('.whispers-list-item').__reactFiber$test = {
+			memoizedProps: { user: { id: '1' } }
+		}
+		for (const [index, dialog] of wrapper.querySelectorAll('.whispers-thread').entries()) {
+			const id = index === 0 ? '1' : '3'
+
+			dialog.querySelector('.thread-header').__reactFiber$test = { memoizedProps: {
+				currentUser: { id: '2', displayName: 'Self' },
+				interlocutor: { id, displayName: index === 0 ? 'One' : 'Other' }
+			} }
+			for (const message of dialog.querySelectorAll('.thread-message__message')) {
+				message.__reactFiber$test = { memoizedProps: { participantsByID: {
+					[id]: { id, displayName: index === 0 ? 'One' : 'Other' },
+					self: { id: '2', displayName: 'Self' }
+				} } }
+			}
+		}
+	})
+
+	assert.equal(wrapper.querySelector('.whispers-list-item img')?.alt, 'Label')
+	const dialogs = wrapper.querySelectorAll('.whispers-thread')
+
+	assert.equal(dialogs[0].querySelector('.thread-header img')?.alt, 'Label')
+	assert.equal(dialogs[0].querySelectorAll('.thread-message__message img').length, 1)
+	assert.equal(dialogs[1].querySelector('.chatter-labels-icons'), null)
 })
