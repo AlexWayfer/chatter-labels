@@ -7,6 +7,10 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 	for (const tab of tabs) {
 		try {
+			await chrome.scripting.insertCSS({
+				target: { tabId: tab.id },
+				files: ['styles/content.css']
+			})
 			await chrome.scripting.executeScript({
 				target: { tabId: tab.id },
 				files: ['scripts/content/loader.js']
