@@ -4,7 +4,9 @@ import { ChatterCard } from './chatter-card.js'
 import { Chat } from './chat.js'
 import { Profile } from './profile.js'
 
-window.dispatchEvent(new Event('chatter-labels:teardown'))
+const teardownEvent = `chatter-labels:teardown:${chrome.runtime.id}`
+
+window.dispatchEvent(new Event(teardownEvent))
 
 const
 	optionsStorage = await OptionsStorage.create(),
@@ -32,7 +34,7 @@ const refreshChats = () => {
 }
 
 window.addEventListener(
-	'chatter-labels:teardown',
+	teardownEvent,
 	() => {
 		observer.disconnect()
 		document.removeEventListener('chatter-labels:user-id', refreshChats, true)
