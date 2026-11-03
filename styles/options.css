@@ -426,9 +426,32 @@ body {
 						.delete-assignment {
 							inline-size: 2rem;
 							block-size: 2rem;
+							flex-shrink: 0;
+							visibility: visible;
+							opacity: 1;
+							transform: translateX(0);
+							transition:
+								inline-size var(--speed2),
+								margin-inline-end var(--speed2),
+								opacity var(--speed2),
+								transform var(--speed2),
+								visibility var(--speed2),
+								display var(--speed2) allow-discrete;
 
 							&.invisible {
 								display: none;
+								visibility: hidden;
+								inline-size: 0;
+								margin-inline-end: -0.25rem;
+								opacity: 0;
+								transform: translateX(-0.5rem);
+							}
+
+							@starting-style {
+								inline-size: 0;
+								margin-inline-end: -0.25rem;
+								opacity: 0;
+								transform: translateX(-0.5rem);
 							}
 						}
 
@@ -476,11 +499,35 @@ body {
 
 				.add-assignments {
 					display: grid;
+					interpolate-size: allow-keywords;
+					height: auto;
+					overflow: clip;
 					gap: 1rem;
 					padding: 1rem;
+					margin-block-start: 1rem;
 					border: var(--input-border);
 					border-radius: 0.75rem;
 					background-color: var(--surface);
+					transition:
+						height var(--speed2),
+						padding-block var(--speed2),
+						margin-block-start var(--speed2),
+						border-block-width var(--speed2),
+						display var(--speed2) allow-discrete;
+
+					&[hidden] {
+						height: 0;
+						padding-block: 0;
+						margin-block-start: 0;
+						border-block-width: 0;
+					}
+
+					@starting-style {
+						height: 0;
+						padding-block: 0;
+						margin-block-start: 0;
+						border-block-width: 0;
+					}
 
 					& > button {
 						justify-self: start;
