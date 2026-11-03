@@ -26,5 +26,6 @@ jobs:
         with:
           runtime: node@lts
           cache: true
+          cache-dependency-path: package.json
 
       - run: pnpm run ${{ matrix.script }}
