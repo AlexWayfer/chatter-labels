@@ -26,7 +26,7 @@ export class LabelsForm extends Form {
 		this.#fieldsetTemplate = this._element.querySelector('template#label')
 
 		this._element.querySelector('button.add').addEventListener('click', _event => {
-			this.add()
+			this.add({}, { prepend: true })
 		})
 
 		this._element.addEventListener('input', _event => {
@@ -48,7 +48,7 @@ export class LabelsForm extends Form {
 		this.#load()
 	}
 
-	add(data = {}) {
+	add(data = {}, { prepend = false } = {}) {
 		const
 			fieldsetFragment = document.importNode(this.#fieldsetTemplate.content, true),
 			fieldsetElement = fieldsetFragment.querySelector('fieldset')
@@ -94,7 +94,11 @@ export class LabelsForm extends Form {
 			this.#updateMoveButtons()
 		})
 
-		this.#fieldsetsElement.append(fieldsetFragment)
+		if (prepend) {
+			this.#fieldsetsElement.prepend(fieldsetFragment)
+		} else {
+			this.#fieldsetsElement.append(fieldsetFragment)
+		}
 
 		const list = new AssignmentsList(
 			fieldsetElement.querySelector('.assignments'),

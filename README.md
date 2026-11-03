@@ -15,6 +15,13 @@ Also shows your labels in [Lurkology chat logs](https://lurkology.com/logs).
 Click an author's name to manage their labels in the user card. Assignments are
 shared with Twitch and matched by Twitch user ID, including historical usernames.
 
+## Development
+
+Run `pnpm install` before loading the unpacked extension. Installation prepares the
+local BeerCSS styles and Material Symbols font used by the options page. After
+updating BeerCSS, run `pnpm prepare:styles` to refresh them. `pnpm run pack` also
+prepares and includes these styles, the icon font, and their licenses in the archive.
+
 ## Credentials
 
 * [Extension icon](https://www.flaticon.com/free-icon/tag_16568959)

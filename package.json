@@ -19,12 +19,17 @@
 		"zip-a-folder": "^7.0.0"
 	},
 	"scripts": {
+		"postinstall": "node exe/prepare-styles.js",
+		"prepare:styles": "node exe/prepare-styles.js",
 		"test": "node --test",
 		"lint:docs": "remark -f .",
 		"lint:styles": "stylelint styles/",
 		"lint:scripts": "eslint",
 		"lint": "pnpm npm-run-all lint:*",
-		"pack": "node exe/pack.js",
+		"pack": "pnpm prepare:styles && node exe/pack.js",
 		"release": "node exe/release.js"
+	},
+	"dependencies": {
+		"beercss": "5.0.3"
 	}
 }

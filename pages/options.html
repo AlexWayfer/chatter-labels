@@ -4,162 +4,226 @@
 		<title>Chatter Labels Options</title>
 
 		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 
 		<link rel="stylesheet" href="../styles/options.css" />
-
 		<script type="module" src="../scripts/options/page.js"></script>
 	</head>
 	<body>
-		<h1>Chatter Labels Options</h1>
+		<header class="page-header row">
+			<img src="../images/icons/128.png" alt="" />
+			<h1>Chatter Labels Options</h1>
+		</header>
 
-		<h2>Storage</h2>
+		<main class="settings-layout grid large-space">
+			<section class="storage-section s12">
+				<header class="section-header row">
+					<h2><i aria-hidden="true">cloud_sync</i> Storage</h2>
+				</header>
+				<article class="storage-panel border">
+					<form name="github-gist">
+						<div class="storage-heading row wrap">
+							<h3>GitHub Gist</h3>
+							<span class="existing-gist" hidden>
+								<a target="_blank"><span>Open Gist</span><i class="tiny" aria-hidden="true">open_in_new</i></a>
+							</span>
+						</div>
+						<p class="token-help">
+							<a
+								class="create-token"
+								href="https://github.com/settings/personal-access-tokens/new"
+								target="_blank"
+							>
+								Create token
+							</a>
+							(select "Gists" in Permissions for Account)
+						</p>
 
-		<h3>GitHub Gist</h3>
-
-		<form name="github-gist">
-			<p>
-				<a
-					class="create-token"
-					href="https://github.com/settings/personal-access-tokens/new"
-					target="_blank"
-				>
-					Create token
-				</a>
-				(select "Gists" in Permissions for Account)
-			</p>
-
-			Token: <input type="password" name="token" required />
-
-			<button type="button" class="token-visibility-toggle">
-				<span class="text-show">Show</span>
-				<span class="text-hide">Hide</span>
-			</button>
-
-			<button type="submit">Save</button>
-
-			<span class="toast saved" hidden>Saved!</span>
-			<span class="toast error" hidden></span>
-
-			<p class="existing-gist" hidden>
-				<a target="_blank">GitHub Gist</a>
-			</p>
-		</form>
-
-		<h2>Labels</h2>
-
-		<div class="labels loading">
-			<template id="label">
-				<fieldset>
-					<div class="move">
-						<button type="button" class="up"><div class="icon"></div></button>
-						<button type="button" class="down"><div class="icon"></div></button>
-					</div>
-
-					<div class="fields">
-						<input type="hidden" name="id" form="labels-form" />
-
-						<label>
-							Icon:
-							<img class="icon-preview" alt="" />
-							<input type="hidden" name="icon" form="labels-form" />
-							<input type="file" class="icon" form="labels-form" accept="image/*" required />
-						</label>
-
-						<label>
-							Name:
-							<input
-								type="text"
-								name="name"
-								form="labels-form"
-								required
-								autocomplete="off"
-							/>
-						</label>
-
-						<label class="show-in-chat">
-							<input type="checkbox" name="enabled" form="labels-form" checked />
-							Show in chat
-						</label>
-					</div>
-
-					<div class="buttons">
-						<button type="button" class="delete"><div class="icon"></div></button>
-					</div>
-
-					<div class="assignments">
-						<h4>
-							<span>Assignments: (<span class="count"></span>)</span>
-							<select class="sort-assignments" aria-label="Sort assignments">
-								<option value="alphabet">Alphabet</option>
-								<option value="date">Date added</option>
-							</select>
-						</h4>
-
-						<template id="assignment">
-							<li>
-								<div class="assignment-header">
-									<button type="button" class="delete-assignment invisible"><div class="icon"></div></button>
-									<span class="username"></span><span class="assigned-at"></span>
-								</div>
-								<details class="assignment-comment">
-									<summary>Comment</summary>
-									<form>
-										<input type="text" name="comment" aria-label="Assignment comment (optional)" />
-										<button type="submit">Save</button>
-										<span class="toast error" hidden></span>
-									</form>
-								</details>
-							</li>
-						</template>
-
-						<ul>
-						</ul>
-
-						<button type="button" class="toggle-add-assignments">Add</button>
-						<button type="button" class="toggle-remove-assignments">Remove</button>
-						<button type="button" class="copy-assignments">
-							<span class="text-copy">Copy</span>
-							<span class="text-copied">Copied!</span>
+						<div class="token-controls">
+							<div class="field label border">
+								<input type="password" name="token" id="gist-token" placeholder=" " required />
+								<label for="gist-token">Token</label>
+							</div>
+							<button
+								type="button"
+								class="token-visibility-toggle transparent circle ripple"
+								aria-label="Show or hide token"
+								title="Show or hide token"
+							>
+								<span class="text-show"><i aria-hidden="true">visibility</i></span>
+								<span class="text-hide"><i aria-hidden="true">visibility_off</i></span>
+							</button>
+						</div>
+						<button type="submit" class="ripple">
+							<i aria-hidden="true">save</i><span>Save</span>
 						</button>
-						<form class="add-assignments" hidden>
-							<textarea
-								rows="4"
-								placeholder="One nickname per line"
-							></textarea>
-							<input
-								type="text"
-								name="comment"
-								placeholder="Comment for all added users (optional)"
-								aria-label="Comment for all added users (optional)"
-							/>
-							<button type="submit">Save</button>
-							<span class="toast added" hidden>Added!</span>
-							<span class="toast error" hidden></span>
-						</form>
-					</div>
-				</fieldset>
-			</template>
+						<span class="toast saved" hidden>Saved!</span>
+						<span class="toast error" hidden></span>
+					</form>
+				</article>
+			</section>
 
-			<div class="fieldsets">
-			</div>
+			<section class="labels loading s12">
+				<header class="section-header row wrap">
+					<h2 class="max"><i aria-hidden="true">label</i> Labels</h2>
+					<form name="labels" id="labels-form" class="row wrap">
+						<button type="button" class="add border ripple positive">
+							<i aria-hidden="true">add</i><span>Add</span>
+						</button>
+						<button type="submit" class="ripple">
+							<i aria-hidden="true">save</i><span>Save</span>
+						</button>
+						<span class="toast saved" hidden>Saved!</span>
+						<span class="toast error" hidden></span>
+					</form>
+				</header>
 
-			<p class="loading-notice">Loading...</p>
-			<p class="error-notice"></p>
-			<p class="empty-list-notice">List is empty.</p>
+				<template id="label">
+					<fieldset>
+						<div class="move">
+							<button type="button" class="up transparent circle ripple" aria-label="Move label up" title="Move label up">
+								<i aria-hidden="true">arrow_upward</i>
+							</button>
+							<button type="button" class="down transparent circle ripple" aria-label="Move label down" title="Move label down">
+								<i aria-hidden="true">arrow_downward</i>
+							</button>
+						</div>
 
-			<form name="labels" id="labels-form">
-				<button type="button" class="add">Add</button>
-				<button type="submit">Save</button>
-				<span class="toast saved" hidden>Saved!</span>
-				<span class="toast error" hidden></span>
-			</form>
-		</div>
+						<div class="fields">
+							<input type="hidden" name="id" form="labels-form" />
+
+							<label class="icon-picker" title="Choose label icon">
+								<i class="icon-placeholder" aria-hidden="true">add_photo_alternate</i>
+								<img class="icon-preview" alt="" />
+								<input type="hidden" name="icon" form="labels-form" />
+								<input type="file" class="icon" form="labels-form" accept="image/*" aria-label="Choose label icon" required />
+							</label>
+
+							<div class="field label border name-field">
+								<input
+									type="text"
+									name="name"
+									form="labels-form"
+									required
+									autocomplete="off"
+									placeholder=" "
+									aria-label="Name"
+								/>
+								<label>Name</label>
+							</div>
+
+							<label class="show-in-chat checkbox">
+								<input type="checkbox" name="enabled" form="labels-form" aria-label="Show in chat" checked />
+								<span aria-hidden="true">Show in chat</span>
+							</label>
+						</div>
+
+						<div class="buttons">
+							<button type="button" class="delete transparent circle ripple danger" aria-label="Delete label" title="Delete label">
+								<i aria-hidden="true">delete</i>
+							</button>
+						</div>
+
+						<div class="assignments">
+							<h4>
+								<span>Assignments: (<span class="count"></span>)</span>
+								<select class="sort-assignments" aria-label="Sort assignments">
+									<option value="alphabet">Alphabet</option>
+									<option value="date">Date added</option>
+								</select>
+							</h4>
+
+							<template id="assignment">
+								<li>
+									<div class="assignment-header">
+										<button
+											type="button"
+											class="delete-assignment invisible transparent circle ripple danger"
+											aria-label="Delete assignment"
+											title="Delete assignment"
+										>
+											<i aria-hidden="true">person_remove</i>
+										</button>
+										<span class="username"></span><span class="assigned-at"></span>
+									</div>
+									<details class="assignment-comment">
+										<summary class="button transparent circle ripple" aria-label="Comment" title="Comment">
+											<i aria-hidden="true">chat_bubble</i>
+										</summary>
+										<form>
+											<div class="field label border">
+												<input type="text" name="comment" placeholder=" " aria-label="Assignment comment (optional)" />
+												<label>Comment (optional)</label>
+											</div>
+											<button type="submit" class="transparent circle ripple" aria-label="Save comment" title="Save comment">
+												<i aria-hidden="true">save</i>
+											</button>
+											<span class="toast error" hidden></span>
+										</form>
+									</details>
+								</li>
+							</template>
+
+							<ul>
+							</ul>
+
+							<nav class="assignment-actions wrap tiny-space">
+								<button type="button" class="toggle-add-assignments border small ripple positive">
+									<i aria-hidden="true">person_add</i><span>Add</span>
+								</button>
+								<button type="button" class="toggle-remove-assignments border small ripple danger">
+									<i aria-hidden="true">person_remove</i><span>Remove</span>
+								</button>
+								<button type="button" class="copy-assignments border small ripple">
+									<i aria-hidden="true">content_copy</i>
+									<span class="text-copy">Copy</span>
+									<span class="text-copied">Copied!</span>
+								</button>
+							</nav>
+
+							<form class="add-assignments" hidden>
+								<div class="field label border">
+									<textarea
+										rows="4"
+										placeholder=" "
+										aria-label="One nickname per line"
+									></textarea>
+									<label>One nickname per line</label>
+								</div>
+								<div class="field label border">
+									<input
+										type="text"
+										name="comment"
+										placeholder=" "
+										aria-label="Comment for all added users (optional)"
+									/>
+									<label>Comment for all added users (optional)</label>
+								</div>
+								<button type="submit" class="ripple">
+									<i aria-hidden="true">save</i><span>Save</span>
+								</button>
+								<span class="toast added" hidden>Added!</span>
+								<span class="toast error" hidden></span>
+							</form>
+						</div>
+					</fieldset>
+				</template>
+
+				<div class="fieldsets">
+				</div>
+
+				<p class="loading-notice">Loading...</p>
+				<p class="error-notice"></p>
+				<p class="empty-list-notice">List is empty.</p>
+			</section>
+		</main>
+
 		<dialog class="confirm">
 			<form method="dialog">
 				<p class="message"></p>
 				<div class="buttons">
-					<button value="cancel">Cancel</button>
-					<button value="ok">OK</button>
+					<button value="cancel" class="border ripple">Cancel</button>
+					<button value="ok" class="danger-filled ripple">OK</button>
 				</div>
 			</form>
 		</dialog>
