@@ -35,6 +35,11 @@ including a reply and an unlabelled user. Chat data is in `exe/fixtures/chat.jso
 messages use the real chat integration with local Twitch surroundings.
 The standard chat badges in `exe/fixtures/assets/` are cropped from the reference
 screenshot and loaded locally rather than approximated with emoji.
+The command also creates `small-promo-440x280.png` and `marquee-promo-1400x560.png`
+in the same output directory. These use the extension icon and name on a dark
+branded background, with two chat messages in the small tile and five in the marquee.
+Their layout is in `exe/fixtures/promo.html`
+and `exe/fixtures/promo.css`.
 The command uses the real options page with the example data in
 `exe/fixtures/options.json`, an isolated browser, and mocked storage and GitHub
 responses. It does not use your token or change your saved labels.

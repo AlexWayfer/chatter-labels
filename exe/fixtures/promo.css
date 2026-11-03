@@ -1,0 +1,127 @@
+:root {
+	font-size: 14px;
+}
+
+body {
+	display: grid;
+	grid-template-columns: 500px minmax(0, 1fr);
+	align-items: center;
+	gap: 60px;
+	width: 100vw;
+	height: 100vh;
+	padding: 64px 80px;
+	background: radial-gradient(ellipse at 95% 0%, #59308088, transparent 70%), #18141f;
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+}
+
+.brand img {
+	display: block;
+	width: 112px;
+	height: 112px;
+	flex-shrink: 0;
+}
+
+h1 {
+	font-size: 64px;
+	line-height: 1.03;
+	font-weight: 750;
+	letter-spacing: -2px;
+	color: #fff;
+}
+
+h1 span {
+	display: block;
+}
+
+main {
+	width: 100%;
+	margin: 0;
+	border: 1px solid #68517c;
+	border-radius: 20px;
+	background: #1f1b27;
+	box-shadow: 0 20px 60px #0005;
+	overflow: hidden;
+}
+
+main [class~="chat-line__message"] {
+	display: none;
+	padding: 14px 24px;
+	font-size: 24px;
+	line-height: 36px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+main [class~="chat-line__message"]:nth-child(2),
+main [class~="chat-line__message"]:nth-child(7) {
+	display: block;
+}
+
+main [class~="chat-line__message"]:nth-child(2) {
+	border-bottom: 1px solid #403448;
+}
+
+main time,
+main .badge,
+main .reply-context {
+	display: none;
+}
+
+@media (width > 440px) {
+	main [class~="chat-line__message"]:nth-child(1),
+	main [class~="chat-line__message"]:nth-child(3),
+	main [class~="chat-line__message"]:nth-child(6) {
+		display: block;
+	}
+
+	main [class~="chat-line__message"]:not(:nth-child(7)) {
+		border-bottom: 1px solid #403448;
+	}
+}
+
+@media (width <= 440px) {
+	:root {
+		font-size: 10px;
+	}
+
+	body {
+		grid-template-columns: minmax(0, 1fr);
+		align-content: center;
+		gap: 28px;
+		padding: 28px;
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		gap: 22px;
+	}
+
+	.brand img {
+		width: 76px;
+		height: 76px;
+		margin: 0;
+	}
+
+	h1 {
+		font-size: 34px;
+		line-height: 1.05;
+		letter-spacing: -0.6px;
+	}
+
+	main {
+		border-radius: 12px;
+	}
+
+	main [class~="chat-line__message"] {
+		padding: 12px 14px;
+		font-size: 16px;
+		line-height: 26px;
+	}
+}

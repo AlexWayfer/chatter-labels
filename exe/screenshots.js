@@ -25,7 +25,7 @@ const types = {
 	'.png': 'image/png',
 	'.woff2': 'font/woff2'
 }
-const fixtureFiles = new Map(['chatter-card', 'chat'].flatMap(scene => {
+const fixtureFiles = new Map(['chatter-card', 'chat', 'promo'].flatMap(scene => {
 	return ['html', 'css', 'js', 'json'].map(extension => [
 		`/screenshots/${scene}.${extension}`,
 		fileURLToPath(new URL(`./fixtures/${scene}.${extension}`, import.meta.url))
@@ -251,6 +251,46 @@ try {
 	assert.equal(chatPng.readUInt32BE(16), 640)
 	assert.equal(chatPng.readUInt32BE(20), 400)
 	console.info(`Saved ${fileURLToPath(chatOutput)} (640×400)`)
+
+	const promoPage = await context.newPage()
+	const promoErrors = []
+
+	promoPage.on('pageerror', error => promoErrors.push(error.message))
+	await promoPage.route('https://api.github.com/gists/example', route => route.fulfill({
+		json: {
+			id: 'example',
+			files: Object.fromEntries(
+				Object.entries(chatData).map(([key, value]) => [key + '.json', { content: JSON.stringify(value) }])
+			)
+		}
+	}))
+	for (const [name, width, height] of [['small-promo', 440, 280], ['marquee-promo', 1400, 560]]) {
+		await promoPage.setViewportSize({ width, height })
+		await promoPage.goto(`${origin}/screenshots/promo.html`)
+		await promoPage.locator('.chatter-labels-icon').first()
+			.waitFor()
+		await promoPage.evaluate(async () => {
+			await document.fonts.ready
+			await Promise.all([...document.images].map(image => image.decode()))
+		})
+		assert.equal(await promoPage.locator('.chat-line__message:visible').count(), width > 440 ? 5 : 2)
+		for (const selector of ['.brand', 'main']) {
+			const box = await promoPage.locator(selector).boundingBox()
+
+			assert.ok(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= width &&
+				box.y + box.height <= height, `${selector} is clipped in ${name}`)
+		}
+		assert.deepEqual(promoErrors, [])
+		const promoOutput = new URL(`${name}-${width}x${height}.png`, output)
+
+		await promoPage.screenshot({ path: fileURLToPath(promoOutput), animations: 'disabled' })
+		const promoPng = await readFile(promoOutput)
+
+		assert.equal(promoPng.readUInt32BE(16), width)
+		assert.equal(promoPng.readUInt32BE(20), height)
+		assert.equal(promoPng[25], 2, 'Promo PNG must be RGB without alpha')
+		console.info(`Saved ${fileURLToPath(promoOutput)} (${width}×${height})`)
+	}
 } finally {
 	await browser?.close()
 	await new Promise(resolve => server.close(resolve))
