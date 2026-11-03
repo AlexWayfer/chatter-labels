@@ -1,0 +1,79 @@
+/* Local Twitch chat surroundings; label icons use the extension's content.css. */
+:root {
+	color-scheme: dark;
+	font-family: Arial, sans-serif;
+	font-size: 10px;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	padding: 10px 0;
+	background: #18181b;
+	color: #efeff1;
+}
+
+main {
+	width: 600px;
+	margin: 0 auto;
+	background: #1f1f23;
+}
+
+[class~="chat-line__message"] {
+	padding: 7px 12px;
+	font-size: 18px;
+	line-height: 28px;
+	overflow-wrap: anywhere;
+}
+
+.highlighted {
+	background: #243b0b;
+}
+
+time {
+	margin-right: 4px;
+	font-size: 15px;
+	color: #adadb8;
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	margin-right: 4px;
+	font-size: 15px;
+	line-height: 18px;
+	vertical-align: middle;
+}
+
+.badge[hidden],
+.reply-context[hidden] {
+	display: none;
+}
+
+.badge img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+[class~="chat-line__username"] {
+	border: 0;
+	background: transparent;
+	color: var(--username-color);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.reply-context {
+	font-size: 15px;
+	line-height: 22px;
+	color: #adadb8;
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Chatter Labels — chat</title>
+		<link rel="stylesheet" href="/screenshots/chat.css">
+		<link rel="stylesheet" href="/styles/content.css">
+		<script type="module" src="/screenshots/chat.js"></script>
+	</head>
+	<body>
+		<main class="chat-scrollable-area__message-container" aria-label="Twitch chat"></main>
+		<template id="chat-message">
+			<div class="chat-line__message">
+				<div class="reply-context" hidden></div>
+				<time>11:34</time>
+				<span class="badge" hidden aria-label="Chat badge"></span>
+				<button class="chat-line__username"></button><span class="separator">: </span><span class="message-text"></span>
+			</div>
+		</template>
+	</body>
+</html>

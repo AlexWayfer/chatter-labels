@@ -1,0 +1,158 @@
+/* Local Twitch surroundings for the screenshot; extension UI uses content.css. */
+:root {
+	color-scheme: dark;
+	font-family: Arial, sans-serif;
+	font-size: 14px;
+
+	--font-size-base: 14px;
+	--font-display: arial, sans-serif;
+	--font-size-3: 18px;
+	--font-weight-medium: 600;
+	--font-weight-semibold: 600;
+	--line-height-heading: 1.2;
+	--line-height-body: 1.5;
+	--color-text-base: #efeff1;
+	--color-text-alt-2: #adadb8;
+	--color-text-link: #bf94ff;
+	--color-border-base: #53535f;
+	--color-background-base: #18181b;
+	--color-background-input: #303032;
+	--color-background-button-primary-default: #9147ff;
+	--color-text-button-primary: #fff;
+	--button-size-small: 26px;
+	--button-padding-x: 8px;
+	--button-text-default: 13px;
+	--button-border-radius-default: 999px;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	min-height: 100vh;
+	padding-top: 8px;
+	background: #0e0e10;
+	color: var(--color-text-base);
+}
+
+button {
+	border: 0;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+
+fieldset {
+	border: 0;
+}
+
+[data-a-target="viewer-card"] {
+	width: 350px;
+	margin: 0 auto;
+	border: 1px solid #303032;
+	border-radius: 6px;
+	background: #1f1f23;
+	box-shadow: 0 12px 40px #0008;
+	position: relative;
+}
+
+[class="viewer-card-header__background"] {
+	display: flex;
+	align-items: start;
+	gap: 8px;
+	padding: 12px 34px 12px 8px;
+	background: #111;
+}
+
+.avatar {
+	width: 52px;
+	height: 52px;
+	flex-shrink: 0;
+}
+
+h1 {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+h1 a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.following {
+	display: flex;
+	gap: 6px;
+	margin-top: 4px;
+	line-height: 1.25;
+}
+
+.following span {
+	font-size: 21px;
+	line-height: 18px;
+}
+
+.close {
+	position: absolute;
+	top: 8px;
+	right: 10px;
+	font-size: 24px;
+	background: transparent;
+}
+
+.badges {
+	padding: 8px;
+}
+
+h2 {
+	margin: 4px 0 8px;
+	font-size: 18px;
+	font-weight: 500;
+}
+
+.badge-list {
+	display: flex;
+	gap: 8px;
+}
+
+.badge {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border: 2px solid #39393d;
+	border-radius: 4px;
+	font-size: 21px;
+}
+
+.moderator {
+	background: #00ad03;
+}
+
+.bot {
+	background: #009d9d;
+}
+
+footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	padding: 8px;
+	background: #303032;
+}
+
+footer button {
+	padding: 7px 12px;
+	border-radius: 999px;
+	background: #9147ff;
+	font-weight: 600;
+}
+
+footer .more {
+	padding: 2px 4px;
+	background: transparent;
+	font-size: 24px;
+}

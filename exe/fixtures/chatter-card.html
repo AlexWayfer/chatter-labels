@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Chatter Labels — user card</title>
+		<link rel="stylesheet" href="/screenshots/chatter-card.css">
+		<link rel="stylesheet" href="/styles/content.css">
+		<script type="module" src="/screenshots/chatter-card.js"></script>
+	</head>
+	<body>
+		<article data-a-target="viewer-card" aria-label="AnnonsusBot user card">
+			<header class="viewer-card-header__background">
+				<svg class="avatar" viewBox="0 0 64 64" aria-label="AnnonsusBot avatar">
+					<circle cx="32" cy="32" r="32" fill="#00eeee" />
+					<g fill="none" stroke="#111" stroke-width="3.5" stroke-linecap="round">
+						<circle cx="32" cy="25" r="10" />
+						<path d="M17 51v-6q0-5 8-7m14 0q8 2 8 7v6M26 41l6 5 6-5" />
+					</g>
+				</svg>
+				<div>
+					<h1 class="viewer-card-header__display-name"><a href="/annonsusbot">AnnonsusBot</a></h1>
+					<p class="following"><span aria-hidden="true">♥</span> Following Since September 3, 2025</p>
+				</div>
+				<button class="close" aria-label="Close user card">×</button>
+			</header>
+			<section class="badges" aria-label="Badges">
+				<h2>Badges</h2>
+				<div class="badge-list">
+					<span class="badge moderator" title="Moderator">⚔</span>
+					<span class="badge bot" title="Bot">🤖</span>
+					<span class="badge subscriber" title="Subscriber">🍣</span>
+				</div>
+			</section>
+			<footer>
+				<button>♔ Gift a Sub</button>
+				<button>Follow</button>
+				<button>Whisper</button>
+				<button class="more" aria-label="More actions">⋮</button>
+				<button>♔ Gift Turbo</button>
+			</footer>
+		</article>
+	</body>
+</html>

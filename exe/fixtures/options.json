@@ -1,0 +1,14 @@
+{
+	"labels": [
+		{ "id": "bot", "name": "Bot", "icon": "🤖", "enabled": true },
+		{ "id": "woman", "name": "Woman", "icon": "♀️", "enabled": true },
+		{ "id": "friend", "name": "Friend", "icon": "🤝", "enabled": true }
+	],
+	"assignments": [
+		{ "labelId": "bot", "userId": "1", "username": "AnnonsusBot", "login": "annonsusbot", "assignedAt": "2026-09-01T17:09:00+03:00" },
+		{ "labelId": "bot", "userId": "2", "username": "BengttBot", "login": "bengttbot", "assignedAt": "2026-09-01T17:09:00+03:00" },
+		{ "labelId": "bot", "userId": "3", "username": "StreamElements", "login": "streamelements", "assignedAt": "2026-09-01T17:09:00+03:00" },
+		{ "labelId": "woman", "userId": "4", "username": "Brylant_Pasy", "login": "brylant_pasy", "assignedAt": "2026-09-10T13:36:00+03:00" },
+		{ "labelId": "friend", "userId": "1", "username": "AnnonsusBot", "login": "annonsusbot", "assignedAt": "2026-09-10T13:37:00+03:00" }
+	]
+}

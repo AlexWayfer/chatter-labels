@@ -1,0 +1,18 @@
+{
+	"users": [
+		{ "id": "6", "username": "bu_lbus", "color": "#ff4500", "labels": [] },
+		{ "id": "5", "username": "Stewienoo", "color": "#5f9ea0", "labels": ["woman"], "badge": "yellow" },
+		{ "id": "2", "username": "BengttBot", "color": "#ff4438", "labels": ["bot"], "badge": "bot" },
+		{ "id": "1", "username": "AnnonsusBot", "color": "#b366ed", "labels": ["bot", "friend"], "badge": "bot" }
+	],
+	"messages": [
+		{ "userId": "6", "text": "CupOfTupid" },
+		{ "userId": "5", "text": "pigMine" },
+		{ "userId": "2", "text": "That vein was silver." },
+		{ "userId": "5", "text": "fishhing" },
+		{ "userId": "2", "text": "The bait wasn't ready." },
+		{ "userId": "5", "text": "!quote", "highlighted": true },
+		{ "userId": "1", "text": "#119: Just one more cast.", "replyTo": "Stewienoo: !quote" },
+		{ "userId": "5", "text": "catSNIFFA" }
+	]
+}
