@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4 (2026-11-03)
+
+*   Redesign the options page with BeerCSS.
+*   Animate assignment form expansion and removal controls.
+*   Add new label forms at the top of the list.
+*   Add support for Lurkology.
+*   Add label management to Twitch profiles.
+*   Show labels in chat threads.
+*   Show labels in whispers.
+*   Show labels in Mod Actions and Activity Feed.
+*   Add optional comments to label assignments, including bulk additions.
+*   Fix labels in suspended users' chatter cards.
+*   Disable assignment controls while saving.
+*   Refresh content styles when reloading or updating the extension.
+*   Update development dependencies and CI tooling.
+
 ## 1.3 (2026-09-10)
 
 *   Add labels icons for user chat history.
