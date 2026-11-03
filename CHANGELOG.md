@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1 (2026-11-03)
+
+*   Fix compatibility between store and unpacked copies of the extension.
+*   Replace assignment comment captions with placeholders in the label editor.
+*   Fix CI caching without a tracked lockfile.
+*   Add scripts for store screenshots and promotional images.
+
 ## 1.4 (2026-11-03)
 
 *   Redesign the options page with BeerCSS.
