@@ -13,7 +13,8 @@ export class OptionsStorage extends BaseStorage {
 
 	async _load() {
 		return super._load({
-			storage: {}
+			storage: {},
+			theme: 'system'
 		})
 	}
 }

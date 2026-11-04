@@ -5,6 +5,7 @@ const destination = new URL('../vendor/beercss/', import.meta.url)
 const modules = [
 	'settings/global',
 	'settings/light',
+	'settings/dark',
 	'settings/reset',
 	'settings/theme',
 	'helpers/form',

@@ -10,9 +10,23 @@
 		<script type="module" src="../scripts/options/page.js"></script>
 	</head>
 	<body>
-		<header class="page-header row">
+		<header class="page-header row wrap">
 			<img src="../images/icons/128.png" alt="" />
 			<h1>Chatter Labels Options</h1>
+			<div class="theme-control">
+				<nav class="theme-modes" role="group" aria-label="Theme">
+					<button type="button" value="system" class="transparent circle small ripple active" aria-label="System theme" title="System theme" aria-pressed="true" disabled>
+						<i class="tiny" aria-hidden="true">desktop_windows</i>
+					</button>
+					<button type="button" value="light" class="transparent circle small ripple" aria-label="Light theme" title="Light theme" aria-pressed="false" disabled>
+						<i class="tiny" aria-hidden="true">light_mode</i>
+					</button>
+					<button type="button" value="dark" class="transparent circle small ripple" aria-label="Dark theme" title="Dark theme" aria-pressed="false" disabled>
+						<i class="tiny" aria-hidden="true">dark_mode</i>
+					</button>
+				</nav>
+				<span class="toast error" role="alert" hidden></span>
+			</div>
 		</header>
 
 		<main class="settings-layout grid large-space">
