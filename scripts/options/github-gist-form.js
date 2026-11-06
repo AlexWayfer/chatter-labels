@@ -6,12 +6,21 @@ export class GitHubGistForm extends Form {
 	#storage
 	#optionsStorage
 	#tokenInputElement
+	#gistIdInputElement
 	#existingGistElement
 
 	static async create(element, optionsStorage) {
-		const storage = await optionsStorage.get('storage')
+		const notice = element.parentElement.querySelector('.storage-notice')
 
-		new this(element, storage, optionsStorage)
+		try {
+			const storage = await optionsStorage.get('storage')
+
+			new this(element, storage, optionsStorage)
+			element.hidden = false
+			notice.hidden = true
+		} catch (error) {
+			notice.textContent = error.message
+		}
 	}
 
 	constructor(element, storage, optionsStorage) {
@@ -20,6 +29,7 @@ export class GitHubGistForm extends Form {
 		this.#storage = storage
 		this.#optionsStorage = optionsStorage
 		this.#tokenInputElement = this._element.querySelector('input[name="token"]')
+		this.#gistIdInputElement = this._element.querySelector('input[name="gistId"]')
 		this.#existingGistElement = this._element.querySelector('.existing-gist')
 
 		this._setTokenInputElementValue(this.#storage.githubGist?.token)
@@ -41,6 +51,7 @@ export class GitHubGistForm extends Form {
 
 		optionsStorage.subscribe('storage', storage => {
 			logger.debug('GitHub Gist Form storage message received')
+			this.#storage = storage
 
 			this._setTokenInputElementValue(storage.githubGist?.token)
 			this._setExistingGistElementHref(storage.githubGist?.gistId)
@@ -48,9 +59,9 @@ export class GitHubGistForm extends Form {
 	}
 
 	async _save() {
-		super._save(async () => {
+		return super._save(async () => {
 			const token = this.#tokenInputElement.value
-			const provider = new GitHubGist(token, this.#storage.githubGist?.gistId)
+			const provider = new GitHubGist(token, this.#gistIdInputElement.value.trim())
 			const gistId = await provider.ensureGistAccess()
 
 			this.#storage.githubGist = { token, gistId }
@@ -64,6 +75,8 @@ export class GitHubGistForm extends Form {
 	}
 
 	_setExistingGistElementHref(gistId) {
+		this.#gistIdInputElement.value = gistId ?? ''
+
 		if (!gistId) {
 			this.#existingGistElement.hidden = true
 			return

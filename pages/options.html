@@ -35,12 +35,10 @@
 					<h2><i aria-hidden="true">cloud_sync</i> Storage</h2>
 				</header>
 				<article class="storage-panel border">
-					<form name="github-gist">
+					<p class="storage-notice" role="status">Loading...</p>
+					<form name="github-gist" hidden>
 						<div class="storage-heading row wrap">
 							<h3>GitHub Gist</h3>
-							<span class="existing-gist" hidden>
-								<a target="_blank"><span>Open Gist</span><i class="tiny" aria-hidden="true">open_in_new</i></a>
-							</span>
 						</div>
 						<p class="token-help">
 							<a
@@ -68,6 +66,14 @@
 								<span class="text-hide"><i aria-hidden="true">visibility_off</i></span>
 							</button>
 						</div>
+						<div class="field label border gist-id-field">
+							<input type="text" name="gistId" id="gist-id" placeholder=" " aria-describedby="gist-id-help" />
+							<label for="gist-id">Gist ID (optional)</label>
+						</div>
+						<span class="existing-gist" hidden>
+							<a target="_blank"><span>Open Gist</span><i class="tiny" aria-hidden="true">open_in_new</i></a>
+						</span>
+						<p class="gist-id-help" id="gist-id-help">Use the same Gist ID in each browser to share labels. Leave empty to create a new gist.</p>
 						<button type="submit" class="ripple">
 							<i aria-hidden="true">save</i><span>Save</span>
 						</button>

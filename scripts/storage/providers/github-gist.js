@@ -40,24 +40,14 @@ export class GitHubGist {
 		await this.#patchGist(fileName, content)
 	}
 
-	// Ensure `this.token` has access to `this.gistId`.
-	// If there's no gistId, or the current token can't access it
-	// (e.g. it belongs to a different account), create a fresh gist.
+	// Validate the selected gist, or create one when no ID is provided.
 	async ensureGistAccess() {
-		if (this.gistId && await this.#canAccessGist()) {
+		if (this.gistId) {
+			await this.#fetchGist()
 			return this.gistId
 		}
 
 		return this.#createGist()
-	}
-
-	async #canAccessGist() {
-		try {
-			await this.#fetchGist()
-			return true
-		} catch {
-			return false
-		}
 	}
 
 	async #createGist() {

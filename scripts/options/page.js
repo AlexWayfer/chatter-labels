@@ -12,9 +12,10 @@ const optionsStorage = await OptionsStorage.create()
 
 await ThemeControl.create(document.querySelector('.theme-control'), optionsStorage)
 
+await GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), optionsStorage)
+
 const mainStorage = await MainStorage.create(optionsStorage)
 
 // logger.debug('optionsStorage = ', optionsStorage)
 
-GitHubGistForm.create(document.querySelector('form[name="github-gist"]'), optionsStorage)
 new LabelsForm(document.querySelector('.labels'), mainStorage, optionsStorage)

@@ -312,6 +312,19 @@ body {
 				}
 			}
 
+			.gist-id-field {
+				grid-area: 4 / 1;
+				margin: 0;
+			}
+
+			.gist-id-help {
+				grid-area: 5 / 1 / auto / -1;
+				margin: 0;
+				font-size: 0.8125rem;
+				line-height: 1.5;
+				color: var(--on-surface-variant);
+			}
+
 			&:has(input[name="token"][type="password"]) .text-hide,
 			&:has(input[name="token"]:not([type="password"])) .text-show {
 				visibility: hidden;
@@ -327,6 +340,7 @@ body {
 			}
 
 			.existing-gist {
+				grid-area: 4 / 2;
 				margin: 0;
 				font-size: 0.8125rem;
 
@@ -699,6 +713,8 @@ body {
 			& > button[type="submit"],
 			.token-help,
 			.token-controls,
+			.gist-id-field,
+			.gist-id-help,
 			.existing-gist {
 				grid-area: auto / 1;
 				text-align: left;
