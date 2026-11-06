@@ -22,15 +22,18 @@ export class IconField {
 
 		this.#fileInput.setCustomValidity('')
 
-		if (file.size > 256 * 1024) {
-			this.#fileInput.setCustomValidity('Image must be smaller than 256 KB')
-			this.#fileInput.reportValidity()
-			this.#fileInput.value = ''
-			return
-		}
-
 		try {
-			this.#valueInput.value = await this.#dataUrl(file)
+			const dataUrl = await this.#dataUrl(file)
+			const size = file.type == 'image/svg+xml' ? file.size : atob(dataUrl.split(',')[1]).length
+
+			if (size > 256 * 1024) {
+				this.#fileInput.setCustomValidity('Image must be smaller than 256 KB')
+				this.#fileInput.reportValidity()
+				this.#fileInput.value = ''
+				return
+			}
+
+			this.#valueInput.value = dataUrl
 			this.#updatePreview()
 			this.#fillEmptyName(file)
 		} catch {
