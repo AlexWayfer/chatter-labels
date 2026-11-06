@@ -336,6 +336,11 @@ body {
 					gap: 0.25rem;
 				}
 			}
+
+			.gist-id-field,
+			.gist-id-field ~ .existing-gist {
+				margin-block-start: 1.5rem;
+			}
 		}
 	}
 
@@ -701,6 +706,10 @@ body {
 
 			& > button[type="submit"] {
 				justify-self: start;
+			}
+
+			.gist-id-field ~ .existing-gist {
+				margin-block-start: 0;
 			}
 		}
 
