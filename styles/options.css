@@ -478,7 +478,6 @@ body {
 					list-style: none;
 					max-height: 22rem;
 					overflow: auto;
-					overscroll-behavior: contain;
 
 					&:not(:has(li)) {
 						display: none;
