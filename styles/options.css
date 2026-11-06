@@ -151,6 +151,27 @@ body {
 		cursor: not-allowed;
 	}
 
+	.save-button {
+		display: inline-grid;
+		grid-template-columns: auto auto;
+		place-items: center;
+
+		& > i {
+			grid-area: 1 / 1;
+		}
+
+		& > span {
+			grid-area: 1 / 2;
+			visibility: hidden;
+		}
+
+		&:not(.saving, .saved) > .text-save,
+		&.saving > .text-saving,
+		&.saved > .text-saved {
+			visibility: visible;
+		}
+	}
+
 	:is(button, .button).border {
 		color: var(--on-surface);
 	}
@@ -667,7 +688,6 @@ body {
 	.toast {
 		font-size: 0.8125rem;
 
-		&.saved,
 		&.added {
 			color: var(--on-surface-variant);
 		}
