@@ -176,6 +176,55 @@ for (const [container, usernameClass] of [
 	['moderation-actions-list-item', 'moderation-actions-list-item__clickable-name'],
 	['activity-base-list-item__subtitle', 'tw-link']
 ]) {
+	test(`keeps separate extension icons stable across ${container} refreshes`, async () => {
+		const wrapper = attach(`
+			<div class="${container}">
+				<button class="${usernameClass}">One</button>
+				<button class="${usernameClass}">Two</button>
+			</div>
+		`, wrapper => {
+			const mod = container === 'moderation-actions-list-item'
+			const owner = { memoizedProps: { [mod ? 'event' : 'activity']: {
+				title: { [mod ? 'localizedStringFragments' : 'fragments']: [
+					{ token: { id: '1', login: 'one' } },
+					{ token: { id: '2', login: 'two' } }
+				] }
+			} } }
+
+			for (const button of wrapper.querySelectorAll('button')) {
+				button.__reactFiber$test = { memoizedProps: {}, return: owner }
+			}
+		})
+		const buttons = wrapper.querySelectorAll('button')
+		const ownIcons = buttons[0].previousElementSibling
+		const otherIcons = ownIcons.cloneNode(true)
+
+		otherIcons.dataset.chatterLabelsExt = 'other-extension'
+		buttons[0].before(otherIcons)
+		for (let i = 0; i < 5; i++) {
+			for (const chat of chats) chat.refresh()
+			await setImmediate()
+			assert.equal(wrapper.querySelectorAll('[data-chatter-labels-ext="test-extension"]').length, 1)
+			assert.equal(otherIcons.isConnected, true)
+			assert.equal(buttons[0].previousElementSibling, otherIcons)
+		}
+
+		// Clean up duplicates left by earlier refreshes, even with another copy between them.
+		buttons[0].before(ownIcons.cloneNode(true), otherIcons)
+		for (const chat of chats) chat.refresh()
+		assert.equal(wrapper.querySelectorAll('[data-chatter-labels-ext="test-extension"]').length, 1)
+		assert.equal(buttons[1].previousElementSibling, buttons[0])
+		for (const callback of subscriptions.get('assignments')) callback([])
+		assert.equal(wrapper.querySelector('[data-chatter-labels-ext="test-extension"]'), null)
+		assert.equal(otherIcons.isConnected, true)
+		for (const callback of subscriptions.get('assignments')) callback(storage.assignments)
+		assert.equal(wrapper.querySelectorAll('[data-chatter-labels-ext="test-extension"]').length, 1)
+		buttons[0].remove()
+		await setImmediate()
+		assert.equal(wrapper.querySelector('[data-chatter-labels-ext="test-extension"]'), null)
+		assert.equal(otherIcons.isConnected, true)
+	})
+
 	test(`labels each user in ${container} and follows reused buttons`, async () => {
 		const lookup = mock.method(TwitchAPI, 'fetchUsers', () => assert.fail('Unexpected user lookup'))
 		const wrapper = attach(`

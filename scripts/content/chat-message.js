@@ -29,7 +29,9 @@ export class ChatMessage {
 			return
 		}
 
-		this.#iconsElement = this.#existingIcons()[0]
+		const existingIcons = this.#existingIcons()
+
+		this.#iconsElement = existingIcons[0]
 
 		if (!this.#iconsElement) {
 			this.#iconsElement = document.createElement('span')
@@ -37,11 +39,13 @@ export class ChatMessage {
 			this.#iconsElement.dataset.chatterLabelsExt = chrome.runtime.id
 		}
 
-		for (const extra of this.#existingIcons()) {
+		for (const extra of existingIcons) {
 			if (extra != this.#iconsElement) extra.remove()
 		}
 
-		usernameElement.before(this.#iconsElement)
+		if (this.#chat.kind.usernameSelector || !existingIcons.length) {
+			usernameElement.before(this.#iconsElement)
+		}
 
 		this.#iconsElement.replaceChildren(
 			...labels.map(label => {
@@ -61,9 +65,14 @@ export class ChatMessage {
 		if (this.#chat.kind.usernameSelector) {
 			return [...this.#element.querySelectorAll(this.constructor.ICONS_SELECTOR)]
 		}
-		const previous = this.#element.previousElementSibling
+		const icons = []
 
-		return previous?.matches(this.constructor.ICONS_SELECTOR) ? [previous] : []
+		for (let previous = this.#element.previousElementSibling;
+			previous?.matches('.chatter-labels-icons');
+			previous = previous.previousElementSibling) {
+			if (previous.matches(this.constructor.ICONS_SELECTOR)) icons.push(previous)
+		}
+		return icons
 	}
 
 	destroy() {
