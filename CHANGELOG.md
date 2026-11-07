@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5 (2026-11-07)
+
+*   Add System, Light, and Dark themes for the options page.
+*   Add optional JavaScript label checks with predefined helper functions.
+*   Support selecting an existing GitHub Gist and report access errors without creating a replacement.
+*   Improve storage loading feedback and show saving progress and success inside Save buttons.
+*   Fix options-page scrolling at assignment list boundaries and spacing between storage fields.
+*   Validate raster icon size after resizing.
+*   Fix tab freezes.
+*   Fix duplicate label icons in Mod Actions and Activity Feed.
+
 ## 1.4.1 (2026-11-03)
 
 *   Fix compatibility between store and unpacked copies of the extension.
