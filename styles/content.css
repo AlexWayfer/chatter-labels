@@ -207,6 +207,8 @@
 			margin-bottom: 6px;
 
 			fieldset {
+				.check-label[hidden],
+				.check-result[hidden],
 				.label-check[hidden] {
 					display: none;
 				}

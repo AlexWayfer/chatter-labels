@@ -182,10 +182,16 @@ export class LabelsElement {
 	}
 
 	#renderCheck(fieldset, check) {
-		fieldset.querySelector('.check-label').disabled = this.#saving || this.#scriptAccessEnabled === false || check?.running === true
+		const button = fieldset.querySelector('.check-label')
+
+		button.hidden = check?.completed === true
+		button.disabled = this.#saving || this.#scriptAccessEnabled === false || check?.running === true
+		button.textContent = check?.running ? 'Checking...' : check?.error ? 'Retry' : 'Check'
+		button.setAttribute('aria-busy', String(check?.running === true))
 		const result = fieldset.querySelector('.check-result')
 
-		result.textContent = check?.text ?? ''
+		result.hidden = check?.running === true || !check?.completed && !check?.error
+		result.textContent = check?.running ? '' : check?.text ?? ''
 		result.classList.toggle('error', !!check?.error)
 		const details = fieldset.querySelector('.check-messages')
 		const messages = check?.messages ?? []
@@ -236,8 +242,10 @@ export class LabelsElement {
 	}
 
 	async #check(label) {
-		if (this.#saving || this.#scriptAccessEnabled === false || this.#checks.get(label.id)?.running) return
-		const check = { script: label.script, running: true, text: 'Checking...' }
+		const previous = this.#checks.get(label.id)
+
+		if (this.#saving || this.#scriptAccessEnabled === false || previous?.running || previous?.completed) return
+		const check = { script: label.script, running: true }
 
 		this.#checks.set(label.id, check)
 		this.#updateCheck(label)
@@ -261,6 +269,7 @@ export class LabelsElement {
 			} else {
 				check.text = value === true ? 'Yes' : value === false ? 'No' : value == null ? 'Unknown' : String(value)
 			}
+			check.completed = true
 		} catch (error) {
 			if (error.code === 'user-scripts-disabled' && !this.#destroyed && this.#checks.get(label.id) === check) {
 				check.text = ''

@@ -23,7 +23,7 @@ test('round-trips check scripts and supports labels saved before scripts existed
 	assert.equal(new Label(label.toJSON()).script, label.script)
 })
 
-test('checks show results and errors without changing assignments or draft edits', async () => {
+test('checks replace the button with results and allow retries only after errors', async () => {
 	let finish
 	const send = mock.fn(() => new Promise(resolve => {
 		finish = resolve
@@ -42,53 +42,69 @@ test('checks show results and errors without changing assignments or draft edits
 		}
 	}
 	const user = { id: '42', login: 'example', username: 'Example' }
-	const editor = await LabelsElement.create(user, storage)
+	for (const [reply, text] of [
+		[{ ok: true, value: false }, 'No'],
+		[{ ok: true, value: true }, 'Yes'],
+		[{ ok: true, value: null }, 'Unknown'],
+		[{ ok: true, value: 0 }, '0'],
+		[{ ok: true, value: 12 }, '12'],
+		[{ ok: true, value: '<b>Plain text</b>' }, '<b>Plain text</b>'],
+		[{ ok: false, error: 'Could not authenticate' }, 'Error: Could not authenticate']
+	]) {
+		const editor = await LabelsElement.create(user, storage)
 
-	document.body.append(editor.element)
-	try {
-		const rows = editor.element.querySelectorAll('fieldset')
-		const button = rows[0].querySelector('button.check-label')
-		const result = rows[0].querySelector('.check-result')
+		document.body.append(editor.element)
+		try {
+			const rows = editor.element.querySelectorAll('fieldset')
+			const button = rows[0].querySelector('button.check-label')
+			const result = rows[0].querySelector('.check-result')
+			const before = send.mock.callCount()
 
-		assert.ok(button, 'scripted labels have a check button')
-		assert.equal(rows[1].querySelector('.label-check').hidden, true)
-		const checkbox = rows[0].querySelector('[name="label"]')
+			assert.equal(button.textContent, 'Check')
+			assert.equal(result.hidden, true)
+			assert.equal(rows[1].querySelector('.label-check').hidden, true)
+			const checkbox = rows[0].querySelector('[name="label"]')
 
-		checkbox.click()
-		const comment = rows[0].querySelector('[name="comment"]')
+			checkbox.click()
+			const comment = rows[0].querySelector('[name="comment"]')
 
-		comment.value = 'Unsaved comment'
-		button.click()
-		assert.equal(button.disabled, true)
-		button.click()
-		assert.equal(send.mock.callCount(), 1)
-		assert.deepEqual(send.mock.calls[0].arguments[0], {
-			type: 'run-label-check', labelId: 'check', user, source: null, pageUrl: 'https://www.twitch.tv/example'
-		})
-		finish({ ok: true, value: false })
-		await setImmediate()
-		assert.equal(result.textContent, 'No')
-		assert.equal(button.disabled, false)
-		assert.equal(checkbox.checked, true)
-		assert.equal(comment.value, 'Unsaved comment')
-		assert.equal(storage.set.mock.callCount(), 0)
-		for (const [reply, text] of [
-			[{ ok: true, value: true }, 'Yes'],
-			[{ ok: true, value: null }, 'Unknown'],
-			[{ ok: true, value: 0 }, '0'],
-			[{ ok: true, value: 12 }, '12'],
-			[{ ok: true, value: '<b>Plain text</b>' }, '<b>Plain text</b>'],
-			[{ ok: false, error: 'Could not authenticate' }, 'Error: Could not authenticate']
-		]) {
+			comment.value = 'Unsaved comment'
 			button.click()
+			assert.equal(button.textContent, 'Checking...')
+			assert.equal(button.disabled, true)
+			assert.equal(result.hidden, true, 'do not show a second checking status beside the button')
+			assert.equal(button.getAttribute('aria-busy'), 'true')
+			button.click()
+			assert.equal(send.mock.callCount(), before + 1)
+			assert.deepEqual(send.mock.calls.at(-1).arguments[0], {
+				type: 'run-label-check', labelId: 'check', user, source: null, pageUrl: 'https://www.twitch.tv/example'
+			})
 			finish(reply)
 			await setImmediate()
 			assert.equal(result.textContent, text)
+			assert.equal(result.hidden, false)
 			assert.equal(result.children.length, 0)
+			assert.equal(button.hidden, reply.ok)
+			assert.equal(checkbox.checked, true)
+			assert.equal(comment.value, 'Unsaved comment')
+			assert.equal(storage.set.mock.callCount(), 0)
+			if (!reply.ok) assert.equal(button.textContent, 'Retry')
+			button.click()
+			if (reply.ok) {
+				assert.equal(send.mock.callCount(), before + 1, 'a completed check cannot be run twice')
+			} else {
+				assert.equal(send.mock.callCount(), before + 2)
+				assert.equal(button.textContent, 'Checking...')
+				assert.equal(result.hidden, true, 'retry hides the previous error')
+				finish({ ok: true, value: false })
+				await setImmediate()
+				assert.equal(result.textContent, 'No')
+				assert.equal(button.hidden, true)
+			}
+		} finally {
+			editor.unsubscribe()
+			editor.element.remove()
 		}
-	} finally {
-		editor.unsubscribe()
-		editor.element.remove()
 	}
 })
 
@@ -165,7 +181,7 @@ test('runner executes stored code in a user-script world and returns async value
 	await assert.rejects(runner.run(request, { ...sender, id: 'another-extension' }), /Unsupported/)
 })
 
-test('detailed results reveal plain-text messages without requests or losing drafts and clear on recheck', async () => {
+test('detailed results stay cached with messages until the saved script changes', async () => {
 	let value = {
 		text: '3 of 127',
 		messages: [
@@ -232,12 +248,21 @@ test('detailed results reveal plain-text messages without requests or losing dra
 		subscriptions.get('assignments')([])
 		assert.equal(editor.element.querySelector('.check-messages').open, true, 'unrelated updates preserve expanded messages')
 		assert.equal(storage.set.mock.callCount(), 0)
+		const completedButton = editor.element.querySelector('.check-label')
+
+		assert.equal(completedButton.hidden, true, 'the detailed result replaces Check')
+		completedButton.click()
+		await setImmediate()
+		assert.equal(send.mock.callCount(), 1, 'storage updates must not allow another successful check')
+		subscriptions.get('labels')([new Label({ id: 'check', script: 'return false' })])
+		assert.equal(editor.element.querySelector('.check-label').hidden, false)
+		assert.equal(editor.element.querySelector('.check-messages').hidden, true)
 		value = { text: '0 of 127', messages: [] }
 		const currentComment = editor.element.querySelector('[name="comment"]')
 
 		currentComment.value = 'Current draft'
 		editor.element.querySelector('.check-label').click()
-		assert.equal(editor.element.querySelector('.check-messages').hidden, true, 'clear previous matches while checking')
+		assert.equal(editor.element.querySelector('.check-messages').hidden, true, 'the changed script starts without previous matches')
 		await setImmediate()
 		assert.equal(editor.element.querySelector('.check-messages').hidden, true)
 		assert.equal(editor.element.querySelector('.check-messages li'), null)
@@ -292,20 +317,24 @@ test('disabled scripts prompt for access while preserving manual edits and recov
 		assert.equal(editor.element.querySelector('.user-scripts-notice').hidden, true)
 		assert.equal(comment.value, 'Draft')
 		assert.equal(checkbox.checked, true)
-		button.click()
-		await setImmediate()
-		assert.equal(editor.element.querySelector('.check-result').textContent, 'Yes')
 		enabled = false
 		chrome.runtime.sendMessage = async message => {
 			return message.type === 'user-scripts-status'
 				? { enabled, message: 'Turn on Allow user scripts.' }
-				: { ok: false, code: 'user-scripts-disabled', error: 'Disabled' }
+				: enabled ? { ok: true, value: true } : { ok: false, code: 'user-scripts-disabled', error: 'Disabled' }
 		}
 		button.click()
 		await setImmediate()
 		assert.equal(editor.element.querySelector('.user-scripts-notice').hidden, false)
 		assert.equal(button.disabled, true)
 		assert.equal(comment.value, 'Draft')
+		enabled = true
+		await editor.refreshScriptAccess()
+		assert.equal(button.textContent, 'Check')
+		button.click()
+		await setImmediate()
+		assert.equal(editor.element.querySelector('.check-result').textContent, 'Yes')
+		assert.equal(button.hidden, true)
 	} finally {
 		editor.unsubscribe()
 		editor.element.remove()
@@ -343,7 +372,7 @@ test('ignores stale completions after a script changes or its editor is removed'
 		editor.element.remove()
 		finish({ ok: true, value: false })
 		await setImmediate()
-		assert.equal(editor.element.querySelector('.check-result').textContent, 'Checking...')
+		assert.equal(editor.element.querySelector('.check-label').textContent, 'Checking...')
 	} finally {
 		editor.element.remove()
 	}

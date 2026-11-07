@@ -19,8 +19,11 @@ shared with Twitch and matched by Twitch user ID, including historical usernames
 
 Each label can have an optional JavaScript check script in Options. Expand
 **Check script**, enter a script, and save. A **Check** button appears
-beside that label in the user editor on Twitch and Lurkology. The result appears
-beside the button without changing the checkbox, comment, or saved assignments.
+beside that label in the user editor on Twitch and Lurkology. It changes to
+**Checking...** while running, then the result replaces the button without
+changing the checkbox, comment, or saved assignments. A successful check stays
+cached for that label in the current editor; it cannot be run twice. Errors show
+their message with a **Retry** button. Changing the saved script resets its result.
 Clearing and saving the script removes the button.
 
 Scripts run only when you click **Check**, using Chrome's `userScripts` API
@@ -186,7 +189,7 @@ collapsed **Messages (N)** list. Each entry requires `text` and may include an I
 `timestamp`, displayed in local time. The search helper returns only matches
 accepted by the custom filter. Message contents are never interpreted as HTML.
 Opening the list uses the already fetched results, makes no requests, and does
-not modify assignments or comments. Rechecking clears the previous list.
+not modify assignments or comments. Changing the saved script clears the previous list.
 Messages from `searchMessages` also include `id` and `channelId`. With these
 fields and a valid timestamp, the displayed date links to that message in
 Lurkology's full channel chat in a new tab. The link uses the UTC archive day
