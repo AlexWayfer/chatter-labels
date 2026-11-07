@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { setImmediate } from 'node:timers/promises'
 import { test } from 'node:test'
 import { JSDOM } from 'jsdom'
+import { scriptExamples } from '../scripts/label-checks/examples.js'
 
 const { window } = new JSDOM(await readFile(new URL('../pages/options.html', import.meta.url), 'utf8'))
 
@@ -66,9 +67,47 @@ test('adds new labels at the top while preserving stored and saved order', async
 	assert.deepEqual(names(), ['New', 'First', 'Second'])
 
 	draft.querySelector('[name="icon"]').value = 'data:image/svg+xml,<svg/>'
+	const script = draft.querySelector('textarea[name="script"]')
+
+	assert.ok(script, 'labels have an optional script field')
+	const examples = [...draft.querySelectorAll('.script-example')]
+
+	assert.equal(examples.length, scriptExamples.length)
+	for (const [index, example] of examples.entries()) {
+		script.value = ''
+		assert.equal(example.querySelector('code').textContent, scriptExamples[index].script)
+		example.querySelector('button').click()
+		assert.equal(script.value, scriptExamples[index].script)
+	}
+	const dialog = document.querySelector('dialog.confirm')
+
+	dialog.showModal = () => {
+		dialog.open = true
+	}
+	dialog.close = () => {
+		dialog.open = false
+		dialog.dispatchEvent(new window.Event('close'))
+	}
+	const previousScript = script.value
+
+	examples[0].querySelector('button').click()
+	assert.equal(dialog.open, true)
+	dialog.returnValue = 'cancel'
+	dialog.close()
+	await setImmediate()
+	assert.equal(script.value, previousScript)
+	examples[0].querySelector('button').click()
+	dialog.returnValue = 'ok'
+	dialog.close()
+	await setImmediate()
+	assert.equal(script.value, scriptExamples[0].script)
+	assert.deepEqual(storage.data.labels.map(label => label.name), ['First', 'Second'])
+	script.value = 'return await Promise.resolve(user.id === "42")'
 	await form._save()
 	assert.deepEqual(storage.data.labels.map(label => label.name), ['New', 'First', 'Second'])
+	assert.equal(storage.data.labels[0].script, script.value)
 	assert.equal(draft.querySelector('.assignments').hidden, false)
 	for (const callback of subscriptions.get('labels')) callback(storage.data.labels)
 	assert.deepEqual(names(), ['New', 'First', 'Second'])
+	assert.equal(fieldsets()[0].querySelector('textarea[name="script"]').value, script.value)
 })

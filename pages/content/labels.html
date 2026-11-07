@@ -2,6 +2,13 @@
 	<div class="chatter-labels">
 		<h5>Labels</h5>
 		<form>
+			<div class="user-scripts-notice" hidden>
+				<p role="status" aria-live="polite"></p>
+				<div class="user-scripts-actions">
+					<button type="button" class="open-user-scripts-settings">Open extension settings</button>
+					<button type="button" class="retry-user-scripts">Retry</button>
+				</div>
+			</div>
 			<div class="fieldsets">
 			</div>
 			<p class="empty-list-notice">
@@ -21,6 +28,14 @@
 			<span class="name"></span>
 			<span class="assigned-at"></span>
 		</label>
+		<div class="label-check" hidden>
+			<button type="button" class="check-label">Check</button>
+			<output class="check-result" role="status" aria-live="polite"></output>
+			<details class="check-messages" hidden>
+				<summary></summary>
+				<ol></ol>
+			</details>
+		</div>
 		<label class="comment">
 			<input type="text" name="comment" placeholder="Comment (optional)" aria-label="Comment (optional)" />
 		</label>

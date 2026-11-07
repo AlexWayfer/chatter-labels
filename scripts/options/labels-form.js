@@ -4,6 +4,10 @@ import { AssignmentsList } from './assignments-list.js'
 import { confirm } from './confirm-dialog.js'
 import { Form } from './form.js'
 import { IconField } from './icon-field.js'
+import { scriptExamples, scriptFunctions } from '../label-checks/examples.js'
+import { ScriptEditor, highlightScript } from './script-editor.js'
+import { UserScriptsNotice } from '../content/user-scripts-notice.js'
+import { createTabs } from './tabs.js'
 
 export class LabelsForm extends Form {
 	#mainStorage
@@ -13,6 +17,9 @@ export class LabelsForm extends Form {
 	#assignmentsLists = new WeakMap()
 	#fieldsetsElement
 	#fieldsetTemplate
+	#scriptEditors = new Map()
+	#scriptAccess
+	#scriptAccessActive = false
 
 	constructor(element, mainStorage, optionsStorage) {
 		super(element)
@@ -24,6 +31,7 @@ export class LabelsForm extends Form {
 
 		this.#fieldsetsElement = this._element.querySelector('.fieldsets')
 		this.#fieldsetTemplate = this._element.querySelector('template#label')
+		this.#scriptAccess = new UserScriptsNotice(this._element.querySelector('.user-scripts-notice'))
 
 		this._element.querySelector('button.add').addEventListener('click', _event => {
 			this.add({}, { prepend: true })
@@ -31,6 +39,7 @@ export class LabelsForm extends Form {
 
 		this._element.addEventListener('input', _event => {
 			this.#validateUniqueNames()
+			this.#updateScriptAccess()
 		})
 
 		this._element.querySelector('form[name="labels"]').addEventListener('submit', event => {
@@ -53,7 +62,7 @@ export class LabelsForm extends Form {
 			fieldsetFragment = document.importNode(this.#fieldsetTemplate.content, true),
 			fieldsetElement = fieldsetFragment.querySelector('fieldset')
 
-		fieldsetElement.querySelectorAll('input[name]').forEach(input => {
+		fieldsetElement.querySelectorAll('input[name], textarea[name="script"]').forEach(input => {
 			if (input.type == 'checkbox') {
 				input.checked = data[input.name] ?? true
 				return
@@ -63,6 +72,48 @@ export class LabelsForm extends Form {
 		})
 
 		new IconField(fieldsetElement)
+		const script = fieldsetElement.querySelector('textarea[name="script"]')
+
+		fieldsetElement.querySelector('.label-script').open = !!script.value.trim()
+		fieldsetElement.querySelector('.label-script').addEventListener('toggle', () => this.#updateScriptAccess())
+		const exampleTemplate = fieldsetElement.querySelector('template.script-example-template')
+		const exampleTabs = fieldsetElement.querySelector('.script-example-tabs')
+		const examplePanels = []
+		const populateSnippet = (element, example) => {
+			element.querySelector('p').textContent = example.description
+			highlightScript(element.querySelector('code'), example.script)
+			element.querySelector('button').addEventListener('click', async () => {
+				if (script.value.trim() && script.value !== example.script &&
+					!await confirm([`Replace this check script with "${example.title}"?`, 'Click "Save" to apply.'].join('\n'))) return
+				this.#scriptEditors.get(fieldsetElement).replace(example.script)
+				this.#updateScriptAccess()
+			})
+		}
+
+		for (const example of scriptExamples) {
+			const element = exampleTemplate.content.firstElementChild.cloneNode(true)
+
+			populateSnippet(element, example)
+			examplePanels.push({ title: example.title, panel: element })
+			fieldsetElement.querySelector('.script-examples-list').append(element)
+		}
+		createTabs(exampleTabs, examplePanels)
+		const functionTemplate = fieldsetElement.querySelector('template.script-function-template')
+		const functionGroup = `script-functions-${crypto.randomUUID()}`
+
+		for (const example of scriptFunctions) {
+			const element = functionTemplate.content.firstElementChild.cloneNode(true)
+
+			element.name = functionGroup
+			element.querySelector('summary span').textContent = example.title
+			populateSnippet(element, example)
+			fieldsetElement.querySelector('.script-functions-list').append(element)
+		}
+		for (const code of fieldsetElement.querySelectorAll('.script-help pre code')) highlightScript(code, code.textContent)
+		createTabs(
+			fieldsetElement.querySelector('.script-reference-tabs'),
+			[...fieldsetElement.querySelector('.script-reference-pages').children].map(panel => ({ title: panel.dataset.title, panel }))
+		)
 
 		fieldsetElement.querySelector('button.up').addEventListener('click', _event => {
 			fieldsetElement.previousElementSibling.before(fieldsetElement)
@@ -90,8 +141,11 @@ export class LabelsForm extends Form {
 			}
 
 			fieldsetElement.remove()
+			this.#scriptEditors.get(fieldsetElement)?.destroy()
+			this.#scriptEditors.delete(fieldsetElement)
 			this.#assignmentsLists.delete(fieldsetElement)
 			this.#updateMoveButtons()
+			this.#updateScriptAccess()
 		})
 
 		if (prepend) {
@@ -108,7 +162,20 @@ export class LabelsForm extends Form {
 		)
 
 		this.#assignmentsLists.set(fieldsetElement, list)
+		this.#scriptEditors.set(fieldsetElement, new ScriptEditor(script))
 		this.#updateMoveButtons()
+		this.#updateScriptAccess()
+	}
+
+	#updateScriptAccess() {
+		const active = this.#fieldsets.some(fieldset => {
+			return fieldset.querySelector('[name="script"]').value.trim() || fieldset.querySelector('.label-script').open
+		})
+
+		if (active === this.#scriptAccessActive) return
+		this.#scriptAccessActive = active
+		if (active) this.#scriptAccess.refresh()
+		else this.#scriptAccess.hide()
 	}
 
 	get #fieldsets() {
@@ -125,9 +192,12 @@ export class LabelsForm extends Form {
 	}
 
 	#renderLabels() {
+		for (const editor of this.#scriptEditors.values()) editor.destroy()
+		this.#scriptEditors.clear()
 		this.#fieldsetsElement.replaceChildren()
 
 		this.#labels.forEach(label => this.add(label))
+		this.#updateScriptAccess()
 	}
 
 	#subscribe() {
@@ -173,7 +243,7 @@ export class LabelsForm extends Form {
 
 				const label = new Label(
 					Object.fromEntries(
-						Array.from(fieldset.querySelectorAll('input[name]')).map(
+						Array.from(fieldset.querySelectorAll('input[name], textarea[name="script"]')).map(
 							input => [input.name, input.type == 'checkbox' ? input.checked : input.value]
 						)
 					)

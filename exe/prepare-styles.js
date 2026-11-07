@@ -10,14 +10,18 @@ const modules = [
 	'settings/theme',
 	'helpers/form',
 	'helpers/ripple',
+	'helpers/scroll',
 	'elements/button',
 	'elements/card',
 	'elements/dialog',
+	'elements/expansion',
 	'elements/field',
 	'elements/grid',
 	'elements/icon',
 	'elements/navigation',
+	'elements/page',
 	'elements/selection',
+	'elements/tab',
 	'elements/typography'
 ]
 
@@ -29,6 +33,8 @@ const styles = await Promise.all(modules.map(module => {
 await mkdir(destination, { recursive: true })
 await writeFile(new URL('options.css', destination), styles.join('\n'))
 await copyFile(new URL('LICENSE', source), new URL('LICENSE', destination))
+await copyFile(new URL('dist/cdn/beer.loader.min.js', source), new URL('loader.js', destination))
+await copyFile(new URL('dist/cdn/elements/page.min.js', source), new URL('page.js', destination))
 await copyFile(
 	new URL('../licenses/material-symbols.txt', import.meta.url),
 	new URL('MaterialSymbols-LICENSE', destination)

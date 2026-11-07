@@ -102,6 +102,14 @@
 					</form>
 				</header>
 
+				<div class="user-scripts-notice" hidden>
+					<p role="status" aria-live="polite"></p>
+					<div class="row wrap">
+						<button type="button" class="open-user-scripts-settings border small ripple">Open extension settings</button>
+						<button type="button" class="retry-user-scripts border small ripple">Retry</button>
+					</div>
+				</div>
+
 				<template id="label">
 					<fieldset>
 						<div class="move">
@@ -135,17 +143,81 @@
 								/>
 								<label>Name</label>
 							</div>
-
-							<label class="show-in-chat checkbox">
-								<input type="checkbox" name="enabled" form="labels-form" aria-label="Show in chat" checked />
-								<span aria-hidden="true">Show in chat</span>
-							</label>
 						</div>
 
 						<div class="buttons">
 							<button type="button" class="delete transparent circle ripple danger" aria-label="Delete label" title="Delete label">
 								<i aria-hidden="true">delete</i>
 							</button>
+						</div>
+
+						<div class="label-options row wrap">
+							<label class="show-in-chat checkbox">
+								<input type="checkbox" name="enabled" form="labels-form" aria-label="Show in chat" checked />
+								<span aria-hidden="true">Show in chat</span>
+							</label>
+							<details class="label-script">
+								<summary class="button border small ripple">
+									<i aria-hidden="true">code</i>
+									<span>Check script</span>
+									<i class="expansion-toggle" aria-hidden="true">expand_more</i>
+								</summary>
+								<div class="field label border">
+									<textarea name="script" form="labels-form" placeholder=" " aria-label="JavaScript check script" spellcheck="false"></textarea>
+									<label>JavaScript check script</label>
+								</div>
+								<div class="script-reference">
+									<div class="tabs left-align scroll script-reference-tabs" role="tablist" aria-label="Script reference"></div>
+									<div class="script-reference-pages">
+										<div class="page script-help" data-title="Help">
+											<h4>Returning a result</h4>
+											<p>Use <code>return</code> to display a result beside Check. Each line below is a separate example:</p>
+											<pre><code>return true;  // Yes
+return false; // No
+return 10;    // Count: 10
+return '10+'; // Text: 10+
+return null;  // Unknown</code></pre>
+											<p>Return booleans for Yes/No and numbers for counts, including <code>0</code>. Text is displayed as written. <code>throw new Error('Message')</code> displays an error. Checks do not change label assignments.</p>
+											<p>To show matching messages under the result, return an object with <code>text</code> and a <code>messages</code> array. Each message needs <code>text</code>; an ISO <code>timestamp</code> is optional. The list starts collapsed and displays plain text. A message with <code>id</code>, <code>channelId</code>, and a valid timestamp gets a link to its context in Lurkology chat. <code>bestLogs.searchMessages()</code> supplies these fields and also returns how many messages were actually checked:</p>
+											<pre><code>const keywords = [];
+const { count, checked, messages } = await bestLogs.searchMessages(keywords);
+return { text: count + ' of ' + checked + ' candidates', messages };</code></pre>
+											<p>For archive searches, <code>checked</code> counts candidates returned by keyword queries, including whole-word mismatches and filter rejections. It is not the total number of messages in the archive. Searches scan available history in pages; the request signal expires after 60 seconds.</p>
+											<h4>Available context</h4>
+											<p>Use <code>user.id</code>, <code>user.login</code>, <code>user.username</code>, and <code>await</code>. Pass <code>signal</code> to fetch to respect the check deadline.</p>
+											<p><code>channel.login</code> is the current Twitch channel when checking from a chatter card in channel chat. <code>channel</code> is null in the profile label editor, on Lurkology, and when no channel can be identified.</p>
+											<p>Runs only when you click Check, with access to the current website. Scripts sync with your labels in GitHub Gist. Only use code you trust.</p>
+										</div>
+										<div class="page script-functions" data-title="Functions">
+											<p>Expand a built-in function to see its usage. Insert fills the editor; click Save to apply.</p>
+											<template class="script-function-template">
+												<details class="script-function">
+													<summary class="button border small ripple">
+														<span></span>
+														<i class="expansion-toggle" aria-hidden="true">expand_more</i>
+													</summary>
+													<p></p>
+													<pre><code></code></pre>
+													<button type="button" class="insert-script border small ripple">Insert</button>
+												</details>
+											</template>
+											<div class="script-functions-list"></div>
+										</div>
+										<div class="page script-examples" data-title="Examples">
+											<p>Insert an example, edit it if needed, then click Save to apply.</p>
+											<template class="script-example-template">
+												<div class="page script-example">
+													<p></p>
+													<pre><code></code></pre>
+													<button type="button" class="insert-script border small ripple">Insert</button>
+												</div>
+											</template>
+											<div class="tabs left-align scroll script-example-tabs" role="tablist" aria-label="Script examples"></div>
+											<div class="script-examples-list"></div>
+										</div>
+									</div>
+								</div>
+							</details>
 						</div>
 
 						<div class="assignments">

@@ -7,7 +7,8 @@
 		"128": "images/icons/128.png",
 		"512": "images/icons/512.png"
 	},
-	"permissions": ["storage", "scripting"],
+	"minimum_chrome_version": "135",
+	"permissions": ["storage", "scripting", "userScripts", "cookies"],
 	"background": {
 		"service_worker": "scripts/service-worker.js",
 		"type": "module"

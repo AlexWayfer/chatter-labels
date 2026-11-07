@@ -37,6 +37,10 @@
 		background-color: var(--secondary-container) !important;
 	}
 
+	body :is(.label-script, .script-function)[open] > summary {
+		background-color: var(--secondary-container) !important;
+	}
+
 	body button.toggle-add-assignments.active {
 		background-color: var(--success-container) !important;
 		color: var(--on-success-container) !important;
@@ -90,6 +94,13 @@
 	--success: #27723d;
 	--success-container: #e5f4e7;
 	--on-success-container: #1b5128;
+	--code-keyword: #7939a6;
+	--code-string: #256b36;
+	--code-number: #9c421d;
+	--code-comment: #636e79;
+	--code-function: #005fa3;
+	--code-property: #875015;
+	--code-type: #006b70;
 }
 
 :root:has(body.dark) {
@@ -100,6 +111,16 @@ body.dark {
 	--success: #a1d4a8;
 	--success-container: #214c2e;
 	--on-success-container: #c3efc9;
+
+	.label-script {
+		--code-keyword: #d3a5f3;
+		--code-string: #b6df98;
+		--code-number: #f3b483;
+		--code-comment: #a6afbb;
+		--code-function: #82c6ff;
+		--code-property: #f5d18a;
+		--code-type: #7bd6cf;
+	}
 }
 
 body {
@@ -189,9 +210,13 @@ body {
 		background-color: var(--error);
 	}
 
-	a:not(.button) {
+	a:not(.button, [role="tab"]) {
 		color: var(--on-surface-variant);
 		text-decoration: underline;
+	}
+
+	.tabs > a {
+		cursor: default;
 	}
 
 	.field {
@@ -380,6 +405,10 @@ body {
 	}
 
 	.labels {
+		.user-scripts-notice {
+			margin-block: 1rem;
+		}
+
 		min-width: 0;
 
 		form[name="labels"] {
@@ -451,10 +480,188 @@ body {
 						opacity: 0;
 					}
 				}
+			}
+
+			.label-options {
+				grid-column: 1 / -1;
+				margin-top: 0.75rem;
 
 				.show-in-chat {
-					grid-column: 2;
 					margin: 0;
+				}
+			}
+
+			.label-script {
+				--code-tab-size: 4;
+				--code-height: calc(20 * 1.5rem + 1rem);
+				--code-min-height: calc(5 * 1.5rem + 1rem);
+
+				/* Keep the native summary beside the checkbox and its content on a full row. */
+				display: contents;
+
+				&::details-content {
+					flex: 1 0 100%;
+					min-width: 0;
+					white-space: normal;
+				}
+
+				&:not([open])::details-content {
+					display: none;
+				}
+
+				& > summary {
+					margin: 0;
+				}
+
+				&[open] > summary .expansion-toggle,
+				.script-function[open] > summary .expansion-toggle {
+					transform: rotate(180deg);
+				}
+
+				summary {
+					user-select: none;
+				}
+
+				.field {
+					margin-top: 1rem;
+				}
+
+				textarea {
+					box-sizing: content-box;
+					min-height: calc(var(--code-min-height) - 1rem);
+					max-block-size: calc(var(--code-height) - 1rem);
+					font: 1rem / 1.5 monospace;
+					caret-color: var(--on-surface);
+					padding: 0.5rem 0.75rem;
+					resize: vertical;
+					tab-size: var(--code-tab-size);
+				}
+
+				.has-code-editor {
+					border: 1px solid var(--outline);
+					border-radius: 0.25rem;
+
+					&:focus-within {
+						outline: 2px solid var(--primary);
+						outline-offset: -1px;
+
+						> label {
+							color: var(--primary);
+						}
+					}
+
+					> label {
+						z-index: 1;
+						background: var(--surface-container-low);
+						inset: -0.5rem auto auto 0.75rem;
+						padding-inline: 0.25rem;
+
+						&::after {
+							display: none;
+						}
+					}
+				}
+
+				.cm-editor {
+					min-height: var(--code-min-height);
+					max-height: var(--code-height);
+					resize: vertical;
+					overflow: hidden;
+					color: var(--on-surface);
+					background: var(--surface-container-low);
+					border-radius: inherit;
+
+					&.cm-focused {
+						outline: none;
+					}
+				}
+
+				.cm-scroller {
+					font: 1rem / 1.5 monospace;
+					tab-size: var(--code-tab-size);
+					overflow: auto;
+				}
+
+				.cm-content {
+					min-height: var(--code-min-height);
+					caret-color: var(--on-surface);
+					padding: 0.5rem 0.75rem;
+				}
+
+				.cm-cursor {
+					border-left-color: var(--on-surface);
+				}
+
+				.script-highlight-error {
+					color: var(--error);
+				}
+
+				.tok-keyword {
+					color: var(--code-keyword);
+				}
+
+				.tok-string,
+				.tok-string2 {
+					color: var(--code-string);
+				}
+
+				.tok-number,
+				.tok-bool,
+				.tok-null {
+					color: var(--code-number);
+				}
+
+				.tok-comment {
+					color: var(--code-comment);
+				}
+
+				.tok-function {
+					color: var(--code-function);
+				}
+
+				/* stylelint-disable selector-class-pattern -- CodeMirror's public token names. */
+				.tok-propertyName {
+					color: var(--code-property);
+				}
+
+				.tok-typeName,
+				.tok-className {
+					color: var(--code-type);
+				}
+				/* stylelint-enable selector-class-pattern */
+
+				p {
+					margin: 0.75rem 0;
+					font-size: 0.8125rem;
+					color: var(--on-surface-variant);
+				}
+
+				.script-reference,
+				.script-function {
+					margin-top: 0.75rem;
+				}
+
+				.tabs > a {
+					font-size: 1.125rem;
+				}
+
+				pre {
+					font: 1rem / 1.5 monospace;
+					max-height: calc(var(--code-height) + 0.5rem + 2px);
+					box-sizing: border-box;
+					resize: vertical;
+					overflow: auto;
+					margin: 0.75rem 0;
+					padding: 0.75rem;
+					border: var(--input-border);
+					border-radius: 0.5rem;
+					background: var(--surface-container);
+					tab-size: var(--code-tab-size);
+
+					code {
+						font: inherit;
+						background: transparent;
+					}
 				}
 			}
 

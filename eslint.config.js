@@ -63,6 +63,6 @@ export default [
 		}
 	},
 	{
-		ignores: ['scripts/compiled/']
+		ignores: ['scripts/compiled/', 'vendor/']
 	}
 ]

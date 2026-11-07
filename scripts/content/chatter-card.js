@@ -36,7 +36,7 @@ export class ChatterCard {
 		element.dataset.userId = userInfo.id
 		element.dispatchEvent(new Event('chatter-labels:user-id', { bubbles: true }))
 
-		const control = await LabelsControl.create(userInfo, mainStorage)
+		const control = await LabelsControl.create(userInfo, mainStorage, 'chat')
 
 		if (!element.isConnected) {
 			control.destroy()

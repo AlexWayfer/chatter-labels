@@ -162,6 +162,26 @@
 	}
 
 	form {
+		.user-scripts-notice {
+			margin-bottom: 8px;
+			font-size: var(--font-size-base);
+			line-height: var(--line-height-body);
+
+			&[hidden] {
+				display: none;
+			}
+
+			p {
+				margin-bottom: 6px;
+			}
+
+			.user-scripts-actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+			}
+		}
+
 		.empty-list-notice {
 			display: none;
 			color: var(--color-text-alt-2);
@@ -187,6 +207,81 @@
 			margin-bottom: 6px;
 
 			fieldset {
+				.label-check[hidden] {
+					display: none;
+				}
+
+				.label-check {
+					display: flex;
+					flex-wrap: wrap;
+					align-items: center;
+					gap: 6px;
+					padding: 4px 2px;
+					font-size: var(--font-size-base);
+				}
+
+				.check-result {
+					min-width: 0;
+					overflow-wrap: anywhere;
+					white-space: pre-wrap;
+
+					&.error {
+						color: var(--color-text-error);
+					}
+				}
+
+				.check-messages {
+					width: 100%;
+
+					&[hidden] {
+						display: none;
+					}
+
+					summary {
+						display: inline-flex;
+						align-items: center;
+						cursor: pointer;
+						user-select: none;
+						border: 0;
+					}
+
+					&[open] > summary {
+						background-color: var(
+							--color-background-button-primary-hover,
+							var(--color-background-button-primary-default)
+						);
+					}
+
+					ol {
+						max-height: 240px;
+						overflow: auto;
+						margin-top: 6px;
+						padding-left: 24px;
+					}
+
+					li {
+						margin-bottom: 8px;
+					}
+
+					time {
+						color: var(--color-text-alt-2);
+						font-size: 0.85em;
+					}
+
+					a {
+						color: var(--color-text-link);
+
+						time {
+							color: inherit;
+						}
+					}
+
+					p {
+						white-space: pre-wrap;
+						overflow-wrap: anywhere;
+					}
+				}
+
 				.comment[hidden] {
 					display: none;
 				}
@@ -230,7 +325,8 @@
 			}
 		}
 
-		button {
+		button,
+		.check-messages > summary {
 			height: var(--button-size-small);
 			padding-inline: calc(var(--button-padding-x) + 2px);
 

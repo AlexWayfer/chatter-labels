@@ -14,8 +14,8 @@ export class LabelsControl {
 	#subscriptions = []
 	#onKeyDown
 
-	static async create(user, mainStorage) {
-		const editor = await LabelsElement.create(user, mainStorage)
+	static async create(user, mainStorage, source = null) {
+		const editor = await LabelsElement.create(user, mainStorage, source)
 
 		try {
 			const [labels, assignments] = await Promise.all([
@@ -48,6 +48,9 @@ export class LabelsControl {
 		this.popup.style.positionAnchor = anchorName
 		this.popup.querySelector('button').setAttribute('popovertarget', popupId)
 		this.popup.append(editor.element)
+		this.popup.addEventListener('toggle', event => {
+			if (event.newState === 'open') editor.refreshScriptAccess()
+		})
 		this.#onKeyDown = event => {
 			if (event.key !== 'Escape' || !this.popup.matches(':popover-open')) return
 			event.preventDefault()

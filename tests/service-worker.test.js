@@ -5,10 +5,15 @@ test('loads styles and the appropriate page bridge before restarting supported t
 	const calls = []
 	let onInstalled
 	let query
+	let onMessage
 
 	globalThis.chrome = {
 		runtime: {
-			onMessage: { addListener() {} },
+			id: 'own-extension',
+			onMessage: { addListener(listener) {
+				onMessage = listener
+			} },
+			onUserScriptMessage: { addListener() {} },
 			onInstalled: {
 				addListener(listener) {
 					onInstalled = listener
@@ -42,4 +47,27 @@ test('loads styles and the appropriate page bridge before restarting supported t
 		['script', { target: { tabId: 3 }, world: 'MAIN', files: ['scripts/content/page/lurkology-user-id.js'] }],
 		['script', { target: { tabId: 3 }, files: ['scripts/content/loader.js'] }]
 	])
+	chrome.userScripts = {
+		execute() {},
+		async getScripts() {
+			throw new Error('Access denied')
+		}
+	}
+	const status = await new Promise(resolve => {
+		assert.equal(onMessage({ type: 'user-scripts-status' }, {}, resolve), true)
+	})
+
+	assert.equal(status.enabled, false)
+	assert.match(status.message, /Allow user scripts/)
+	let opened
+
+	chrome.tabs.create = async options => {
+		opened = options
+	}
+	const response = await new Promise(resolve => {
+		assert.equal(onMessage({ type: 'open-user-scripts-settings', url: 'https://untrusted.example' }, {}, resolve), true)
+	})
+
+	assert.equal(response.ok, true)
+	assert.deepEqual(opened, { url: 'chrome://extensions/?id=own-extension' })
 })
