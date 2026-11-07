@@ -2,6 +2,8 @@
 
 ## UI consistency
 
+Use BeerCSS as the primary toolkit for the options page and make full use of its existing components, helpers, and documented behavior. Before implementing or replacing a UI pattern, inspect the installed BeerCSS version and its official documentation for ready-made support. Add the required upstream CSS and JavaScript modules to local asset preparation instead of recreating supported components. Limit custom UI code to product-specific behavior, accessibility gaps, or demonstrated library limitations. Preserve the host site's styles for controls embedded in Twitch and Lurkology.
+
 Before adding or changing a control, inspect comparable controls in the project and follow their existing styles and behavior. Do not invent separate styling for an equivalent control.
 
 Controls styled as buttons, including native `summary` toggles, must match existing buttons in cursor, text selection, borders, spacing, and backgrounds. On the options page, text buttons use the default cursor; do not add `cursor: pointer` to them. Keep the shared border and indicate toggle state through the background, as Add and Remove do. Preserve explicitly requested differences.
