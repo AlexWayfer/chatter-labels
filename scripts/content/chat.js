@@ -189,7 +189,7 @@ export class Chat {
 
 			if (existing) {
 				if (this.#kind.resolveUserEachRender &&
-					!node.closest(ChatMessage.ICONS_SELECTOR)) {
+					!node.closest('.chatter-labels-icons')) {
 					existing.render()
 				}
 				continue
