@@ -226,6 +226,14 @@ in the archive. No CDN is needed for syntax highlighting.
 
 Install the screenshot browser once with `pnpm exec playwright install chromium`.
 Then run `pnpm screenshots` to generate `pkg/screenshots/options-1280x800.png`.
+`pkg/screenshots/options-dark-1280x800.png` shows the same overview after selecting
+Dark with the theme control.
+`pkg/screenshots/label-check-script-1280x800.png` focuses on an expanded script editor
+and the `twitch.getUser()` function reference in Dark mode. Its Bot example checks whether the
+resolved login ends in `bot`.
+`pkg/screenshots/label-check-result-1280x800.png` shows the example's Yes result
+in the user-card label editor, without changing assignments. Script access and
+the extension/Twitch request boundary are mocked for these screenshots.
 It also creates `pkg/screenshots/chatter-card-640x400.png`, showing the current
 label editor on a local Twitch user-card fixture with Bot and Friend assigned.
 The card surroundings are a mock; the integration, popover, and label form use
@@ -245,8 +253,10 @@ The command uses the real options page with the example data in
 responses. It does not use your token or change your saved labels.
 
 The images use a fixed locale and time zone. The 1280×800 options image uses
-a light theme and 50% page scale so all three example labels fit in the overview;
-the user card uses a dark background. CSS, fonts, and icons load
+a light theme and 46% page scale so all three example labels fit in the overview;
+the dark overview uses the same scale, while the script editor uses 65% and scrolls
+to the Labels section. The user card uses a dark background; the check-result
+image uses 150% scale for readability. CSS, fonts, and icons load
 locally; unexpected external requests are blocked.
 
 ## Credentials
