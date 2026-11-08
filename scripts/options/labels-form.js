@@ -74,7 +74,17 @@ export class LabelsForm extends Form {
 		new IconField(fieldsetElement)
 		const script = fieldsetElement.querySelector('textarea[name="script"]')
 
-		fieldsetElement.querySelector('.label-script').open = !!script.value.trim()
+		const updateScriptStatus = () => {
+			const status = fieldsetElement.querySelector('.script-status')
+			const present = !!script.value.trim()
+
+			status.textContent = present ? 'Present' : 'Absent'
+			status.classList.toggle('primary', present)
+			status.classList.toggle('surface-variant', !present)
+		}
+
+		updateScriptStatus()
+		script.addEventListener('input', updateScriptStatus)
 		fieldsetElement.querySelector('.label-script').addEventListener('toggle', () => this.#updateScriptAccess())
 		const exampleTemplate = fieldsetElement.querySelector('template.script-example-template')
 		const exampleTabs = fieldsetElement.querySelector('.script-example-tabs')
@@ -86,6 +96,7 @@ export class LabelsForm extends Form {
 				if (script.value.trim() && script.value !== example.script &&
 					!await confirm([`Replace this check script with "${example.title}"?`, 'Click "Save" to apply.'].join('\n'))) return
 				this.#scriptEditors.get(fieldsetElement).replace(example.script)
+				updateScriptStatus()
 				this.#updateScriptAccess()
 			})
 		}

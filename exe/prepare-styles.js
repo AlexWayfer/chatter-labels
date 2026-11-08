@@ -11,6 +11,7 @@ const modules = [
 	'helpers/form',
 	'helpers/ripple',
 	'helpers/scroll',
+	'elements/badge',
 	'elements/button',
 	'elements/card',
 	'elements/dialog',

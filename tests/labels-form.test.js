@@ -15,7 +15,11 @@ test('adds new labels at the top while preserving stored and saved order', async
 	const storage = {
 		data: {
 			labels: ['First', 'Second'].map(name => ({
-				id: name, name, icon: 'data:image/svg+xml,<svg/>', enabled: true
+				id: name,
+				name,
+				icon: 'data:image/svg+xml,<svg/>',
+				enabled: true,
+				script: name === 'First' ? 'return true' : ' \n\t'
 			})),
 			assignments: []
 		},
@@ -42,6 +46,10 @@ test('adds new labels at the top while preserving stored and saved order', async
 	const names = () => fieldsets().map(fieldset => fieldset.querySelector('[name="name"]').value)
 
 	assert.deepEqual(names(), ['First', 'Second'])
+	for (const [index, fieldset] of fieldsets().entries()) {
+		assert.equal(fieldset.querySelector('.label-script').open, false, 'stored scripts start collapsed')
+		assert.equal(fieldset.querySelector('.script-status').textContent, index === 0 ? 'Present' : 'Absent')
+	}
 	const originalFirst = fieldsets()[0]
 	const add = element.querySelector('button.add')
 
@@ -54,6 +62,8 @@ test('adds new labels at the top while preserving stored and saved order', async
 	assert.equal(draft.querySelector('button.up').hidden, true)
 	assert.equal(draft.querySelector('button.down').hidden, false)
 	assert.equal(draft.querySelector('.assignments').hidden, true)
+	assert.equal(draft.querySelector('.label-script').open, false)
+	assert.equal(draft.querySelector('.script-status').textContent, 'Absent')
 
 	add.click()
 	const latest = fieldsets()[0]
@@ -70,14 +80,30 @@ test('adds new labels at the top while preserving stored and saved order', async
 	const script = draft.querySelector('textarea[name="script"]')
 
 	assert.ok(script, 'labels have an optional script field')
+	const details = draft.querySelector('.label-script')
+	const status = draft.querySelector('.script-status')
+
+	details.open = true
+	for (const value of ['return false', '', ' \n\t', 'return null']) {
+		script.value = value
+		script.dispatchEvent(new window.Event('input', { bubbles: true }))
+		assert.equal(status.hidden, false, 'both script states remain visible')
+		assert.equal(status.textContent, value.trim() ? 'Present' : 'Absent')
+		assert.equal(status.classList.contains('primary'), !!value.trim())
+		assert.equal(status.classList.contains('surface-variant'), !value.trim())
+		assert.equal(details.open, true, 'editing does not change the disclosure state')
+	}
 	const examples = [...draft.querySelectorAll('.script-example')]
 
 	assert.equal(examples.length, scriptExamples.length)
 	for (const [index, example] of examples.entries()) {
 		script.value = ''
+		script.dispatchEvent(new window.Event('input', { bubbles: true }))
+		assert.equal(status.textContent, 'Absent')
 		assert.equal(example.querySelector('code').textContent, scriptExamples[index].script)
 		example.querySelector('button').click()
 		assert.equal(script.value, scriptExamples[index].script)
+		assert.equal(status.textContent, 'Present', 'inserting a snippet updates the status')
 	}
 	const dialog = document.querySelector('dialog.confirm')
 
@@ -110,4 +136,6 @@ test('adds new labels at the top while preserving stored and saved order', async
 	for (const callback of subscriptions.get('labels')) callback(storage.data.labels)
 	assert.deepEqual(names(), ['New', 'First', 'Second'])
 	assert.equal(fieldsets()[0].querySelector('textarea[name="script"]').value, script.value)
+	assert.equal(fieldsets()[0].querySelector('.label-script').open, false)
+	assert.equal(fieldsets()[0].querySelector('.script-status').textContent, 'Present')
 })

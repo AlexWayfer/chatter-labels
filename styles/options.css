@@ -513,6 +513,10 @@ body {
 					margin: 0;
 				}
 
+				.script-status {
+					inline-size: 4.5em;
+				}
+
 				&[open] > summary .expansion-toggle,
 				.script-function[open] > summary .expansion-toggle {
 					transform: rotate(180deg);
