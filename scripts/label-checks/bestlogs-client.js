@@ -67,8 +67,10 @@ export function createBestLogsClient(user, channel, twitch, signal) {
 			const matches = []
 			const inspected = new Set()
 			const result = () => ({ count: matches.length, checked: inspected.size, messages: matches })
-			let retried = false
+			let requestDelay = 400
 			const search = async url => {
+				let retried = false
+
 				for (;;) {
 					signal.throwIfAborted()
 					const response = await fetch(url, { signal, credentials: 'omit' })
@@ -94,7 +96,8 @@ export function createBestLogsClient(user, channel, twitch, signal) {
 						throw new Error(`BestLogs rate limit reached (HTTP 429). ${advice}`)
 					}
 					retried = true
-					await pause(delay)
+					requestDelay = Math.max(requestDelay, delay)
+					await pause(requestDelay)
 				}
 			}
 
@@ -107,7 +110,7 @@ export function createBestLogsClient(user, channel, twitch, signal) {
 				for (;;) {
 					signal.throwIfAborted()
 					if (inspected.size >= maxMessages) return result()
-					if (requested) await pause(400)
+					if (requested) await pause(requestDelay)
 					requested = true
 					const pageSize = Math.min(500, maxMessages - inspected.size)
 					const url = new URL('https://bestlogs.lurkology.com/channelid/' + owner.id + '/userid/' + user.id + '/search')

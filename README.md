@@ -152,13 +152,14 @@ including whole-word mismatches and filter rejections. Both limits default to
 `Infinity`; finite values must be positive integers. Explicit limits may return
 partial counts, so omit them when you want the complete search result.
 
-An HTTP 429 response allows one retry per search after a short `Retry-After`
-delay (one second when the header is unavailable). Waiting is cancelled with the
-check. A server delay longer than three seconds, or another 429 after the retry,
-is reported with a readable rate-limit error. Queries and pages run sequentially
-with a cancellable 400 ms pause between requests. More keywords and pages require
-more requests. Other checks and shared-IP traffic can still exhaust the server's
-rate limit. Errors and timeouts are not displayed as successful partial counts.
+Queries and pages run sequentially with an initial 400 ms pause between requests.
+An HTTP 429 response allows one retry of that request after a short `Retry-After`
+delay (one second when the header is unavailable). The pause increases to at least
+that delay for the rest of the search. Waiting is cancelled with the check. A
+server delay longer than three seconds, or another 429 for the same request,
+ends the search with a rate-limit error. More keywords and pages require more
+requests. Other checks and shared-IP traffic can still exhaust the server's rate
+limit. Errors and timeouts are not displayed as successful partial counts.
 
 The example leaves the keyword array empty; fill it with your own words or masks.
 An empty list reports an error before making requests.

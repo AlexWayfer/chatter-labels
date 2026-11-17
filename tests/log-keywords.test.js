@@ -389,7 +389,7 @@ test('a server that repeats a full page fails rather than silently truncating or
 	await assert.rejects(client.searchMessages(['hello']), /pagination did not advance/)
 })
 
-test('429 respects a short Retry-After once and rejects long or repeated throttling', async t => {
+test('429 respects a short Retry-After and stops if the same request is still throttled', async t => {
 	t.mock.timers.enable({ apis: ['setTimeout'] })
 	let requests = 0
 	let alwaysThrottle = false
@@ -434,6 +434,39 @@ test('429 respects a short Retry-After once and rejects long or repeated throttl
 	t.mock.timers.tick(1000)
 	await rejected
 	assert.equal(requests, 5, 'do not keep retrying a throttled check')
+})
+
+test('recovers from throttling on separate requests and keeps the longer pause', async () => {
+	const requests = []
+	const pauses = []
+	const context = {
+		user: { id: '42' },
+		channel: { login: 'example' },
+		signal: new AbortController().signal,
+		URL,
+		URLSearchParams,
+		setTimeout(callback, delay) {
+			pauses.push(delay)
+			return setTimeout(callback, 0)
+		},
+		clearTimeout,
+		twitch: { gql: async () => ({ user: { id: '99' } }) },
+		fetch: async url => {
+			const query = url.searchParams.get('q')
+			const isFirstAttempt = !requests.includes(query)
+
+			requests.push(query)
+			if (isFirstAttempt && query !== 'cheers') {
+				return new Response('', { status: 429, headers: { 'Retry-After': query === 'hello' ? '1' : '2' } })
+			}
+			return Response.json({ messages: [{ id: query, text: query, tags: { 'user-id': '42', 'room-id': '99' } }] })
+		}
+	}
+	const client = runInNewContext(`(${createBestLogsClient.toString()})(user, channel, twitch, signal)`, context)
+
+	assert.equal(await client.countMessages(['hello', 'hey', 'cheers']), 3)
+	assert.deepEqual(requests, ['hello', 'hello', 'hey', 'hey', 'cheers'])
+	assert.deepEqual(pauses, [1000, 1000, 2000, 2000])
 })
 
 test('cancelling a check during the rate-limit delay prevents another request', async t => {

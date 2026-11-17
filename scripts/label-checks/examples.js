@@ -47,7 +47,7 @@ return { text: count + ' of ' + checked + ' candidates', messages };
 	{
 		id: 'bestlogs-count',
 		title: 'bestLogs.countMessages()',
-		description: 'Searches this chatter’s available archive in the current Twitch chat channel using q, then validates whole words and * masks locally, ignoring case. Returns a number; use searchMessages for candidates checked and message details. Queries are deduplicated and paginated in batches of up to 500, with 400 ms pauses between requests. Optional filter(message, matchedWords) accepts or rejects each matching message once. By default there is no candidate or match cap; optional maxMessages caps unique candidates checked, and limit caps accepted matches. A 429 allows one short retry for the entire search. Archive coverage and the check deadline still apply.',
+		description: 'Searches this chatter’s available archive in the current Twitch chat channel using q, then validates whole words and * masks locally, ignoring case. Returns a number; use searchMessages for candidates checked and message details. Queries are deduplicated and paginated in batches of up to 500. Pauses start at 400 ms and increase when BestLogs throttles requests. Optional filter(message, matchedWords) accepts or rejects each matching message once. By default there is no candidate or match cap; optional maxMessages caps unique candidates checked, and limit caps accepted matches. A 429 allows one short retry of that request. Archive coverage and the check deadline still apply.',
 		script: `const keywords = [];
 return await bestLogs.countMessages(keywords);
 `
