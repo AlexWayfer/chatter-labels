@@ -8,6 +8,10 @@ Before adding or changing a control, inspect comparable controls in the project 
 
 Controls styled as buttons, including native `summary` toggles, must match existing buttons in cursor, text selection, borders, spacing, and backgrounds. On the options page, text buttons use the default cursor; do not add `cursor: pointer` to them. Keep the shared border and indicate toggle state through the background, as Add and Remove do. Preserve explicitly requested differences.
 
+## Personal label check scripts
+
+When updating a personal label check script, include its complete updated JavaScript in one fenced code block in the final reply, ready to paste into the label editor. A file link may supplement the code block. Codex can open file links in the changes panel, where copying both old and new lines can break the script.
+
 ## Releases
 
 1. Inspect the working tree, the current manifest version, release tags, and all changes since the previous release before proposing a new version. Use a minor version for backward-compatible features and a patch version for fixes; reserve a major version for incompatible changes.
