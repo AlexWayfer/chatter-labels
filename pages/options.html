@@ -117,14 +117,11 @@
 
 				<template id="label">
 					<fieldset>
-						<div class="move">
-							<button type="button" class="up transparent circle ripple" aria-label="Move label up" title="Move label up">
-								<i aria-hidden="true">arrow_upward</i>
-							</button>
-							<button type="button" class="down transparent circle ripple" aria-label="Move label down" title="Move label down">
-								<i aria-hidden="true">arrow_downward</i>
-							</button>
-						</div>
+						<button type="button" class="label-drag-handle transparent circle ripple"
+							aria-label="Move label" aria-keyshortcuts="ArrowUp ArrowDown Home End"
+							title="Drag to move, or use Up, Down, Home, and End" disabled>
+							<i aria-hidden="true">drag_indicator</i>
+						</button>
 
 						<div class="fields">
 							<input type="hidden" name="id" form="labels-form" />

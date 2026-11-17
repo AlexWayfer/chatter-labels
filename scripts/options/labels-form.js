@@ -8,6 +8,7 @@ import { scriptExamples, scriptFunctions } from '../label-checks/examples.js'
 import { ScriptEditor, highlightScript } from './script-editor.js'
 import { UserScriptsNotice } from '../content/user-scripts-notice.js'
 import { createTabs } from './tabs.js'
+import Sortable from '../../vendor/sortablejs/sortable.js'
 
 export class LabelsForm extends Form {
 	#mainStorage
@@ -17,6 +18,8 @@ export class LabelsForm extends Form {
 	#assignmentsLists = new WeakMap()
 	#fieldsetsElement
 	#fieldsetTemplate
+	#dragging = false
+	#renderAfterDrag = false
 	#scriptEditors = new Map()
 	#scriptAccess
 	#scriptAccessActive = false
@@ -32,6 +35,42 @@ export class LabelsForm extends Form {
 		this.#fieldsetsElement = this._element.querySelector('.fieldsets')
 		this.#fieldsetTemplate = this._element.querySelector('template#label')
 		this.#scriptAccess = new UserScriptsNotice(this._element.querySelector('.user-scripts-notice'))
+
+		Sortable.create(this.#fieldsetsElement, {
+			draggable: 'fieldset',
+			handle: '.label-drag-handle:enabled',
+			direction: 'vertical',
+			forceFallback: true,
+			fallbackTolerance: 4,
+			scrollSensitivity: 72,
+			scrollSpeed: 16,
+			revertOnSpill: true,
+			onChoose: () => {
+				this.#dragging = true
+			},
+			onStart: () => {
+				Sortable.ghost.inert = true
+			},
+			onUnchoose: () => {
+				this.#dragging = false
+				if (!this.#renderAfterDrag) return
+				this.#renderAfterDrag = false
+				queueMicrotask(() => this.#renderLabels())
+			},
+			onEnd: ({ item, oldDraggableIndex, originalEvent }) => {
+				if (originalEvent.type === 'pointercancel' || originalEvent.type === 'touchcancel') {
+					this.#moveLabel(item, oldDraggableIndex)
+				}
+			}
+		})
+
+		this.#fieldsetsElement.ownerDocument.addEventListener('keydown', event => {
+			if (event.key !== 'Escape' || !this.#dragging) return
+
+			event.preventDefault()
+			// Sortable uses pointercancel to clean up a fallback drag.
+			this.#fieldsetsElement.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }))
+		})
 
 		this._element.querySelector('button.add').addEventListener('click', _event => {
 			this.add({}, { prepend: true })
@@ -126,14 +165,24 @@ export class LabelsForm extends Form {
 			[...fieldsetElement.querySelector('.script-reference-pages').children].map(panel => ({ title: panel.dataset.title, panel }))
 		)
 
-		fieldsetElement.querySelector('button.up').addEventListener('click', _event => {
-			fieldsetElement.previousElementSibling.before(fieldsetElement)
-			this.#updateMoveButtons()
-		})
+		const handle = fieldsetElement.querySelector('.label-drag-handle')
 
-		fieldsetElement.querySelector('button.down').addEventListener('click', _event => {
-			fieldsetElement.nextElementSibling.after(fieldsetElement)
-			this.#updateMoveButtons()
+		handle.addEventListener('keydown', event => {
+			if (handle.disabled || this.#dragging || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+
+			const fieldsets = this.#fieldsets
+			const index = fieldsets.indexOf(fieldsetElement)
+			const destinations = new Map([
+				['ArrowUp', index - 1],
+				['ArrowDown', index + 1],
+				['Home', 0],
+				['End', fieldsets.length - 1]
+			])
+			if (!destinations.has(event.key)) return
+
+			event.preventDefault()
+			this.#moveLabel(fieldsetElement, destinations.get(event.key))
+			handle.focus()
 		})
 
 		fieldsetElement.querySelector('button.delete').addEventListener('click', async _event => {
@@ -155,7 +204,7 @@ export class LabelsForm extends Form {
 			this.#scriptEditors.get(fieldsetElement)?.destroy()
 			this.#scriptEditors.delete(fieldsetElement)
 			this.#assignmentsLists.delete(fieldsetElement)
-			this.#updateMoveButtons()
+			this.#updateDragHandles()
 			this.#updateScriptAccess()
 		})
 
@@ -174,7 +223,7 @@ export class LabelsForm extends Form {
 
 		this.#assignmentsLists.set(fieldsetElement, list)
 		this.#scriptEditors.set(fieldsetElement, new ScriptEditor(script))
-		this.#updateMoveButtons()
+		this.#updateDragHandles()
 		this.#updateScriptAccess()
 	}
 
@@ -190,19 +239,34 @@ export class LabelsForm extends Form {
 	}
 
 	get #fieldsets() {
-		return Array.from(this.#fieldsetsElement.children)
+		return Array.from(this.#fieldsetsElement.children).filter(fieldset => fieldset !== Sortable.ghost)
 	}
 
-	#updateMoveButtons() {
+	#moveLabel(fieldset, destination) {
+		const fieldsets = this.#fieldsets
+		const index = fieldsets.indexOf(fieldset)
+
+		if (index < 0 || destination < 0 || destination >= fieldsets.length || index === destination) return
+
+		const before = fieldsets[destination + Number(index < destination)] ?? null
+
+		this.#fieldsetsElement.insertBefore(fieldset, before)
+	}
+
+	#updateDragHandles() {
 		const fieldsets = this.#fieldsets
 
-		fieldsets.forEach((fieldset, index) => {
-			fieldset.querySelector('button.up').hidden = index == 0
-			fieldset.querySelector('button.down').hidden = index == fieldsets.length - 1
-		})
+		for (const fieldset of fieldsets) {
+			fieldset.querySelector('.label-drag-handle').disabled = fieldsets.length < 2
+		}
 	}
 
 	#renderLabels() {
+		if (this.#dragging) {
+			this.#renderAfterDrag = true
+			return
+		}
+
 		for (const editor of this.#scriptEditors.values()) editor.destroy()
 		this.#scriptEditors.clear()
 		this.#fieldsetsElement.replaceChildren()
@@ -246,6 +310,8 @@ export class LabelsForm extends Form {
 	}
 
 	async _save() {
+		if (this.#dragging) return
+
 		await super._save(async () => {
 			const labelsByFieldset = new Map()
 

@@ -449,15 +449,23 @@ body {
 			border-radius: 1rem;
 			background-color: var(--surface-container-low);
 
-			.move {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
+			&.sortable-ghost {
+				opacity: 0.4;
 			}
 
-			.move button {
+			.label-drag-handle {
+				align-self: center;
 				inline-size: 2rem;
 				block-size: 2rem;
+				touch-action: none;
+
+				&:enabled {
+					cursor: grab;
+				}
+
+				&:enabled:active {
+					cursor: grabbing;
+				}
 			}
 
 			.fields {

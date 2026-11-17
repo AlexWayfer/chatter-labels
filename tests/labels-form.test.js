@@ -8,6 +8,7 @@ import { scriptExamples } from '../scripts/label-checks/examples.js'
 const { window } = new JSDOM(await readFile(new URL('../pages/options.html', import.meta.url), 'utf8'))
 
 globalThis.document = window.document
+globalThis.window = window
 const { LabelsForm } = await import('../scripts/options/labels-form.js')
 
 test('adds new labels at the top while preserving stored and saved order', async () => {
@@ -59,8 +60,14 @@ test('adds new labels at the top while preserving stored and saved order', async
 	assert.notEqual(draft, originalFirst)
 	draft.querySelector('[name="name"]').value = 'New'
 	assert.deepEqual(names(), ['New', 'First', 'Second'])
-	assert.equal(draft.querySelector('button.up').hidden, true)
-	assert.equal(draft.querySelector('button.down').hidden, false)
+	const draftHandle = draft.querySelector('button.label-drag-handle')
+	assert.equal(draftHandle.disabled, false)
+	draftHandle.focus()
+	draftHandle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End' }))
+	assert.deepEqual(names(), ['First', 'Second', 'New'])
+	assert.equal(document.activeElement, draftHandle)
+	draftHandle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Home' }))
+	assert.deepEqual(names(), ['New', 'First', 'Second'])
 	assert.equal(draft.querySelector('.assignments').hidden, true)
 	assert.equal(draft.querySelector('.label-script').open, false)
 	assert.equal(draft.querySelector('.script-status').textContent, 'Absent')
@@ -70,7 +77,7 @@ test('adds new labels at the top while preserving stored and saved order', async
 
 	latest.querySelector('[name="name"]').value = 'Latest'
 	assert.deepEqual(names(), ['Latest', 'New', 'First', 'Second'])
-	latest.querySelector('button.down').click()
+	latest.querySelector('button.label-drag-handle').dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown' }))
 	assert.deepEqual(names(), ['New', 'Latest', 'First', 'Second'])
 	latest.querySelector('button.delete').click()
 	await setImmediate()
@@ -138,4 +145,14 @@ test('adds new labels at the top while preserving stored and saved order', async
 	assert.equal(fieldsets()[0].querySelector('textarea[name="script"]').value, script.value)
 	assert.equal(fieldsets()[0].querySelector('.label-script').open, false)
 	assert.equal(fieldsets()[0].querySelector('.script-status').textContent, 'Present')
+
+	for (const callback of subscriptions.get('labels')) callback(storage.data.labels.slice(0, 1))
+	const onlyHandle = fieldsets()[0].querySelector('button.label-drag-handle')
+	assert.equal(onlyHandle.disabled, true)
+	assert.equal(onlyHandle.hidden, false)
+	add.click()
+	assert.equal(onlyHandle.disabled, false)
+	fieldsets()[0].querySelector('button.delete').click()
+	await setImmediate()
+	assert.equal(onlyHandle.disabled, true)
 })
