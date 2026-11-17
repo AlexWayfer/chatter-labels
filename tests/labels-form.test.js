@@ -10,6 +10,7 @@ const { window } = new JSDOM(await readFile(new URL('../pages/options.html', imp
 globalThis.document = window.document
 globalThis.window = window
 const { LabelsForm } = await import('../scripts/options/labels-form.js')
+const { default: Sortable } = await import('../vendor/sortablejs/sortable.js')
 
 test('adds new labels at the top while preserving stored and saved order', async () => {
 	const subscriptions = new Map()
@@ -40,7 +41,23 @@ test('adds new labels at the top while preserving stored and saved order', async
 		}
 	}
 	const element = document.querySelector('.labels')
+	const motion = new window.EventTarget()
+
+	motion.matches = false
+	window.matchMedia = query => {
+		assert.equal(query, '(prefers-reduced-motion: reduce)')
+		return motion
+	}
 	const form = new LabelsForm(element, storage, { subscribe() {} })
+	const sortable = Sortable.get(element.querySelector('.fieldsets'))
+
+	assert.ok(sortable.option('animation') > 0)
+	motion.matches = true
+	motion.dispatchEvent(new window.Event('change'))
+	assert.equal(sortable.option('animation'), 0)
+	motion.matches = false
+	motion.dispatchEvent(new window.Event('change'))
+	assert.ok(sortable.option('animation') > 0)
 
 	await setImmediate()
 	const fieldsets = () => [...element.querySelector('.fieldsets').children]

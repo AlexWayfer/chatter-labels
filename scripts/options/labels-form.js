@@ -44,10 +44,14 @@ export class LabelsForm extends Form {
 		this.#fieldsetTemplate = this._element.querySelector('template#label')
 		this.#scriptAccess = new UserScriptsNotice(this._element.querySelector('.user-scripts-notice'))
 
-		Sortable.create(this.#fieldsetsElement, {
+		const reducedMotion = this.#fieldsetsElement.ownerDocument.defaultView.matchMedia('(prefers-reduced-motion: reduce)')
+		const animationDuration = 200
+		const sortable = Sortable.create(this.#fieldsetsElement, {
 			draggable: '>' + activeFieldset,
 			handle: '.label-drag-handle:enabled',
 			direction: 'vertical',
+			animation: reducedMotion.matches ? 0 : animationDuration,
+			easing: 'ease-out',
 			forceFallback: true,
 			fallbackTolerance: 4,
 			scrollSensitivity: 72,
@@ -67,9 +71,18 @@ export class LabelsForm extends Form {
 			},
 			onEnd: ({ item, oldDraggableIndex, originalEvent }) => {
 				if (originalEvent.type === 'pointercancel' || originalEvent.type === 'touchcancel') {
+					// Clear drag offsets before restoring the original order.
+					for (const fieldset of this.#fieldsets) {
+						for (const animation of fieldset.getAnimations()) {
+							if (animation.transitionProperty === 'transform') animation.finish()
+						}
+					}
 					this.#moveLabel(item, oldDraggableIndex)
 				}
 			}
+		})
+		reducedMotion.addEventListener('change', () => {
+			sortable.option('animation', reducedMotion.matches ? 0 : animationDuration)
 		})
 
 		this.#fieldsetsElement.ownerDocument.addEventListener('keydown', event => {
