@@ -35,7 +35,12 @@
 					<h2><i aria-hidden="true">cloud_sync</i> Storage</h2>
 				</header>
 				<article class="storage-panel border">
-					<p class="storage-notice" role="status">Loading...</p>
+					<p class="storage-notice" role="status">
+						<span class="row tiny-space">
+							<progress class="circle small" aria-hidden="true"></progress>
+							Loading...
+						</span>
+					</p>
 					<form name="github-gist" hidden>
 						<div class="storage-heading row wrap">
 							<h3>GitHub Gist</h3>
@@ -309,7 +314,12 @@ return { text: count + ' of ' + checked + ' candidates', messages };</code></pre
 				<div class="fieldsets">
 				</div>
 
-				<p class="loading-notice">Loading...</p>
+				<p class="loading-notice">
+					<span class="row tiny-space">
+						<progress class="circle small" aria-hidden="true"></progress>
+						Loading...
+					</span>
+				</p>
 				<p class="error-notice"></p>
 				<p class="empty-list-notice">List is empty.</p>
 			</section>

@@ -22,6 +22,7 @@ const modules = [
 	'elements/icon',
 	'elements/navigation',
 	'elements/page',
+	'elements/progress',
 	'elements/selection',
 	'elements/tab',
 	'elements/typography'
@@ -37,6 +38,7 @@ await writeFile(new URL('options.css', destination), styles.join('\n'))
 await copyFile(new URL('LICENSE', source), new URL('LICENSE', destination))
 await copyFile(new URL('dist/cdn/beer.loader.min.js', source), new URL('loader.js', destination))
 await copyFile(new URL('dist/cdn/elements/page.min.js', source), new URL('page.js', destination))
+await copyFile(new URL('dist/cdn/elements/progress.min.js', source), new URL('progress.js', destination))
 await copyFile(
 	new URL('../licenses/material-symbols.txt', import.meta.url),
 	new URL('MaterialSymbols-LICENSE', destination)

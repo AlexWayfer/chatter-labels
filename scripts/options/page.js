@@ -5,6 +5,7 @@ import { GitHubGistForm } from './github-gist-form.js'
 import { LabelsForm } from './labels-form.js'
 import { ThemeControl } from './theme-control.js'
 import '../../vendor/beercss/page.js'
+import '../../vendor/beercss/progress.js'
 import { ui } from '../../vendor/beercss/loader.js'
 
 ui()

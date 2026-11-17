@@ -9,6 +9,7 @@ const html = await readFile(new URL('../pages/options.html', import.meta.url), '
 test('keeps the form hidden until saved settings are loaded', async () => {
 	const { window } = new JSDOM(html)
 	const element = window.document.querySelector('form[name="github-gist"]')
+	const notice = element.parentElement.querySelector('.storage-notice')
 	let resolve
 	const pending = new Promise(done => {
 		resolve = done
@@ -19,17 +20,20 @@ test('keeps the form hidden until saved settings are loaded', async () => {
 	})
 
 	assert.equal(element.hidden, true)
+	assert.equal(notice.hidden, false)
+	assert.ok(notice.querySelector('progress.circle.small:not([value])'))
 	resolve({ githubGist: { token: 'saved-token', gistId: 'saved-id' } })
 	await loading
 	assert.equal(element.hidden, false)
 	assert.equal(element.elements.token.value, 'saved-token')
 	assert.equal(element.elements.gistId.value, 'saved-id')
-	assert.equal(element.parentElement.querySelector('.storage-notice').hidden, true)
+	assert.equal(notice.hidden, true)
 })
 
 test('shows a settings read error without opening an empty form', async () => {
 	const { window } = new JSDOM(html)
 	const element = window.document.querySelector('form[name="github-gist"]')
+	const notice = element.parentElement.querySelector('.storage-notice')
 
 	await GitHubGistForm.create(element, {
 		async get() {
@@ -37,7 +41,8 @@ test('shows a settings read error without opening an empty form', async () => {
 		}
 	})
 	assert.equal(element.hidden, true)
-	assert.equal(element.parentElement.querySelector('.storage-notice').textContent, 'Storage unavailable')
+	assert.equal(notice.textContent, 'Storage unavailable')
+	assert.equal(notice.querySelector('progress'), null)
 })
 
 function setup(t, githubGist = { token: 'token', gistId: 'existing' }) {
