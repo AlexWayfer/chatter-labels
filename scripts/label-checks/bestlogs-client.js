@@ -1,5 +1,7 @@
 // Keep this factory self-contained: the runner injects it into the user-script world.
-export function createBestLogsClient(user, channel, twitch, signal) {
+export function createBestLogsClient(user, channel, twitch, signal, onProgress = () => {}) {
+	let sequence = 0
+
 	function pause(milliseconds) {
 		signal.throwIfAborted()
 		return new Promise((resolve, reject) => {
@@ -101,7 +103,8 @@ export function createBestLogsClient(user, channel, twitch, signal) {
 				}
 			}
 
-			let requested = false
+			let requestNumber = 0
+			let totalRequests = queries.size
 
 			for (const query of queries) {
 				let offset = 0
@@ -110,8 +113,9 @@ export function createBestLogsClient(user, channel, twitch, signal) {
 				for (;;) {
 					signal.throwIfAborted()
 					if (inspected.size >= maxMessages) return result()
-					if (requested) await pause(requestDelay)
-					requested = true
+					if (offset > 0) totalRequests++
+					onProgress({ sequence: ++sequence, request: ++requestNumber, total: totalRequests })
+					if (requestNumber > 1) await pause(requestDelay)
 					const pageSize = Math.min(500, maxMessages - inspected.size)
 					const url = new URL('https://bestlogs.lurkology.com/channelid/' + owner.id + '/userid/' + user.id + '/search')
 

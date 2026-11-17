@@ -31,9 +31,9 @@ export class LabelCheckRunner {
 		}
 	}
 
-	async requestTwitch(message, sender) {
+	#activeRun(runId, sender) {
 		this.#assertSender(sender)
-		const run = this.#runs.get(message.runId)
+		const run = this.#runs.get(runId)
 
 		if (!run) throw new Error('This label check is no longer running.')
 		if (sender.tab.id !== run.sender.tab.id ||
@@ -42,12 +42,28 @@ export class LabelCheckRunner {
 			throw new Error('Unsupported check source.')
 		}
 		run.controller.signal.throwIfAborted()
+		return run
+	}
+
+	async requestTwitch(message, sender) {
+		const run = this.#activeRun(message.runId, sender)
+
 		return this.#request({
 			query: message.query, variables: message.variables, authenticated: message.authenticated === true
 		}, { signal: run.controller.signal, tabId: sender.tab.id })
 	}
 
-	async run({ labelId, user, source, pageUrl }, sender) {
+	async reportProgress({ runId, sequence, request, total }, sender) {
+		const { sender: origin, requestId } = this.#activeRun(runId, sender)
+
+		if (typeof requestId !== 'string' ||
+			[sequence, request, total].some(value => !Number.isSafeInteger(value) || value < 1) || request > total) return
+		const target = origin.documentId ? { documentId: origin.documentId } : { frameId: origin.frameId }
+
+		await chrome.tabs.sendMessage(origin.tab.id, { type: 'label-check-progress', requestId, sequence, request, total }, target)
+	}
+
+	async run({ labelId, user, source, pageUrl, requestId }, sender) {
 		this.#assertSender(sender)
 		if (!user || typeof user.id !== 'string' || !user.id) throw new Error('Missing Twitch user ID.')
 		const labels = await this.#storage.get('labels')
@@ -64,11 +80,13 @@ export class LabelCheckRunner {
 		const runId = crypto.randomUUID()
 		const controller = new AbortController()
 
-		this.#runs.set(runId, { sender, controller })
-		const code = `(async (user, channel, signal) => {
+		this.#runs.set(runId, { sender, controller, requestId })
+		const code = `(async (user, channel, signal, runId) => {
 			try {
-				const twitch = (${createTwitchClient.toString()})(signal, ${JSON.stringify(runId)});
-				const bestLogs = (${createBestLogsClient.toString()})(user, channel, twitch, signal);
+				const twitch = (${createTwitchClient.toString()})(signal, runId);
+				const bestLogs = (${createBestLogsClient.toString()})(user, channel, twitch, signal, progress => {
+					chrome.runtime.sendMessage({ type: 'label-check-progress', runId, ...progress }).catch(() => {});
+				});
 				const value = await (async () => {
 ${label.script}
 				})();
@@ -76,7 +94,7 @@ ${label.script}
 			} catch (error) {
 				return { ok: false, error: String(error?.message ?? error) };
 			}
-		})(${JSON.stringify(input)}, ${JSON.stringify(channel)}, AbortSignal.timeout(60000))`
+		})(${JSON.stringify(input)}, ${JSON.stringify(channel)}, AbortSignal.timeout(60000), ${JSON.stringify(runId)})`
 		let timer
 
 		try {

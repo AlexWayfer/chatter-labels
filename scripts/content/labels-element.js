@@ -186,7 +186,15 @@ export class LabelsElement {
 
 		button.hidden = check?.completed === true
 		button.disabled = this.#saving || this.#scriptAccessEnabled === false || check?.running === true
-		button.textContent = check?.running ? 'Checking...' : check?.error ? 'Retry' : 'Check'
+		if (check?.running) {
+			const { progress } = check
+
+			button.textContent = progress
+				? `Request ${progress.request}/${progress.total}`
+				: 'Checking...'
+		} else {
+			button.textContent = check?.error ? 'Retry' : 'Check'
+		}
 		button.setAttribute('aria-busy', String(check?.running === true))
 		const result = fieldset.querySelector('.check-result')
 
@@ -246,12 +254,23 @@ export class LabelsElement {
 
 		if (this.#saving || this.#scriptAccessEnabled === false || previous?.running || previous?.completed) return
 		const check = { script: label.script, running: true }
+		const requestId = crypto.randomUUID()
+		const onProgress = (message, sender) => {
+			if (message?.type !== 'label-check-progress' || message.requestId !== requestId ||
+				sender.id !== chrome.runtime.id || this.#checks.get(label.id) !== check) return
+			if (message.sequence > (check.progress?.sequence ?? 0)) {
+				check.progress = message
+				this.#updateCheck(label)
+			}
+		}
 
 		this.#checks.set(label.id, check)
 		this.#updateCheck(label)
+		chrome.runtime.onMessage.addListener(onProgress)
 		try {
 			const response = await chrome.runtime.sendMessage({
 				type: 'run-label-check',
+				requestId,
 				labelId: label.id,
 				user: this.#user,
 				source: this.#source,
@@ -279,6 +298,7 @@ export class LabelsElement {
 				check.error = true
 			}
 		} finally {
+			chrome.runtime.onMessage.removeListener(onProgress)
 			check.running = false
 			if (!this.#destroyed && this.#checks.get(label.id) === check) this.#updateCheck(label)
 		}

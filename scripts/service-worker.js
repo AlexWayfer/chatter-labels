@@ -30,9 +30,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 })
 
 chrome.runtime.onUserScriptMessage.addListener((message, sender, sendResponse) => {
-	if (message?.type !== 'label-check-twitch-gql') return
+	const type = message?.type
+
+	if (type !== 'label-check-twitch-gql' && type !== 'label-check-progress') return
 	Promise.resolve(checks).then(runner => {
 		if (!runner) throw new Error('This label check is no longer running.')
+		if (type === 'label-check-progress') return runner.reportProgress(message, sender)
 		return runner.requestTwitch(message, sender)
 	})
 		.then(

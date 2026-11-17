@@ -9,7 +9,15 @@ import { Label } from '../scripts/models/label.js'
 const { window } = new JSDOM('', { url: 'https://www.twitch.tv/example' })
 
 for (const name of ['document', 'DOMParser', 'Event']) globalThis[name] = window[name]
-globalThis.chrome = { runtime: { id: 'test', getURL: path => new URL(`../${path}`, import.meta.url) } }
+const messageListeners = new Set()
+globalThis.chrome = { runtime: {
+	id: 'test',
+	getURL: path => new URL(`../${path}`, import.meta.url),
+	onMessage: {
+		addListener: listener => messageListeners.add(listener),
+		removeListener: listener => messageListeners.delete(listener)
+	}
+} }
 const fetchMock = mock.method(globalThis, 'fetch', async url => new Response(await readFile(url)))
 const { LabelsElement } = await import('../scripts/content/labels-element.js')
 
@@ -76,7 +84,10 @@ test('checks replace the button with results and allow retries only after errors
 			assert.equal(button.getAttribute('aria-busy'), 'true')
 			button.click()
 			assert.equal(send.mock.callCount(), before + 1)
-			assert.deepEqual(send.mock.calls.at(-1).arguments[0], {
+			const { requestId, ...request } = send.mock.calls.at(-1).arguments[0]
+
+			assert.ok(requestId)
+			assert.deepEqual(request, {
 				type: 'run-label-check', labelId: 'check', user, source: null, pageUrl: 'https://www.twitch.tv/example'
 			})
 			finish(reply)
@@ -105,6 +116,57 @@ test('checks replace the button with results and allow retries only after errors
 			editor.unsubscribe()
 			editor.element.remove()
 		}
+	}
+})
+
+test('shows current BestLogs request only on the matching check button', async () => {
+	const pending = []
+	chrome.runtime.sendMessage = request => new Promise(resolve => pending.push({ request, resolve }))
+	const storage = {
+		labels: ['first', 'second'].map(id => new Label({ id, script: 'return false' })),
+		assignments: [],
+		get(key) {
+			return this[key]
+		},
+		subscribe() {
+			return () => {}
+		}
+	}
+	const editor = await LabelsElement.create({ id: '42' }, storage)
+	const [first, second] = editor.element.querySelectorAll('.check-label')
+	const publish = (requestId, sequence, request, total, id = 'test') => {
+		for (const listener of messageListeners) {
+			listener({ type: 'label-check-progress', requestId, sequence, request, total }, { id })
+		}
+	}
+
+	first.click()
+	second.click()
+	try {
+		const [firstCheck, secondCheck] = pending
+		const { requestId } = firstCheck.request
+
+		assert.equal(first.getAttribute('aria-busy'), 'true')
+		assert.notEqual(requestId, secondCheck.request.requestId)
+		publish(requestId, 1, 1, 3, 'other-extension')
+		assert.equal(first.textContent, 'Checking...')
+		publish(requestId, 1, 1, 3)
+		assert.equal(first.textContent, 'Request 1/3')
+		publish(requestId, 3, 3, 4)
+		publish(requestId, 2, 2, 3)
+		assert.equal(first.textContent, 'Request 3/4')
+		assert.equal(second.textContent, 'Checking...')
+		firstCheck.resolve({ ok: false, error: 'Failed' })
+		await setImmediate()
+		assert.equal(first.textContent, 'Retry')
+		assert.equal(first.getAttribute('aria-busy'), 'false')
+		first.click()
+		publish(requestId, 4, 4, 4)
+		assert.equal(first.textContent, 'Checking...')
+	} finally {
+		for (const check of pending) check.resolve({ ok: true, value: false })
+		await setImmediate()
+		editor.unsubscribe()
 	}
 })
 
@@ -486,4 +548,58 @@ test('background requests are bound to an active check and its original tab and 
 	assert.equal(requestSignal.aborted, true)
 	await assert.rejects(runner.requestTwitch(message, sender), /no longer running/)
 	assert.equal(request.mock.callCount(), 1)
+})
+
+test('forwards BestLogs progress before each request and adds newly discovered pages to the total', async () => {
+	const { LabelCheckRunner } = await import('../scripts/label-checks/runner.js')
+	const sender = { id: 'test', tab: { id: 7 }, frameId: 0, documentId: 'document-one', url: 'https://www.twitch.tv/example' }
+	const send = mock.fn(async () => {})
+	const progress = []
+	const runner = new LabelCheckRunner({ get: async () => [{
+		id: 'check', script: 'return await bestLogs.countMessages(["missing", "hello", "absent"])'
+	}] }, { request: async () => ({ user: { id: '99' } }) })
+	const runtime = { sendMessage: async message => {
+		if (message.type === 'label-check-twitch-gql') return { ok: true, data: await runner.requestTwitch(message, sender) }
+		progress.push(message)
+		await assert.rejects(runner.reportProgress(message, { ...sender, documentId: 'another-document' }), /Unsupported/)
+		await runner.reportProgress(message, sender)
+	} }
+	chrome.tabs = { sendMessage: send }
+	chrome.userScripts = {
+		async getScripts() {
+			return []
+		},
+		async configureWorld() {},
+		async execute(options) {
+			return [{ result: await runInNewContext(options.js[0].code, {
+				AbortSignal,
+				URL,
+				URLSearchParams,
+				setTimeout,
+				clearTimeout,
+				chrome: { runtime },
+				async fetch(url) {
+					const offset = Number(url.searchParams.get('offset'))
+					const query = url.searchParams.get('q')
+					const { request, total } = progress.at(-1)
+					const expected = { missing: [1, 3], hello: offset ? [3, 4] : [2, 3], absent: [4, 4] }
+
+					assert.deepEqual([request, total], expected[query])
+					if (query !== 'hello') return new Response('Not found', { status: 404 })
+					return Response.json({ messages: Array.from({ length: offset ? 3 : 500 }, (_, index) => ({
+						id: String(offset + index),
+						text: offset ? 'hello' : 'helloing',
+						tags: { 'user-id': '42', 'room-id': '99' }
+					})) })
+				}
+			}) }]
+		}
+	}
+	const result = await runner.run({ labelId: 'check', user: { id: '42' }, source: 'chat', requestId: 'check-request' }, sender)
+
+	assert.equal(result, 3)
+	assert.deepEqual(send.mock.calls.map(call => call.arguments), [3, 3, 4, 4].map((total, index) => [7, {
+		type: 'label-check-progress', requestId: 'check-request', sequence: index + 1, request: index + 1, total
+	}, { documentId: 'document-one' }]))
+	await assert.rejects(runner.reportProgress(progress[0], sender), /no longer running/)
 })
