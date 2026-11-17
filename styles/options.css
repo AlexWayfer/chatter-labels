@@ -449,6 +449,39 @@ body {
 			border-radius: 1rem;
 			background-color: var(--surface-container-low);
 
+			@media (prefers-reduced-motion: no-preference) {
+				&:is(.label-entering, .label-removing) {
+					interpolate-size: allow-keywords;
+					block-size: auto;
+					min-block-size: 0;
+					overflow: clip;
+					transition:
+						block-size var(--speed2) ease-out,
+						padding-block var(--speed2) ease-out,
+						margin-block-end var(--speed2) ease-out,
+						border-block-width var(--speed2) ease-out,
+						opacity var(--speed2) ease-out;
+				}
+
+				&.label-removing {
+					block-size: 0;
+					padding-block: 0;
+					margin-block-end: 0;
+					border-block-width: 0;
+					opacity: 0;
+				}
+
+				@starting-style {
+					&.label-entering {
+						block-size: 0;
+						padding-block: 0;
+						margin-block-end: 0;
+						border-block-width: 0;
+						opacity: 0;
+					}
+				}
+			}
+
 			&.sortable-ghost {
 				opacity: 0.4;
 			}

@@ -152,7 +152,19 @@ test('adds new labels at the top while preserving stored and saved order', async
 	assert.equal(onlyHandle.hidden, false)
 	add.click()
 	assert.equal(onlyHandle.disabled, false)
-	fieldsets()[0].querySelector('button.delete').click()
+	const removing = fieldsets()[0]
+	const exit = Promise.withResolvers()
+
+	removing.getAnimations = () => [{ finished: exit.promise }]
+	removing.querySelector('button.delete').click()
 	await setImmediate()
+	assert.equal(removing.isConnected, true)
+	assert.equal(removing.inert, true)
+	assert.equal(removing.disabled, true)
 	assert.equal(onlyHandle.disabled, true)
+	assert.equal(element.querySelector('form[name="labels"]').checkValidity(), true)
+
+	exit.resolve()
+	await setImmediate()
+	assert.equal(removing.isConnected, false)
 })

@@ -10,6 +10,14 @@ import { UserScriptsNotice } from '../content/user-scripts-notice.js'
 import { createTabs } from './tabs.js'
 import Sortable from '../../vendor/sortablejs/sortable.js'
 
+const activeFieldset = 'fieldset:not(.label-removing)'
+
+function labelTransitionsFinished(fieldset) {
+	const animations = fieldset.getAnimations?.() ?? []
+
+	return Promise.allSettled(animations.map(animation => animation.finished))
+}
+
 export class LabelsForm extends Form {
 	#mainStorage
 	#optionsStorage
@@ -37,7 +45,7 @@ export class LabelsForm extends Form {
 		this.#scriptAccess = new UserScriptsNotice(this._element.querySelector('.user-scripts-notice'))
 
 		Sortable.create(this.#fieldsetsElement, {
-			draggable: 'fieldset',
+			draggable: '>' + activeFieldset,
 			handle: '.label-drag-handle:enabled',
 			direction: 'vertical',
 			forceFallback: true,
@@ -73,7 +81,7 @@ export class LabelsForm extends Form {
 		})
 
 		this._element.querySelector('button.add').addEventListener('click', _event => {
-			this.add({}, { prepend: true })
+			this.add({}, { prepend: true, animate: true })
 		})
 
 		this._element.addEventListener('input', _event => {
@@ -96,7 +104,7 @@ export class LabelsForm extends Form {
 		this.#load()
 	}
 
-	add(data = {}, { prepend = false } = {}) {
+	add(data = {}, { prepend = false, animate = false } = {}) {
 		const
 			fieldsetFragment = document.importNode(this.#fieldsetTemplate.content, true),
 			fieldsetElement = fieldsetFragment.querySelector('fieldset')
@@ -200,14 +208,22 @@ export class LabelsForm extends Form {
 				return
 			}
 
+			if (!fieldsetElement.isConnected || fieldsetElement.inert) return
+
+			fieldsetElement.inert = true
+			fieldsetElement.disabled = true
+			fieldsetElement.classList.add('label-removing')
+			this.#updateDragHandles()
+			this.#updateScriptAccess()
+			this.#validateUniqueNames()
+
+			await labelTransitionsFinished(fieldsetElement)
 			fieldsetElement.remove()
 			this.#scriptEditors.get(fieldsetElement)?.destroy()
 			this.#scriptEditors.delete(fieldsetElement)
-			this.#assignmentsLists.delete(fieldsetElement)
-			this.#updateDragHandles()
-			this.#updateScriptAccess()
 		})
 
+		fieldsetElement.classList.toggle('label-entering', animate)
 		if (prepend) {
 			this.#fieldsetsElement.prepend(fieldsetFragment)
 		} else {
@@ -225,6 +241,10 @@ export class LabelsForm extends Form {
 		this.#scriptEditors.set(fieldsetElement, new ScriptEditor(script))
 		this.#updateDragHandles()
 		this.#updateScriptAccess()
+
+		if (animate) {
+			labelTransitionsFinished(fieldsetElement).then(() => fieldsetElement.classList.remove('label-entering'))
+		}
 	}
 
 	#updateScriptAccess() {
@@ -239,7 +259,9 @@ export class LabelsForm extends Form {
 	}
 
 	get #fieldsets() {
-		return Array.from(this.#fieldsetsElement.children).filter(fieldset => fieldset !== Sortable.ghost)
+		return Array.from(this.#fieldsetsElement.children).filter(
+			fieldset => fieldset !== Sortable.ghost && fieldset.matches(activeFieldset)
+		)
 	}
 
 	#moveLabel(fieldset, destination) {
@@ -365,18 +387,19 @@ export class LabelsForm extends Form {
 	#validateUniqueNames() {
 		const seen = new Set()
 
-		Array.from(this._element.querySelectorAll('input[name="name"]')).forEach(input => {
+		for (const fieldset of this.#fieldsets) {
+			const input = fieldset.querySelector('input[name="name"]')
 			const value = input.value.trim()
 
 			input.setCustomValidity('')
 
-			if (!value) return
+			if (!value) continue
 
 			if (seen.has(value)) {
 				input.setCustomValidity('Name must be unique')
 			} else {
 				seen.add(value)
 			}
-		})
+		}
 	}
 }
