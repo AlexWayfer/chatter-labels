@@ -292,6 +292,7 @@ body {
 	}
 
 	.page-header {
+		min-height: 0;
 		margin-bottom: 2rem;
 
 		& > img {
@@ -306,11 +307,34 @@ body {
 
 	.settings-layout {
 		align-items: start;
+		column-gap: 0;
+	}
+
+	.page-header,
+	.section-header {
+		padding-inline: 0;
 	}
 
 	.section-header {
 		min-height: 2.5rem;
 		margin: 0 0 1rem;
+
+		&.fixed {
+			inset-block: 0 auto;
+			padding-block: 0.75rem;
+			container-type: scroll-state;
+
+			&::after {
+				@container scroll-state(stuck: top) {
+					position: absolute;
+					inset: 0;
+					box-shadow: var(--elevate2);
+					clip-path: inset(100% 0 -0.75rem);
+					pointer-events: none;
+					content: "";
+				}
+			}
+		}
 	}
 
 	.storage-panel {
