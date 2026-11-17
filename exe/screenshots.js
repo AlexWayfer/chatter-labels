@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const output = new URL('../pkg/screenshots/options-1280x800.png', import.meta.url)
+const output = new URL('../pkg/screenshots/', import.meta.url)
 const data = JSON.parse(await readFile(new URL('./fixtures/options.json', import.meta.url), 'utf8'))
 const cardFixture = JSON.parse(await readFile(new URL('./fixtures/chatter-card.json', import.meta.url), 'utf8'))
 const chatFixture = JSON.parse(await readFile(new URL('./fixtures/chat.json', import.meta.url), 'utf8'))
@@ -118,6 +118,7 @@ try {
 		window.chrome.runtime = {
 			id: 'store-screenshot',
 			getURL: path => new URL('/' + path, location.origin).href,
+			onMessage: { addListener() {}, removeListener() {} },
 			async sendMessage(message) {
 				if (message.type === 'user-scripts-status') return { enabled: true }
 				if (message.type === 'run-label-check' && message.labelId === 'bot') {
@@ -138,7 +139,7 @@ try {
 				json: {
 					id: 'example',
 					files: Object.fromEntries(
-						Object.entries(data).map(([key, value]) => [key + '.json', { content: JSON.stringify(value) }])
+						Object.entries(checkData).map(([key, value]) => [key + '.json', { content: JSON.stringify(value) }])
 					)
 				}
 			})
@@ -152,6 +153,19 @@ try {
 		.waitFor()
 	assert.equal(await page.locator('.fieldsets > fieldset').count(), data.labels.length)
 	assert.equal(await page.locator('.assignment-header').count(), data.assignments.length)
+	await page.getByRole('button', { name: 'Dark theme', exact: true }).click()
+	await page.locator('body.dark').waitFor()
+	assert.equal(await page.getByRole('button', { name: 'Dark theme', exact: true }).getAttribute('aria-pressed'), 'true')
+
+	const scriptLabel = page.locator('.fieldsets > fieldset').first()
+	const presentStatus = scriptLabel.locator('.script-status')
+	const absentStatus = page.locator('.script-status').nth(1)
+
+	assert.equal(await scriptLabel.locator('.label-script').getAttribute('open'), null)
+	assert.equal(await presentStatus.isVisible(), true)
+	assert.equal(await presentStatus.textContent(), 'Present')
+	assert.equal(await absentStatus.isVisible(), true)
+	assert.equal(await absentStatus.textContent(), 'Absent')
 	// Match the overview framing of the store screenshot without changing product styles.
 	await page.addStyleTag({ content: 'html { zoom: 0.46; }' })
 	await page.evaluate(async () => {
@@ -164,63 +178,22 @@ try {
 	}))
 
 	assert.ok(bounds.width <= 1280 && bounds.height <= 800, `Page overflows screenshot: ${JSON.stringify(bounds)}`)
-	assert.deepEqual(errors, [])
-	await mkdir(new URL('./', output), { recursive: true })
-	await page.screenshot({ path: fileURLToPath(output), animations: 'disabled' })
-	const png = await readFile(output)
+	const presentStyle = await presentStatus.evaluate(element => ({
+		width: element.getBoundingClientRect().width,
+		background: getComputedStyle(element).backgroundColor
+	}))
+	const absentStyle = await absentStatus.evaluate(element => ({
+		width: element.getBoundingClientRect().width,
+		background: getComputedStyle(element).backgroundColor
+	}))
 
-	assert.equal(png.readUInt32BE(16), 1280)
-	assert.equal(png.readUInt32BE(20), 800)
-	console.info(`Saved ${fileURLToPath(output)} (1280×800)`)
-
-	await page.getByRole('button', { name: 'Dark theme', exact: true }).click()
-	await page.locator('body.dark').waitFor()
-	assert.equal(await page.getByRole('button', { name: 'Dark theme', exact: true }).getAttribute('aria-pressed'), 'true')
+	assert.equal(presentStyle.width, absentStyle.width, 'Script status badges keep the same width')
+	assert.notEqual(presentStyle.background, absentStyle.background, 'Script states use different colors')
 	assert.deepEqual(errors, [])
+	await mkdir(output, { recursive: true })
 	await saveScreenshot(page, 'options-dark', 1280, 800)
 
-	const scriptPage = await context.newPage()
-	const scriptErrors = []
-
-	scriptPage.on('pageerror', error => scriptErrors.push(error.message))
-	await scriptPage.route('https://api.github.com/gists/example', route => route.fulfill({
-		json: {
-			id: 'example',
-			files: Object.fromEntries(
-				Object.entries(checkData).map(([key, value]) => [key + '.json', { content: JSON.stringify(value) }])
-			)
-		}
-	}))
-	await scriptPage.goto(`${origin}/pages/options.html`)
-	await scriptPage.locator('.labels:not(.loading)').waitFor()
-	await scriptPage.getByRole('button', { name: 'Dark theme', exact: true }).click()
-	await scriptPage.locator('body.dark').waitFor()
-	assert.equal(await scriptPage.getByRole('button', { name: 'Dark theme', exact: true }).getAttribute('aria-pressed'), 'true')
-	await scriptPage.addStyleTag({ content: 'html { zoom: 0.65; }' })
-	const scriptLabel = scriptPage.locator('.fieldsets > fieldset').first()
-
-	assert.equal(await scriptLabel.locator('.label-script').getAttribute('open'), null)
-	assert.equal(await scriptLabel.locator('.script-status').isVisible(), true)
-	assert.equal(await scriptLabel.locator('.script-status').textContent(), 'Present')
-	const absentStatus = scriptPage.locator('.script-status').nth(1)
-
-	assert.equal(await absentStatus.textContent(), 'Absent')
-	for (const theme of ['Light theme', 'Dark theme']) {
-		await scriptPage.getByRole('button', { name: theme, exact: true }).click()
-		const presentStyle = await scriptLabel.locator('.script-status').evaluate(element => ({
-			width: element.getBoundingClientRect().width,
-			background: getComputedStyle(element).backgroundColor
-		}))
-		const absentStyle = await absentStatus.evaluate(element => ({
-			width: element.getBoundingClientRect().width,
-			background: getComputedStyle(element).backgroundColor
-		}))
-
-		assert.equal(presentStyle.width, absentStyle.width, 'Script status badges keep the same width')
-		assert.notEqual(presentStyle.background, absentStyle.background, 'Script states use different colors')
-	}
-	await scriptPage.locator('.labels').evaluate(element => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 24))
-	await saveScreenshot(scriptPage, 'label-script-status', 1280, 800)
+	await page.addStyleTag({ content: 'html { zoom: 0.65; }' })
 	await scriptLabel.locator('.label-script > summary').click()
 	await scriptLabel.locator('.cm-editor').waitFor()
 	assert.equal(await scriptLabel.locator('[name="script"]').inputValue(), botCheckScript)
@@ -230,10 +203,10 @@ try {
 
 	await userFunction.locator('summary').click()
 	assert.equal(await userFunction.getAttribute('open'), '')
-	await scriptPage.waitForFunction(() => [...document.querySelectorAll('details[open]')].every(element => {
+	await page.waitForFunction(() => [...document.querySelectorAll('details[open]')].every(element => {
 		return getComputedStyle(element, '::details-content').opacity === '1'
 	}))
-	await scriptPage.locator('.labels').evaluate(element => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 24))
+	await page.locator('.labels').evaluate(element => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 24))
 	const labelBounds = await scriptLabel.boundingBox()
 	const editorBounds = await scriptLabel.locator('.cm-editor').boundingBox()
 	const functionBounds = await userFunction.boundingBox()
@@ -241,15 +214,11 @@ try {
 	assert.ok(labelBounds && labelBounds.y >= 0 && labelBounds.y + labelBounds.height <= 800, 'Script label is clipped')
 	assert.ok(editorBounds && editorBounds.y >= 0 && editorBounds.y + editorBounds.height <= 800, 'Script editor is clipped')
 	assert.ok(functionBounds && functionBounds.y >= 0 && functionBounds.y + functionBounds.height <= 800, 'Function reference is clipped')
-	assert.deepEqual(scriptErrors, [])
-	await saveScreenshot(scriptPage, 'label-check-script', 1280, 800)
+	assert.deepEqual(errors, [])
+	await saveScreenshot(page, 'label-check-script', 1280, 800)
 
-	const cardPage = await context.newPage()
-
-	await cardPage.setViewportSize({ width: 640, height: 400 })
-	const cardErrors = []
 	const cardData = {
-		labels: data.labels,
+		labels: checkData.labels,
 		assignments: cardFixture.assignedLabels.map(labelId => ({
 			labelId,
 			userId: cardFixture.user.id,
@@ -259,48 +228,6 @@ try {
 		}))
 	}
 
-	cardPage.on('pageerror', error => cardErrors.push(error.message))
-	await cardPage.route('https://api.github.com/gists/example', route => route.fulfill({
-		json: {
-			id: 'example',
-			files: Object.fromEntries(
-				Object.entries(cardData).map(([key, value]) => [key + '.json', { content: JSON.stringify(value) }])
-			)
-		}
-	}))
-	await cardPage.route('https://gql.twitch.tv/gql', route => route.fulfill({
-		json: { data: { user: cardFixture.user } }
-	}))
-	await cardPage.goto(`${origin}/screenshots/chatter-card.html`)
-	await cardPage.getByTitle('Edit labels').click()
-	const popup = cardPage.getByRole('dialog', { name: `Labels for ${cardFixture.user.displayName}` })
-
-	await popup.waitFor({ state: 'visible' })
-	assert.equal(await popup.locator('input[name="label"]').count(), data.labels.length)
-	assert.deepEqual(await popup.locator('input[name="label"]:checked').evaluateAll(
-		inputs => inputs.map(input => input.value)
-	), cardFixture.assignedLabels)
-	await cardPage.evaluate(async () => {
-		await document.fonts.ready
-		await Promise.all([...document.images].map(image => image.decode()))
-	})
-	assert.deepEqual(cardErrors, [])
-	const popupBounds = await popup.boundingBox()
-
-	assert.ok(
-		popupBounds && popupBounds.x >= 0 && popupBounds.y >= 0 &&
-		popupBounds.x + popupBounds.width <= 640 && popupBounds.y + popupBounds.height <= 400,
-		'Label editor is clipped in the screenshot'
-	)
-	const cardOutput = new URL('chatter-card-640x400.png', output)
-
-	await cardPage.screenshot({ path: fileURLToPath(cardOutput), animations: 'disabled' })
-	const cardPng = await readFile(cardOutput)
-
-	assert.equal(cardPng.readUInt32BE(16), 640)
-	assert.equal(cardPng.readUInt32BE(20), 400)
-	console.info(`Saved ${fileURLToPath(cardOutput)} (640×400)`)
-
 	const checkPage = await context.newPage()
 	const checkErrors = []
 
@@ -309,7 +236,7 @@ try {
 		json: {
 			id: 'example',
 			files: Object.fromEntries(
-				Object.entries({ ...cardData, labels: checkData.labels }).map(([key, value]) => [key + '.json', { content: JSON.stringify(value) }])
+				Object.entries(cardData).map(([key, value]) => [key + '.json', { content: JSON.stringify(value) }])
 			)
 		}
 	}))
@@ -323,6 +250,7 @@ try {
 	const checkedLabel = checkPopup.locator('fieldset').filter({ has: checkPage.locator('[name="label"][value="bot"]') })
 
 	await checkPopup.getByRole('button', { name: 'Check', exact: true }).click()
+	assert.equal(await checkPopup.locator('input[name="label"]').count(), data.labels.length)
 	await checkedLabel.locator('.check-result:not([hidden])').waitFor()
 	assert.equal(await checkedLabel.locator('.check-result').textContent(), 'Yes')
 	assert.equal(await checkedLabel.locator('.check-label').isVisible(), false)

@@ -226,19 +226,18 @@ in the archive. No CDN is needed for syntax highlighting.
 ### Store screenshots
 
 Install the screenshot browser once with `pnpm exec playwright install chromium`.
-Then run `pnpm screenshots` to generate `pkg/screenshots/options-1280x800.png`.
-`pkg/screenshots/options-dark-1280x800.png` shows the same overview after selecting
-Dark with the theme control.
+Then run `pnpm screenshots` to generate `pkg/screenshots/options-dark-1280x800.png`.
+The dark options overview shows the Bot check script marked Present and the other
+labels marked Absent, with all check scripts collapsed.
 `pkg/screenshots/label-check-script-1280x800.png` focuses on an expanded script editor
 and the `twitch.getUser()` function reference in Dark mode. Its Bot example checks whether the
 resolved login ends in `bot`.
 `pkg/screenshots/label-check-result-1280x800.png` shows the example's Yes result
 in the user-card label editor, without changing assignments. Script access and
 the extension/Twitch request boundary are mocked for these screenshots.
-It also creates `pkg/screenshots/chatter-card-640x400.png`, showing the current
-label editor on a local Twitch user-card fixture with Bot and Friend assigned.
-The card surroundings are a mock; the integration, popover, and label form use
-the extension's real modules and styles. Card data is in `exe/fixtures/chatter-card.json`.
+The user-card fixture has Bot and Friend assigned. The integration, popover,
+and label form use the extension's real modules and styles. Card data is in
+`exe/fixtures/chatter-card.json`.
 `pkg/screenshots/chat-640x400.png` shows label icons next to usernames in chat,
 including a reply and an unlabelled user. Chat data is in `exe/fixtures/chat.json`;
 messages use the real chat integration with local Twitch surroundings.
@@ -253,11 +252,10 @@ The command uses the real options page with the example data in
 `exe/fixtures/options.json`, an isolated browser, and mocked storage and GitHub
 responses. It does not use your token or change your saved labels.
 
-The images use a fixed locale and time zone. The 1280×800 options image uses
-a light theme and 46% page scale so all three example labels fit in the overview;
-the dark overview uses the same scale, while the script editor uses 65% and scrolls
-to the Labels section. The user card uses a dark background; the check-result
-image uses 150% scale for readability. CSS, fonts, and icons load
+The images use a fixed locale and time zone. The 1280×800 options overview uses
+46% page scale so all three example labels fit. The script editor uses 65% and
+scrolls to the Labels section. The check-result image uses a dark background
+and 150% scale for readability. CSS, fonts, and icons load
 locally; unexpected external requests are blocked.
 
 ## Credentials
