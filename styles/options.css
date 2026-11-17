@@ -548,8 +548,14 @@ body {
 			}
 
 			.label-options {
+				--label-options-row-gap: 1rem;
+
 				grid-column: 1 / -1;
 				margin-top: 0.75rem;
+				row-gap: var(--label-options-row-gap);
+
+				/* The script content keeps its flex row even when collapsed. */
+				margin-block-end: calc(-1 * var(--label-options-row-gap));
 
 				.show-in-chat {
 					margin: 0;
@@ -568,10 +574,22 @@ body {
 					flex: 1 0 100%;
 					min-width: 0;
 					white-space: normal;
+					contain: layout;
+					overflow: clip;
+					block-size: calc-size(auto, size + var(--label-options-row-gap));
+					opacity: 1;
+					transform: none;
+					transition: none;
+
+					@media (prefers-reduced-motion: no-preference) {
+						transition:
+							block-size var(--speed2) ease-out,
+							content-visibility var(--speed2) allow-discrete;
+					}
 				}
 
 				&:not([open])::details-content {
-					display: none;
+					block-size: 0;
 				}
 
 				& > summary {
