@@ -148,6 +148,23 @@
 	}
 }
 
+[data-a-target="mod-view-context-bar-contents"] #community-tab-content {
+	[class~="chatter-list-item--compact"]:has(> .chatter-labels-icons) {
+		display: flex;
+		align-items: center;
+
+		> .chatter-labels-icons {
+			display: flex;
+			flex: none;
+			align-items: center;
+
+			.chatter-labels-icon {
+				margin-bottom: 0;
+			}
+		}
+	}
+}
+
 .chatter-labels {
 	padding: 8px;
 

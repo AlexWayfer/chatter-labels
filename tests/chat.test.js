@@ -161,6 +161,60 @@ test('updates thread labels when labels or assignments change', () => {
 	assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)
 })
 
+test('labels Community users by Twitch ID and follows filtering and reused rows', async () => {
+	const responses = []
+	const lookup = mock.method(TwitchAPI, 'fetchUsers', () => new Promise(resolve => responses.push(resolve)))
+	const row = name => `<div class="chatter-list-item--compact"><button aria-label="Open details for ${name}" class="tw-link"><span>${name}</span></button></div>`
+	const wrapper = attach(`
+		<div data-a-target="mod-view-context-bar-contents"><div id="community-tab-content">
+			<button aria-expanded="true">Moderators</button>
+			${row('NewName')}${row('Other')}${row('NewName')}
+		</div></div>
+	`)
+	const panel = wrapper.querySelector('#community-tab-content')
+	const [first, second, third] = panel.querySelectorAll('.tw-link')
+
+	await setImmediate()
+	assert.equal(lookup.mock.callCount(), 1)
+	assert.deepEqual(lookup.mock.calls[0].arguments, [['newname', 'other']])
+	first.querySelector('span').firstChild.data = 'Next'
+	await setImmediate()
+	assert.equal(lookup.mock.callCount(), 2)
+	responses[0]([{ id: '1', login: 'newname' }, { id: '2', login: 'other' }])
+	responses[1]([{ id: '3', login: 'next' }])
+	await setImmediate()
+	assert.equal(first.previousElementSibling, null)
+	assert.equal(second.previousElementSibling, null)
+	assert.equal(third.previousElementSibling?.querySelector('img')?.alt, 'Label')
+	assert.equal(third.textContent, 'NewName')
+
+	for (const callback of subscriptions.get('assignments')) callback([
+		{ user: { id: '3', username: 'OldName' }, label: { id: 'label' } }
+	])
+	assert.equal(third.previousElementSibling, null)
+	assert.equal(first.previousElementSibling?.querySelector('img')?.alt, 'Label')
+
+	panel.innerHTML = row('Next') + row('NewArrival')
+	const filtered = panel.querySelector('button')
+
+	await setImmediate()
+	assert.equal(filtered.previousElementSibling?.querySelector('img')?.alt, 'Label')
+	assert.equal(lookup.mock.callCount(), 3)
+	assert.deepEqual(lookup.mock.calls[2].arguments, [['newarrival']])
+	filtered.firstElementChild.textContent = ''
+	await setImmediate()
+	assert.equal(filtered.previousElementSibling, null)
+
+	filtered.firstElementChild.textContent = 'NEXT'
+	await setImmediate()
+	assert.equal(filtered.previousElementSibling?.querySelector('img')?.alt, 'Label')
+
+	for (const chat of chats) chat.destroy()
+	responses[2]([{ id: '3', login: 'newarrival' }])
+	await setImmediate()
+	assert.equal(panel.querySelector('.chatter-labels-icons'), null)
+})
+
 const whisperHTML = login => `
 	<div class="whispers-list-item">
 		<button role="listitem" data-a-target="whisper-with-${login}">

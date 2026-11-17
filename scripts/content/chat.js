@@ -1,4 +1,5 @@
 import { logger } from '../logger.js'
+import { TwitchAPI } from '../twitch/api.js'
 import { ChatMessage } from './chat-message.js'
 import { ChatterCard } from './chatter-card.js'
 
@@ -38,6 +39,12 @@ export class Chat {
 			resolveUserEachRender: true
 		},
 		{
+			name: 'community',
+			containerSelector: '[data-a-target="mod-view-context-bar-contents"] #community-tab-content',
+			messageSelector: '.chatter-list-item--compact > button.tw-link',
+			resolveUserEachRender: true
+		},
+		{
 			name: 'history',
 			containerSelector: '.message-list',
 			messageSelector: '.vcml-message',
@@ -66,6 +73,8 @@ export class Chat {
 	#messages = new Set()
 	#messagesByElement = new WeakMap()
 	#containers = new Map()
+	#communityIds = new Map()
+	#communityLogins = new Set()
 
 	constructor(mainStorage, labels, assignments, kind) {
 		this.#mainStorage = mainStorage
@@ -89,6 +98,8 @@ export class Chat {
 	}
 
 	userIdFrom(element) {
+		if (this.#kind.name === 'community') return this.#communityUserId(element)
+
 		const target = this.#kind.resolveUserEachRender
 			? element
 			: element.querySelector('.chat-line__message--alert .message') ??
@@ -101,6 +112,37 @@ export class Chat {
 
 		if (!this.#kind.usernameSelector) return target.dataset.userId
 		return target.dataset.userId ?? element.closest(ChatterCard.CARD_SELECTOR)?.dataset.userId
+	}
+
+	#communityUserId(element) {
+		const login = element.querySelector(':scope > span')?.textContent.trim().toLowerCase()
+
+		if (!login || this.#communityIds.has(login)) return this.#communityIds.get(login)
+		if (!this.#assignments.length) return
+		this.#communityIds.set(login, null)
+		if (!this.#communityLogins.size) queueMicrotask(() => this.#fetchCommunityIds())
+		this.#communityLogins.add(login)
+	}
+
+	#fetchCommunityIds() {
+		const logins = [...this.#communityLogins]
+
+		this.#communityLogins.clear()
+		for (let offset = 0; offset < logins.length; offset += 100) {
+			const batch = logins.slice(offset, offset + 100)
+
+			TwitchAPI.fetchUsers(batch)
+				.then(users => {
+					for (const user of users) {
+						if (user?.login && user.id) this.#communityIds.set(user.login.toLowerCase(), user.id)
+					}
+					this.#renderMessages()
+				})
+				.catch(error => {
+					for (const login of batch) this.#communityIds.delete(login)
+					logger.debug('Could not resolve Community users', error)
+				})
+		}
 	}
 
 	attachIfNeeded(node) {
@@ -137,6 +179,10 @@ export class Chat {
 		const observer = new MutationObserver(mutations => {
 			for (const mutation of mutations) {
 				if (mutation.type !== 'childList') this.#createMessagesIfNeeded(mutation.target)
+				else if (this.#kind.name === 'community' && !mutation.addedNodes.length &&
+					mutation.target.closest(this.#kind.messageSelector)) {
+					this.#createMessagesIfNeeded(mutation.target)
+				}
 
 				for (const addedNode of mutation.addedNodes) {
 					this.#createMessagesIfNeeded(addedNode)
