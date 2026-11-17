@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6 (2026-11-17)
+
+*   Add drag handles and keyboard shortcuts for reordering labels.
+*   Keep Add and Save visible while scrolling through labels.
+*   Show loading spinners on the options page.
+*   Animate adding, removing, and reordering labels, as well as opening and closing the check script editor.
+*   Keep check scripts collapsed by default and show whether each label has a script.
+*   Show label icons in the Community tab in Twitch Mod View.
+*   Show a spinner during label checks and display BestLogs request progress.
+*   Retry each rate-limited BestLogs request once after a short delay, and keep the longer pause for the rest of the search.
+*   Refresh Chrome Web Store screenshot tooling to cover dark mode, check scripts, and check results.
+
 ## 1.5 (2026-11-07)
 
 *   Add System, Light, and Dark themes for the options page.
