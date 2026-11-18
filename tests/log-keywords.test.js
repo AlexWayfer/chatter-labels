@@ -82,7 +82,13 @@ test('log example counts unique messages by the selected author in the current c
 	response = {}
 	await assert.rejects(run(), /invalid search response/)
 	context.fetch = async () => new Response('No user logs found', { status: 404 })
-	await assert.rejects(run(), /No archived logs/)
+	await assert.rejects(run(), /BestLogs: No user logs found/)
+	for (const reason of ['No channel logs found', 'The user does not exist: id:42', 'The channel does not exist: id:99']) {
+		context.fetch = async () => new Response(reason, { status: 404 })
+		await assert.rejects(run(), error => error.message === 'BestLogs: ' + reason)
+	}
+	context.fetch = async () => new Response('', { status: 404 })
+	await assert.rejects(run(), /BestLogs search failed: HTTP 404/)
 	context.fetch = async () => new Response('Not found', { status: 404 })
 	assert.equal(await run(), 0, 'rustlog uses a distinct 404 response for an empty search')
 	context.fetch = async () => new Response('', { status: 429, headers: { 'Retry-After': '20' } })

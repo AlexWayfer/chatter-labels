@@ -139,8 +139,10 @@ export function createBestLogsClient(user, channel, twitch, signal, onProgress =
 
 					signal.throwIfAborted()
 					if (response.status === 404) {
-						if ((await response.text()).trim() === 'Not found') break
-						throw new Error('No archived logs are available for this user in this channel.')
+						const reason = (await response.text()).trim()
+
+						if (reason === 'Not found') break
+						throw new Error(reason ? 'BestLogs: ' + reason : 'BestLogs search failed: HTTP 404')
 					}
 					if (!response.ok) throw new Error('BestLogs search failed: HTTP ' + response.status)
 					const data = await response.json()
