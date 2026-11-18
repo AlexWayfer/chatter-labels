@@ -225,6 +225,7 @@
 
 			fieldset {
 				.check-label[hidden],
+				.cancel-check[hidden],
 				.check-result[hidden],
 				.label-check[hidden] {
 					display: none;
@@ -235,7 +236,7 @@
 					flex-wrap: wrap;
 					align-items: center;
 					gap: 6px;
-					padding: 4px 2px;
+					padding: 4px 0;
 					font-size: var(--font-size-base);
 				}
 

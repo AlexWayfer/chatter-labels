@@ -19,8 +19,11 @@ shared with Twitch and matched by Twitch user ID, including historical usernames
 
 Each label can have an optional JavaScript check script in Options. Expand
 **Check script**, enter a script, and save. A **Check** button appears
-beside that label in the user editor on Twitch and Lurkology. It changes to
-**Checking...** while running, then the result replaces the button without
+beside that label in the user editor on Twitch and Lurkology. While it runs,
+**Stop** stops the check and lets you start it again. BestLogs shows the
+current request and a compact confirmed-match count such as **5 of 14 candidates**.
+Stopping keeps these counts and the confirmed messages from processed pages.
+When a check finishes, the result replaces the button without
 changing the checkbox, comment, or saved assignments. A successful check stays
 cached for that label in the current editor; it cannot be run twice. Errors show
 their message with a **Retry** button. Changing the saved script resets its result.
@@ -35,7 +38,7 @@ Access is checked again when you reopen the popup or return from settings, and
 before each execution. Manual label editing and saving remain available.
 
 The script receives `user.id`, `user.login`, `user.username`, and a `signal` that
-aborts after 10 seconds. `channel.login` identifies the current Twitch channel
+aborts on cancellation or after 60 seconds. `channel.login` identifies the current Twitch channel
 when checking from a chatter card in channel chat (including popout, embedded,
 and moderator chats). `channel` is `null` in the profile label editor, on Lurkology,
 and outside known channel routes. The channel is resolved from the tab's current
@@ -77,9 +80,9 @@ const { login } = await twitch.getUser(user.id, 'login')
 return login
 ```
 
-Pass `signal` to `fetch` to cancel slow requests. The signal expires after 60
-seconds so paginated archive searches can make spaced requests. After 65 seconds the editor
-reports a timeout; this does not forcibly stop arbitrary JavaScript. Scripts run
+Pass `signal` to `fetch` so **Stop** and timeouts stop your own requests too.
+After 65 seconds the editor reports a timeout. Checks rely on custom code to
+honor the signal. Scripts run
 in a separate user-script world with access to the current website's DOM, storage,
 and network, but without the extension's storage or GitHub token. Only use scripts
 you trust. Script source is saved in the same GitHub Gist as the label; execution

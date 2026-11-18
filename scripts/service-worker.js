@@ -16,6 +16,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			.then(() => sendResponse({ ok: true }), error => sendResponse({ ok: false, error: error.message }))
 		return true
 	}
+	if (message.type === 'cancel-label-check') {
+		Promise.resolve(checks).then(runner => runner?.cancel(message, sender))
+			.then(() => sendResponse({ ok: true }), error => sendResponse({ ok: false, error: error.message }))
+		return true
+	}
 	if (message.type !== 'run-label-check') return
 	checks ??= OptionsStorage.create().then(options => MainStorage.create(options))
 		.then(storage => new LabelCheckRunner(storage))
@@ -25,7 +30,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 		})
 	checks.then(runner => runner.run(message, sender))
 		.then(value => sendResponse({ ok: true, value }))
-		.catch(error => sendResponse({ ok: false, error: error.message, code: error.code }))
+		.catch(error => sendResponse({ ok: false, error: error.message, code: error.code, partial: error.partial }))
 	return true
 })
 
@@ -43,6 +48,16 @@ chrome.runtime.onUserScriptMessage.addListener((message, sender, sendResponse) =
 			error => sendResponse({ ok: false, error: error.message })
 		)
 	return true
+})
+
+chrome.runtime.onUserScriptConnect.addListener(port => {
+	Promise.resolve(checks).then(
+		runner => {
+			if (runner) runner.connect(port)
+			else port.disconnect()
+		},
+		() => port.disconnect()
+	)
 })
 
 chrome.runtime.onInstalled.addListener(async () => {

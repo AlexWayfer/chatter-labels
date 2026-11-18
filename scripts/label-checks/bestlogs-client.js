@@ -105,6 +105,20 @@ export function createBestLogsClient(user, channel, twitch, signal, onProgress =
 
 			let requestNumber = 0
 			let totalRequests = queries.size
+			let reportedMatches = 0
+			const reportProgress = () => {
+				const messages = matches.length !== reportedMatches ? matches : undefined
+
+				reportedMatches = matches.length
+				return onProgress({
+					sequence: ++sequence,
+					request: requestNumber,
+					total: totalRequests,
+					checked: inspected.size,
+					count: matches.length,
+					messages
+				})
+			}
 
 			for (const query of queries) {
 				let offset = 0
@@ -114,7 +128,8 @@ export function createBestLogsClient(user, channel, twitch, signal, onProgress =
 					signal.throwIfAborted()
 					if (inspected.size >= maxMessages) return result()
 					if (offset > 0) totalRequests++
-					onProgress({ sequence: ++sequence, request: ++requestNumber, total: totalRequests })
+					requestNumber++
+					await reportProgress()
 					if (requestNumber > 1) await pause(requestDelay)
 					const pageSize = Math.min(500, maxMessages - inspected.size)
 					const url = new URL('https://bestlogs.lurkology.com/channelid/' + owner.id + '/userid/' + user.id + '/search')
@@ -134,6 +149,7 @@ export function createBestLogsClient(user, channel, twitch, signal, onProgress =
 					if (!Array.isArray(data?.messages)) throw new Error('BestLogs returned an invalid search response.')
 					const batch = data.messages.slice(0, pageSize)
 					const fingerprint = JSON.stringify(batch.map(message => [message?.id, message?.timestamp]))
+					const checkedBeforePage = inspected.size
 
 					if (batch.length && fingerprint === previousPage) throw new Error('BestLogs pagination did not advance. Try again later.')
 					previousPage = fingerprint
@@ -160,8 +176,12 @@ export function createBestLogsClient(user, channel, twitch, signal, onProgress =
 							if (!accepted) continue
 						}
 						matches.push({ ...message, channelId: owner.id })
-						if (matches.length >= limit) return result()
+						if (matches.length >= limit) {
+							await reportProgress()
+							return result()
+						}
 					}
+					if (inspected.size > checkedBeforePage) await reportProgress()
 					if (batch.length < pageSize) break
 					offset += batch.length
 				}

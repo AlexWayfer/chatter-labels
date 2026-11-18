@@ -171,6 +171,7 @@ export class LabelsElement {
 
 		fieldset.querySelector('.label-check').hidden = !label.script?.trim()
 		fieldset.querySelector('.check-label').addEventListener('click', () => this.#check(label))
+		fieldset.querySelector('.cancel-check').addEventListener('click', () => this.#cancelCheck(label))
 		fieldset.querySelector('.check-messages').addEventListener('toggle', event => {
 			const check = this.#checks.get(label.id)
 
@@ -190,17 +191,28 @@ export class LabelsElement {
 			const { progress } = check
 
 			button.textContent = progress
-				? `Request ${progress.request}/${progress.total}`
+				? `${progress.request}/${progress.total}`
 				: 'Checking...'
 		} else {
 			button.textContent = check?.error ? 'Retry' : 'Check'
 		}
+		button.title = check?.running && check.progress ? `Request ${check.progress.request}/${check.progress.total}` : ''
 		button.setAttribute('aria-busy', String(check?.running === true))
+		const cancel = fieldset.querySelector('.cancel-check')
+		const counts = check?.running && check.progress
+			? `${check.progress.count} of ${check.progress.checked} candidates`
+			: ''
+
+		cancel.hidden = !check?.running
+		cancel.disabled = !!check?.cancelling
+		cancel.textContent = check?.cancelling ? 'Stopping...' : 'Stop'
 		const result = fieldset.querySelector('.check-result')
 
-		result.hidden = check?.running === true || !check?.completed && !check?.error
-		result.textContent = check?.running ? '' : check?.text ?? ''
-		result.classList.toggle('error', !!check?.error)
+		result.hidden = !check?.cancelError && !counts && (!check?.completed && !check?.error && !check?.cancelled)
+		const text = check?.cancelError ?? (counts || check?.text || '')
+
+		if (result.textContent !== text) result.textContent = text
+		result.classList.toggle('error', !!(check?.error || check?.cancelError))
 		const details = fieldset.querySelector('.check-messages')
 		const messages = check?.messages ?? []
 		const list = details.querySelector('ol')
@@ -253,8 +265,8 @@ export class LabelsElement {
 		const previous = this.#checks.get(label.id)
 
 		if (this.#saving || this.#scriptAccessEnabled === false || previous?.running || previous?.completed) return
-		const check = { script: label.script, running: true }
 		const requestId = crypto.randomUUID()
+		const check = { script: label.script, running: true, requestId }
 		const onProgress = (message, sender) => {
 			if (message?.type !== 'label-check-progress' || message.requestId !== requestId ||
 				sender.id !== chrome.runtime.id || this.#checks.get(label.id) !== check) return
@@ -278,7 +290,9 @@ export class LabelsElement {
 			})
 
 			if (!response?.ok) {
-				throw Object.assign(new Error(response?.error ?? 'Could not run the check. Reload this page and try again.'), { code: response?.code })
+				throw Object.assign(new Error(response?.error ?? 'Could not run the check. Reload this page and try again.'), {
+					code: response?.code, partial: response?.partial
+				})
 			}
 			const value = response.value
 
@@ -290,7 +304,11 @@ export class LabelsElement {
 			}
 			check.completed = true
 		} catch (error) {
-			if (error.code === 'user-scripts-disabled' && !this.#destroyed && this.#checks.get(label.id) === check) {
+			if (error.code === 'label-check-cancelled') {
+				check.text = error.partial?.text ?? 'Stopped.'
+				check.messages = error.partial?.messages ?? []
+				check.cancelled = true
+			} else if (error.code === 'user-scripts-disabled' && !this.#destroyed && this.#checks.get(label.id) === check) {
 				check.text = ''
 				await this.refreshScriptAccess()
 			} else {
@@ -300,7 +318,27 @@ export class LabelsElement {
 		} finally {
 			chrome.runtime.onMessage.removeListener(onProgress)
 			check.running = false
+			delete check.cancelError
 			if (!this.#destroyed && this.#checks.get(label.id) === check) this.#updateCheck(label)
+		}
+	}
+
+	async #cancelCheck(label) {
+		const check = this.#checks.get(label.id)
+
+		if (!check?.running || check.cancelling) return
+		check.cancelling = true
+		delete check.cancelError
+		this.#updateCheck(label)
+		try {
+			const response = await chrome.runtime.sendMessage({ type: 'cancel-label-check', requestId: check.requestId })
+
+			if (!response?.ok) throw new Error(response?.error ?? 'The extension did not respond.')
+		} catch (error) {
+			if (!check.running || this.#checks.get(label.id) !== check) return
+			check.cancelling = false
+			check.cancelError = `Could not cancel the check: ${error.message}`
+			this.#updateCheck(label)
 		}
 	}
 

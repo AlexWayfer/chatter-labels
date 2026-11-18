@@ -14,6 +14,7 @@ test('loads styles and the appropriate page bridge before restarting supported t
 				onMessage = listener
 			} },
 			onUserScriptMessage: { addListener() {} },
+			onUserScriptConnect: { addListener() {} },
 			onInstalled: {
 				addListener(listener) {
 					onInstalled = listener

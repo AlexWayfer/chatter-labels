@@ -24,6 +24,32 @@ const { LabelsElement } = await import('../scripts/content/labels-element.js')
 fetchMock.mock.restore()
 afterEach(() => mock.restoreAll())
 
+function checkRuntime(runner, sender, runtime = {}) {
+	return {
+		...runtime,
+		connect({ name }) {
+			const messages = new Set()
+			const disconnects = new Set()
+			const port = {
+				name,
+				sender,
+				onDisconnect: { addListener() {} },
+				postMessage: message => queueMicrotask(() => messages.forEach(listener => listener(message))),
+				disconnect: () => queueMicrotask(() => disconnects.forEach(listener => listener()))
+			}
+
+			queueMicrotask(() => runner.connect(port))
+			return {
+				onMessage: {
+					addListener: listener => messages.add(listener),
+					removeListener: listener => messages.delete(listener)
+				},
+				onDisconnect: { addListener: listener => disconnects.add(listener) }
+			}
+		}
+	}
+}
+
 test('round-trips check scripts and supports labels saved before scripts existed', () => {
 	assert.equal(new Label({ id: 'old' }).script, '')
 	const label = new Label({ id: 'new', script: 'return await Promise.resolve(false)' })
@@ -134,9 +160,9 @@ test('shows current BestLogs request only on the matching check button', async (
 	}
 	const editor = await LabelsElement.create({ id: '42' }, storage)
 	const [first, second] = editor.element.querySelectorAll('.check-label')
-	const publish = (requestId, sequence, request, total, id = 'test') => {
+	const publish = (requestId, sequence, request, total, checked, count, id = 'test') => {
 		for (const listener of messageListeners) {
-			listener({ type: 'label-check-progress', requestId, sequence, request, total }, { id })
+			listener({ type: 'label-check-progress', requestId, sequence, request, total, checked, count }, { id })
 		}
 	}
 
@@ -148,23 +174,84 @@ test('shows current BestLogs request only on the matching check button', async (
 
 		assert.equal(first.getAttribute('aria-busy'), 'true')
 		assert.notEqual(requestId, secondCheck.request.requestId)
-		publish(requestId, 1, 1, 3, 'other-extension')
+		const [firstProgress, secondProgress] = editor.element.querySelectorAll('.check-result')
+
+		publish(requestId, 1, 1, 3, 0, 0, 'other-extension')
 		assert.equal(first.textContent, 'Checking...')
-		publish(requestId, 1, 1, 3)
-		assert.equal(first.textContent, 'Request 1/3')
-		publish(requestId, 3, 3, 4)
-		publish(requestId, 2, 2, 3)
-		assert.equal(first.textContent, 'Request 3/4')
+		publish(requestId, 1, 1, 3, 0, 0)
+		assert.equal(first.textContent, '1/3')
+		assert.equal(firstProgress.textContent, '0 of 0 candidates')
+		publish(requestId, 3, 3, 4, 14, 5)
+		publish(requestId, 2, 2, 3, 8, 2)
+		assert.equal(first.textContent, '3/4')
+		assert.equal(firstProgress.textContent, '5 of 14 candidates')
+		assert.equal(secondProgress.hidden, true)
 		assert.equal(second.textContent, 'Checking...')
 		firstCheck.resolve({ ok: false, error: 'Failed' })
 		await setImmediate()
 		assert.equal(first.textContent, 'Retry')
+		assert.equal(firstProgress.textContent, 'Error: Failed')
 		assert.equal(first.getAttribute('aria-busy'), 'false')
 		first.click()
-		publish(requestId, 4, 4, 4)
+		publish(requestId, 4, 4, 4, 15, 5)
 		assert.equal(first.textContent, 'Checking...')
 	} finally {
 		for (const check of pending) check.resolve({ ok: true, value: false })
+		await setImmediate()
+		editor.unsubscribe()
+	}
+})
+
+test('Stop preserves the partial result and messages and allows a fresh check', async () => {
+	let finish
+	const send = mock.fn(message => {
+		if (message.type === 'cancel-label-check') {
+			finish({
+				ok: false,
+				code: 'label-check-cancelled',
+				partial: { text: '1 of 3 candidates', messages: [{ text: 'я видела', id: 'one' }] }
+			})
+			return Promise.resolve({ ok: true })
+		}
+		return new Promise(resolve => {
+			finish = resolve
+		})
+	})
+
+	chrome.runtime.sendMessage = send
+	const editor = await LabelsElement.create({ id: '42' }, {
+		get(key) {
+			return key === 'labels' ? [new Label({ id: 'check', script: 'return false' })] : []
+		},
+		subscribe: () => () => {}
+	})
+	const button = editor.element.querySelector('.check-label')
+	const cancel = editor.element.querySelector('.cancel-check')
+	const result = editor.element.querySelector('.check-result')
+
+	try {
+		assert.equal(cancel.hidden, true)
+		button.click()
+		assert.equal(cancel.hidden, false)
+		assert.equal(cancel.textContent, 'Stop')
+		cancel.click()
+		await setImmediate()
+		const { requestId } = send.mock.calls[0].arguments[0]
+
+		assert.deepEqual(send.mock.calls[1].arguments[0], { type: 'cancel-label-check', requestId })
+		assert.equal(result.textContent, '1 of 3 candidates')
+		assert.equal(editor.element.querySelector('.check-messages summary').textContent, 'Messages (1)')
+		assert.equal(editor.element.querySelector('.check-messages li p').textContent, 'я видела')
+		assert.equal(result.classList.contains('error'), false)
+		assert.equal(cancel.hidden, true)
+		assert.equal(button.textContent, 'Check')
+		button.click()
+		assert.notEqual(send.mock.calls[2].arguments[0].requestId, requestId)
+		finish({ ok: true, value: true })
+		await setImmediate()
+		assert.equal(result.textContent, 'Yes')
+	} finally {
+		finish?.({ ok: true, value: false })
 		await setImmediate()
 		editor.unsubscribe()
 	}
@@ -183,7 +270,9 @@ test('runner executes stored code in a user-script world and returns async value
 		async configureWorld() {},
 		async execute(options) {
 			injection = options
-			return [{ result: await runInNewContext(options.js[0].code, { AbortSignal }) }]
+			const runtime = checkRuntime(runner, sender)
+
+			return [{ result: await runInNewContext(options.js[0].code, { AbortSignal, AbortController, chrome: { runtime } }) }]
 		}
 	}
 	const runner = new LabelCheckRunner(storage)
@@ -527,7 +616,9 @@ test('background requests are bound to an active check and its original tab and 
 		configureWorld: mock.fn(async () => {}),
 		async execute(options) {
 			assert.equal(options.worldId, 'label-checks')
-			return [{ result: await runInNewContext(options.js[0].code, { AbortSignal, chrome: { runtime } }) }]
+			return [{ result: await runInNewContext(options.js[0].code, {
+				AbortSignal, AbortController, chrome: { runtime: checkRuntime(runner, sender, runtime) }
+			}) }]
 		}
 	}
 	const runner = new LabelCheckRunner({ get: async () => [{ id: 'check', script: 'const data = await twitch.gql("{ currentUser { id } }"); return data.allowed' }] }, { request })
@@ -550,7 +641,83 @@ test('background requests are bound to an active check and its original tab and 
 	assert.equal(request.mock.callCount(), 1)
 })
 
-test('forwards BestLogs progress before each request and adds newly discovered pages to the total', async () => {
+test('cancellation reaches the injected signal and an in-flight background request', async () => {
+	const { LabelCheckRunner } = await import('../scripts/label-checks/runner.js')
+	const sender = { id: 'test', tab: { id: 7 }, frameId: 0, documentId: 'document-one', url: 'https://www.twitch.tv/example' }
+	const background = Promise.withResolvers()
+	const archive = Promise.withResolvers()
+	const injected = Promise.withResolvers()
+	const waitForAbort = signal => new Promise((_, reject) => {
+		signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+	})
+	const runner = new LabelCheckRunner({ get: async () => [{
+		id: 'check', script: 'await Promise.all([twitch.gql("{ currentUser { id } }"), fetch("https://example.test", { signal })])'
+	}] }, { request: (_payload, { signal }) => {
+		background.resolve(signal)
+		return waitForAbort(signal)
+	} })
+	const request = { labelId: 'check', user: { id: '42' }, requestId: 'check-request' }
+	let runId
+	const runtime = checkRuntime(runner, sender, {
+		sendMessage(message) {
+			runId = message.runId
+			return runner.requestTwitch(message, sender).then(data => ({ ok: true, data }))
+		}
+	})
+
+	chrome.userScripts = {
+		async getScripts() {
+			return []
+		},
+		async configureWorld() {},
+		async execute(options) {
+			const result = await runInNewContext(options.js[0].code, {
+				AbortSignal,
+				AbortController,
+				chrome: { runtime },
+				fetch(_url, { signal }) {
+					archive.resolve(signal)
+					return waitForAbort(signal)
+				}
+			})
+
+			injected.resolve(result)
+			return [{ result }]
+		}
+	}
+	const running = runner.run(request, sender)
+	const rejected = assert.rejects(running, error => {
+		assert.equal(error.code, 'label-check-cancelled')
+		assert.equal(error.partial.text, '1 of 3 candidates')
+		assert.equal(error.partial.messages[0].text, 'hello')
+		return true
+	})
+	const [backgroundSignal, archiveSignal] = await Promise.all([background.promise, archive.promise])
+	const checkMessage = {
+		runId,
+		sequence: 1,
+		request: 1,
+		total: 3,
+		checked: 3,
+		count: 1,
+		messages: [{ text: 'hello', id: 'one', channelId: '99' }]
+	}
+
+	chrome.tabs = { sendMessage: async () => {} }
+	await runner.reportProgress(checkMessage, sender)
+	await runner.reportProgress({ ...checkMessage, sequence: 2, request: 2, messages: undefined }, sender)
+	await runner.reportProgress({ ...checkMessage, sequence: 1, checked: 1, count: 0, messages: [] }, sender)
+	runner.cancel(request, { ...sender, documentId: 'another-document' })
+	assert.equal(backgroundSignal.aborted, false)
+	assert.equal(archiveSignal.aborted, false)
+	runner.cancel(request, sender)
+	await rejected
+	assert.equal(backgroundSignal.aborted, true)
+	assert.equal((await injected.promise).ok, false)
+	assert.equal(archiveSignal.aborted, true)
+})
+
+test('forwards BestLogs request and candidate progress across pages and empty queries', async () => {
 	const { LabelCheckRunner } = await import('../scripts/label-checks/runner.js')
 	const sender = { id: 'test', tab: { id: 7 }, frameId: 0, documentId: 'document-one', url: 'https://www.twitch.tv/example' }
 	const send = mock.fn(async () => {})
@@ -573,11 +740,12 @@ test('forwards BestLogs progress before each request and adds newly discovered p
 		async execute(options) {
 			return [{ result: await runInNewContext(options.js[0].code, {
 				AbortSignal,
+				AbortController,
 				URL,
 				URLSearchParams,
 				setTimeout,
 				clearTimeout,
-				chrome: { runtime },
+				chrome: { runtime: checkRuntime(runner, sender, runtime) },
 				async fetch(url) {
 					const offset = Number(url.searchParams.get('offset'))
 					const query = url.searchParams.get('q')
@@ -598,8 +766,10 @@ test('forwards BestLogs progress before each request and adds newly discovered p
 	const result = await runner.run({ labelId: 'check', user: { id: '42' }, source: 'chat', requestId: 'check-request' }, sender)
 
 	assert.equal(result, 3)
-	assert.deepEqual(send.mock.calls.map(call => call.arguments), [3, 3, 4, 4].map((total, index) => [7, {
-		type: 'label-check-progress', requestId: 'check-request', sequence: index + 1, request: index + 1, total
+	assert.deepEqual(send.mock.calls.map(call => call.arguments), [
+		[1, 3, 0, 0], [2, 3, 0, 0], [2, 3, 500, 0], [3, 4, 500, 0], [3, 4, 503, 3], [4, 4, 503, 3]
+	].map(([request, total, checked, count], index) => [7, {
+		type: 'label-check-progress', requestId: 'check-request', sequence: index + 1, request, total, checked, count
 	}, { documentId: 'document-one' }]))
 	await assert.rejects(runner.reportProgress(progress[0], sender), /no longer running/)
 })
