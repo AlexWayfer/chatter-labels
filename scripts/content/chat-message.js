@@ -48,13 +48,13 @@ export class ChatMessage {
 		}
 
 		this.#iconsElement.replaceChildren(
-			...labels.map(label => {
+			...labels.map(({ label, comment }) => {
 				const iconElement = document.createElement('img')
 
 				iconElement.classList.add('chatter-labels-icon')
 				iconElement.src = label.icon
 				iconElement.alt = label.name
-				iconElement.title = label.name
+				iconElement.title = comment ? `${label.name} (${comment})` : label.name
 
 				return iconElement
 			})
@@ -86,8 +86,12 @@ export class ChatMessage {
 
 		if (!userAssignments.length) return []
 
-		return this.#chat.labels.filter(
-			label => label.enabled && userAssignments.some(assignment => assignment.label?.id == label.id)
-		)
+		return this.#chat.labels.flatMap(label => {
+			if (!label.enabled) return []
+
+			const assignment = userAssignments.find(assignment => assignment.label?.id == label.id)
+
+			return assignment ? [{ label, comment: assignment.comment?.trim() }] : []
+		})
 	}
 }

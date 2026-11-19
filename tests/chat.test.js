@@ -133,10 +133,11 @@ test('renders each author independently in the thread parent and reply list', ()
 	assert.equal(replies[0].querySelector('.chatter-labels-icons'), null)
 	assert.equal(replies[1].querySelector('img').alt, 'Label')
 	for (const callback of subscriptions.get('assignments')) {
-		callback([{ user: { id: '2' }, label: { id: 'label' } }])
+		callback([{ user: { id: '2' }, label: { id: 'label' }, comment: 'Recognized in chat' }])
 	}
 	assert.equal(wrapper.querySelector('[data-test-selector="parent"] img'), null)
 	assert.equal(replies[0].querySelector('img').alt, 'Label')
+	assert.equal(replies[0].querySelector('img').title, 'Label (Recognized in chat)')
 	assert.equal(replies[1].querySelector('.chatter-labels-icons'), null)
 })
 
@@ -147,7 +148,15 @@ test('updates thread labels when labels or assignments change', () => {
 	}
 
 	assert.equal(wrapper.querySelectorAll('.chatter-labels-icon').length, 1)
+	assert.equal(wrapper.querySelector('img').title, 'Label')
+	update('assignments', [{ ...storage.assignments[0], comment: ' Reason <plain text> ' }])
+	assert.equal(wrapper.querySelector('img').title, 'Label (Reason <plain text>)')
+	assert.equal(wrapper.querySelector('img').alt, 'Label')
 	update('labels', [{ ...storage.labels[0], name: 'Renamed' }])
+	assert.equal(wrapper.querySelector('img').title, 'Renamed (Reason <plain text>)')
+	update('assignments', [{ ...storage.assignments[0], comment: 'Updated reason' }])
+	assert.equal(wrapper.querySelector('img').title, 'Renamed (Updated reason)')
+	update('assignments', [{ ...storage.assignments[0], comment: '  ' }])
 	assert.equal(wrapper.querySelector('img').title, 'Renamed')
 	update('labels', [{ ...storage.labels[0], enabled: false }])
 	assert.equal(wrapper.querySelector('.chatter-labels-icons'), null)

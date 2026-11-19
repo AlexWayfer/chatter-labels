@@ -109,6 +109,7 @@ test('edits the clicked author by ID inside the user card and releases subscript
 	popup.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
 	await setImmediate()
 	assert.equal(storage.assignments[0].comment, 'Recognized in old logs')
+	assert.equal(document.querySelector('.chatter-labels-icon').title, 'Friend (Recognized in old logs)')
 	assert.equal(storage.assignments[0].user.id, '123')
 	assert.equal(storage.assignments[0].assignedAt, '2026-11-01T00:00:00Z')
 	dialog.remove()
