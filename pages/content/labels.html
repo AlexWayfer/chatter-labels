@@ -1,6 +1,9 @@
 <template id="chatter-labels">
 	<div class="chatter-labels">
-		<h5>Labels</h5>
+		<div class="labels-heading">
+			<h5>Labels</h5>
+			<a class="configure" href="#">Configure</a>
+		</div>
 		<form>
 			<div class="user-scripts-notice" hidden>
 				<p role="status" aria-live="polite"></p>
@@ -11,10 +14,7 @@
 			</div>
 			<div class="fieldsets">
 			</div>
-			<p class="empty-list-notice">
-				No labels configured.
-				<a class="configure" href="#">Configure</a>
-			</p>
+			<p class="empty-list-notice">No labels configured.</p>
 			<button type="submit">Save</button>
 		</form>
 	</div>
@@ -28,7 +28,7 @@
 			<span class="name"></span>
 			<span class="assigned-at"></span>
 		</label>
-		<div class="label-check" hidden>
+		<div class="chatter-labels-check" hidden>
 			<button type="button" class="check-label">Check</button>
 			<button type="button" class="cancel-check" hidden>Stop</button>
 			<output class="check-result" role="status" aria-live="polite" hidden></output>

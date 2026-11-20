@@ -140,7 +140,7 @@ export class LabelsElement {
 				this.#renderCheck(fieldset, this.#checks.get(fieldset.querySelector('[name="label"]').value))
 			}
 		})
-		this.#formElement.querySelector('.configure').addEventListener('click', event => {
+		this.element.querySelector('.configure').addEventListener('click', event => {
 			event.preventDefault()
 			chrome.runtime.sendMessage({ type: 'open-options' })
 		})
@@ -169,7 +169,7 @@ export class LabelsElement {
 		labelElement.querySelector('.assigned-at').textContent = assignment?.formattedAssignedAt ?? ''
 		const fieldset = labelElement.querySelector('fieldset')
 
-		fieldset.querySelector('.label-check').hidden = !label.script?.trim()
+		fieldset.querySelector('.chatter-labels-check').hidden = !label.script?.trim()
 		fieldset.querySelector('.check-label').addEventListener('click', () => this.#check(label))
 		fieldset.querySelector('.cancel-check').addEventListener('click', () => this.#cancelCheck(label))
 		fieldset.querySelector('.check-messages').addEventListener('toggle', event => {

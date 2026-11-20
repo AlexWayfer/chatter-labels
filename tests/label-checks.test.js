@@ -96,7 +96,7 @@ test('checks replace the button with results and allow retries only after errors
 
 			assert.equal(button.textContent, 'Check')
 			assert.equal(result.hidden, true)
-			assert.equal(rows[1].querySelector('.label-check').hidden, true)
+			assert.equal(rows[1].querySelector('.chatter-labels-check').hidden, true)
 			const checkbox = rows[0].querySelector('[name="label"]')
 
 			checkbox.click()

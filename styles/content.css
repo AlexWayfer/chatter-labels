@@ -168,14 +168,27 @@
 .chatter-labels {
 	padding: 8px;
 
-	h5 {
+	.labels-heading {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		column-gap: 8px;
 		margin-bottom: 6px;
 
-		font-family: var(--font-display);
-		line-height: var(--line-height-heading);
-		font-size: var(--font-size-3);
-		font-weight: var(--font-weight-medium);
-		letter-spacing: -0.18px;
+		h5 {
+			margin: 0;
+
+			font-family: var(--font-display);
+			line-height: var(--line-height-heading);
+			font-size: var(--font-size-3);
+			font-weight: var(--font-weight-medium);
+			letter-spacing: -0.18px;
+		}
+
+		.configure {
+			color: var(--color-text-link);
+			font-size: var(--font-size-base);
+		}
 	}
 
 	form {
@@ -203,11 +216,6 @@
 			display: none;
 			color: var(--color-text-alt-2);
 			font-size: var(--font-size-base);
-
-			.configure {
-				display: block;
-				color: var(--color-text-link);
-			}
 		}
 
 		&:not(:has(.fieldsets > fieldset)) {
@@ -227,11 +235,11 @@
 				.check-label[hidden],
 				.cancel-check[hidden],
 				.check-result[hidden],
-				.label-check[hidden] {
+				.chatter-labels-check[hidden] {
 					display: none;
 				}
 
-				.label-check {
+				.chatter-labels-check {
 					display: flex;
 					flex-wrap: wrap;
 					align-items: center;
